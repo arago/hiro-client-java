@@ -10,27 +10,10 @@ import java.util.Map;
 
 public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
 
-    public abstract static class Conf<B extends Conf<B>> extends AbstractAPIClient.Conf<B> {
-        protected  String apiName;
-        protected  String endpoint;
+    public interface Conf extends AbstractAPIClient.Conf {
+        String getApiName();
 
-        /**
-         * @param apiName Name of the API
-         */
-        public B setApiName(String apiName) {
-            this.apiName = apiName;
-            return self();
-        }
-
-        /**
-         * @param endpoint Custom endpoint for the API. If left alone, an endpoint will be fetched via an API call.
-         */
-        public B setEndpoint(String endpoint) {
-            this.endpoint = endpoint;
-            return self();
-        }
-
-        abstract AbstractTokenAPIHandler build();
+        String getEndpoint();
     }
 
     private final String apiName;
@@ -45,10 +28,10 @@ public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
      *
      * @param builder The builder to use.
      */
-    protected AbstractTokenAPIHandler(Conf<?> builder) {
+    protected AbstractTokenAPIHandler(Conf builder) {
         super(builder);
-        this.apiName = builder.apiName;
-        this.endpoint = builder.endpoint;
+        this.apiName = builder.getApiName();
+        this.endpoint = builder.getEndpoint();
     }
 
     /**

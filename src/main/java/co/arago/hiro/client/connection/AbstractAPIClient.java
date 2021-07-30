@@ -28,101 +28,26 @@ import java.util.Map;
  */
 public abstract class AbstractAPIClient {
 
-    public abstract static class Conf<B extends Conf<B>> {
-        protected String apiUrl;
-        protected AbstractAPIClient.ProxySpec proxy;
-        protected boolean followRedirects = true;
-        protected long connectTimeout;
-        protected long httpRequestTimeout;
-        protected Boolean acceptAllCerts;
-        protected SSLContext sslContext;
-        protected SSLParameters sslParameters;
-        protected String userAgent;
-        protected HttpClient client;
+    public interface Conf {
+        String getApiUrl();
 
-        /**
-         * @param apiUrl The root url for the API
-         */
-        public B setApiUrl(String apiUrl) {
-            this.apiUrl = apiUrl;
-            return self();
-        }
+        ProxySpec getProxy();
 
-        /**
-         * @param proxy Simple proxy with one address and port
-         */
-        public B setProxy(ProxySpec proxy) {
-            this.proxy = proxy;
-            return self();
-        }
+        boolean isFollowRedirects();
 
-        /**
-         * @param followRedirects Enable Redirect.NORMAL
-         */
-        public B setFollowRedirects(boolean followRedirects) {
-            this.followRedirects = followRedirects;
-            return self();
-        }
+        long getConnectTimeout();
 
-        /**
-         * @param connectTimeout Connect timeout in milliseconds
-         */
-        public B setConnectTimeout(long connectTimeout) {
-            this.connectTimeout = connectTimeout;
-            return self();
-        }
+        long getHttpRequestTimeout();
 
-        /**
-         * @param httpRequestTimeout Request timeout in ms.
-         */
-        public B setHttpRequestTimeout(long httpRequestTimeout) {
-            this.httpRequestTimeout = httpRequestTimeout;
-            return self();
-        }
+        Boolean getAcceptAllCerts();
 
-        /**
-         * @param acceptAllCerts Skip SSL certificate verification
-         */
-        public B setAcceptAllCerts(Boolean acceptAllCerts) {
-            this.acceptAllCerts = acceptAllCerts;
-            return self();
-        }
+        SSLContext getSslContext();
 
-        /**
-         * @param sslContext The specific SSLContext to use.
-         */
-        public B setSslContext(SSLContext sslContext) {
-            this.sslContext = sslContext;
-            return self();
-        }
+        SSLParameters getSslParameters();
 
-        /**
-         * @param sslParameters The specific SSLParameters to use.
-         */
-        public B setSslParameters(SSLParameters sslParameters) {
-            this.sslParameters = sslParameters;
-            return self();
-        }
+        String getUserAgent();
 
-        /**
-         * @param userAgent For header "User-Agent". Default is determined by the package.
-         */
-        public B setUserAgent(String userAgent) {
-            this.userAgent = userAgent;
-            return self();
-        }
-
-        /**
-         * @param client Instance of the configured http client.
-         */
-        public B setClient(HttpClient client) {
-            this.client = client;
-            return self();
-        }
-
-        abstract B self();
-
-        abstract AbstractAPIClient build();
+        HttpClient getClient();
     }
 
     /**
@@ -221,19 +146,19 @@ public abstract class AbstractAPIClient {
      *
      * @param builder The builder to use.
      */
-    protected AbstractAPIClient(Conf<?> builder) {
-        this.apiUrl = (StringUtils.endsWith(builder.apiUrl, "/") ? builder.apiUrl : builder.apiUrl + "/");
-        this.proxy = builder.proxy;
-        this.followRedirects = builder.followRedirects;
-        this.connectTimeout = builder.connectTimeout;
-        this.httpRequestTimeout = builder.httpRequestTimeout;
-        this.acceptAllCerts = builder.acceptAllCerts;
-        this.sslParameters = builder.sslParameters;
-        this.userAgent = (builder.userAgent != null ? builder.userAgent : (version != null ? title + " " + version : title));
-        this.client = builder.client;
+    protected AbstractAPIClient(Conf builder) {
+        this.apiUrl = (StringUtils.endsWith(builder.getApiUrl(), "/") ? builder.getApiUrl() : builder.getApiUrl() + "/");
+        this.proxy = builder.getProxy();
+        this.followRedirects = builder.isFollowRedirects();
+        this.connectTimeout = builder.getConnectTimeout();
+        this.httpRequestTimeout = builder.getHttpRequestTimeout();
+        this.acceptAllCerts = builder.getAcceptAllCerts();
+        this.sslParameters = builder.getSslParameters();
+        this.userAgent = (builder.getUserAgent() != null ? builder.getUserAgent() : (version != null ? title + " " + version : title));
+        this.client = builder.getClient();
 
         if (acceptAllCerts == null) {
-            this.sslContext = builder.sslContext;
+            this.sslContext = builder.getSslContext();
         } else {
             if (acceptAllCerts) {
                 try {
