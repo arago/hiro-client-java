@@ -28,6 +28,10 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         protected Long refreshOffset = 5000L;
         protected Long freshBuffer = 30000L;
 
+        public Conf() {
+            this.apiName = "auth";
+        }
+
         /**
          * @param username HIRO username
          */
@@ -89,7 +93,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
         @Override
         PasswordAuthTokenAPIHandler build() {
-            this.apiName = (this.apiName != null ? this.apiName : "auth");
             return new PasswordAuthTokenAPIHandler(this);
         }
     }
