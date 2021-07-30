@@ -4,72 +4,51 @@ import co.arago.hiro.client.util.FixedTokenException;
 import co.arago.hiro.client.util.HiroException;
 
 import java.io.InputStream;
-import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.time.Instant;
 
 public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
 
-    public static String DEFAULT_NAME = "HIRO_TOKEN";
+    public abstract static class Conf<B extends Conf<B>> extends AbstractTokenAPIHandler.Conf<B> {
+        protected  String tokenEnv = "HIRO_TOKEN";
+
+        /**
+         * @param tokenEnv The name of the environment variable.
+         */
+        public B setTokenEnv(String tokenEnv) {
+            this.tokenEnv = tokenEnv;
+            return self();
+        }
+
+        abstract EnvironmentTokenAPIHandler build();
+    }
+
+    public static final class Builder extends Conf<Builder> {
+        @Override
+        Builder self() {
+            return this;
+        }
+
+        @Override
+        EnvironmentTokenAPIHandler build() {
+            return new EnvironmentTokenAPIHandler(this);
+        }
+    }
 
     private final String tokenEnv;
 
-    /**
-     * Constructor. Use {@link #DEFAULT_NAME} as environment variable.
-     *
-     * @param apiUrl The root URL for the HIRO API.
-     */
-    public EnvironmentTokenAPIHandler(String apiUrl) {
-        super(apiUrl, "none", null, null);
-        this.tokenEnv = DEFAULT_NAME;
+    public static Builder newBuilder() {
+        return new Builder();
     }
 
     /**
-     * Constructor. Use {@link #DEFAULT_NAME} as environment variable.
+     * Constructor.
      *
-     * @param apiUrl The root URL for the HIRO API.
-     * @param client Use a pre-defined {@link HttpClient}.
+     * @param builder The builder to use.
      */
-    public EnvironmentTokenAPIHandler(String apiUrl, HttpClient client) {
-        super(apiUrl, "none", null, client);
-        this.tokenEnv = DEFAULT_NAME;
-    }
-
-    /**
-     * Constructor
-     *
-     * @param apiUrl   The root URL for the HIRO API.
-     * @param tokenEnv The fixed token.
-     */
-    public EnvironmentTokenAPIHandler(String apiUrl, String tokenEnv) {
-        super(apiUrl, "none", null, null);
-        this.tokenEnv = tokenEnv;
-    }
-
-    /**
-     * Constructor
-     *
-     * @param apiUrl   The root URL for the HIRO API.
-     * @param tokenEnv The fixed token.
-     * @param client   Use a pre-defined {@link HttpClient}.
-     */
-    public EnvironmentTokenAPIHandler(String apiUrl, String tokenEnv, HttpClient client) {
-        super(apiUrl, "none", null, client);
-        this.tokenEnv = tokenEnv;
-    }
-
-    /**
-     * Override this to add automatic token renewal if necessary.
-     *
-     * @param httpResponse The httpResponse from the HttpRequest
-     * @param retry        the current state of retry. If this is set to false, false will also be returned.
-     *                     (Ignored here)
-     * @return always false.
-     * @throws HiroException never thrown here.
-     */
-    @Override
-    protected boolean checkResponse(HttpResponse<InputStream> httpResponse, boolean retry) throws HiroException {
-        return false;
+    protected EnvironmentTokenAPIHandler(Conf<?> builder) {
+        super(builder);
+        this.tokenEnv = builder.tokenEnv;
     }
 
     /**

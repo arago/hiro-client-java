@@ -53,6 +53,6 @@ public class HiroException extends RuntimeException implements Serializable {
 
     @Override
     public String toString() {
-        return this.getClass().getName() + ": (" + String.valueOf(code) + ") " + getMessage() + (body != null ? ": " + body : "");
+        return this.getClass().getName() + ": (" + code + ") " + getMessage() + (body != null ? ": " + body : "");
     }
 }

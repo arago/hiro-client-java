@@ -4,49 +4,50 @@ import co.arago.hiro.client.util.FixedTokenException;
 import co.arago.hiro.client.util.HiroException;
 
 import java.io.InputStream;
-import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.time.Instant;
 
 public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
 
+    public static abstract class Conf<B extends Conf<B>> extends AbstractTokenAPIHandler.Conf<B> {
+        protected  String token;
+
+        /**
+         * @param token The static token to use.
+         */
+        public B setToken(String token) {
+            this.token = token;
+            return self();
+        }
+
+        abstract FixedTokenAPIHandler build();
+    }
+
+    public static final class Builder extends Conf<Builder> {
+        @Override
+        Builder self() {
+            return this;
+        }
+
+        FixedTokenAPIHandler build() {
+            return new FixedTokenAPIHandler(this);
+        }
+    }
+
     private final String token;
 
-    /**
-     * Constructor
-     *
-     * @param apiUrl The root URL for the HIRO API.
-     * @param token  The fixed token.
-     */
-    public FixedTokenAPIHandler(String apiUrl, String token) {
-        super(apiUrl, "none", null, null);
-        this.token = token;
+    public static Builder newBuilder() {
+        return new Builder();
     }
 
     /**
      * Constructor
      *
-     * @param apiUrl The root URL for the HIRO API.
-     * @param token  The fixed token.
-     * @param client Use a pre-defined {@link HttpClient}.
+     * @param builder The builder to use.
      */
-    public FixedTokenAPIHandler(String apiUrl, String token, HttpClient client) {
-        super(apiUrl, "none", null, client);
-        this.token = token;
-    }
-
-    /**
-     * Override this to add automatic token renewal if necessary.
-     *
-     * @param httpResponse The httpResponse from the HttpRequest
-     * @param retry        the current state of retry. If this is set to false, false will also be returned.
-     *                     (Ignored here)
-     * @return always false.
-     * @throws HiroException Never thrown here.
-     */
-    @Override
-    protected boolean checkResponse(HttpResponse<InputStream> httpResponse, boolean retry) throws HiroException {
-        return false;
+    protected FixedTokenAPIHandler(Conf<?> builder) {
+        super(builder);
+        this.token = builder.token;
     }
 
     /**

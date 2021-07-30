@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -21,7 +20,81 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
     final Logger log = LoggerFactory.getLogger(PasswordAuthTokenAPIHandler.class);
 
-    public static class TokenInfo {
+    public static abstract class Conf<B extends Conf<B>> extends AbstractTokenAPIHandler.Conf<Builder> {
+        protected String username;
+        protected String password;
+        protected String clientId;
+        protected String clientSecret;
+        protected Long refreshOffset = 5000L;
+        protected Long freshBuffer = 30000L;
+
+        /**
+         * @param username HIRO username
+         */
+        public Builder setUsername(String username) {
+            this.username = username;
+            return self();
+        }
+
+        /**
+         * @param password HIRO password
+         */
+        public Builder setPassword(String password) {
+            this.password = password;
+            return self();
+        }
+
+        /**
+         * @param clientId HIRO client_id
+         */
+        public Builder setClientId(String clientId) {
+            this.clientId = clientId;
+            return self();
+        }
+
+        /**
+         * @param clientSecret HIRO client_secret
+         */
+        public Builder setClientSecret(String clientSecret) {
+            this.clientSecret = clientSecret;
+            return self();
+        }
+
+        /**
+         * @param refreshOffset ms of offset for token expiry. This is subtracted from the instant given via "expires-at".
+         */
+        public Builder setRefreshOffset(Long refreshOffset) {
+            this.refreshOffset = refreshOffset;
+            return self();
+        }
+
+        /**
+         * @param freshBuffer ms of time, where no refresh calls are sent to the backend to avoid request flooding
+         */
+        public Builder setFreshBuffer(Long freshBuffer) {
+            this.freshBuffer = freshBuffer;
+            return self();
+        }
+
+        @Override
+        abstract PasswordAuthTokenAPIHandler build();
+    }
+
+
+    public static final class Builder extends Conf<Builder> {
+        @Override
+        Builder self() {
+            return this;
+        }
+
+        @Override
+        PasswordAuthTokenAPIHandler build() {
+            this.apiName = (this.apiName != null ? this.apiName : "auth");
+            return new PasswordAuthTokenAPIHandler(this);
+        }
+    }
+
+    protected static class TokenInfo {
         /**
          * The token string
          */
@@ -105,109 +178,28 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
     protected TokenInfo tokenInfo = new TokenInfo();
 
-    /**
-     * Constructor
-     *
-     * @param apiUrl       The root URL for the HIRO API.
-     * @param username     HIRO Username
-     * @param password     HIRO Password
-     * @param clientId     HIRO APP clientId
-     * @param clientSecret HIRO APP clientSecret
-     * @throws IOException          When the endpoint cannot be determined via API call.
-     * @throws InterruptedException When the API call gets interrupted.
-     */
-    public PasswordAuthTokenAPIHandler(
-            String apiUrl,
-            String username,
-            String password,
-            String clientId,
-            String clientSecret
-    ) throws IOException, InterruptedException {
-        this(apiUrl, username, password, clientId, clientSecret, (HttpClient) null);
+    public static Builder newBuilder() {
+        return new Builder();
     }
 
-    /**
-     * Constructor
-     *
-     * @param apiUrl       The root URL for the HIRO API.
-     * @param username     HIRO Username
-     * @param password     HIRO Password
-     * @param clientId     HIRO APP clientId
-     * @param clientSecret HIRO APP clientSecret
-     */
-    public PasswordAuthTokenAPIHandler(
-            String apiUrl,
-            String username,
-            String password,
-            String clientId,
-            String clientSecret,
-            String endpoint
-    ) {
-        this(apiUrl, username, password, clientId, clientSecret, endpoint, null);
-    }
+    protected PasswordAuthTokenAPIHandler(Conf<?> builder) {
+        super(builder);
+        this.username = builder.username;
+        this.password = builder.password;
+        this.clientId = builder.clientId;
+        this.clientSecret = builder.clientSecret;
 
-    /**
-     * Constructor
-     *
-     * @param apiUrl       The root URL for the HIRO API.
-     * @param username     HIRO Username
-     * @param password     HIRO Password
-     * @param clientId     HIRO APP clientId
-     * @param clientSecret HIRO APP clientSecret
-     * @param client       Use a pre-defined {@link HttpClient}.
-     * @throws IOException          When the endpoint cannot be determined via API call.
-     * @throws InterruptedException When the API call gets interrupted.
-     */
-    public PasswordAuthTokenAPIHandler(
-            String apiUrl,
-            String username,
-            String password,
-            String clientId,
-            String clientSecret,
-            HttpClient client
-    ) throws IOException, InterruptedException {
-        super(apiUrl, "auth", client);
-        this.username = username;
-        this.password = password;
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
-    }
-
-    /**
-     * Constructor
-     *
-     * @param apiUrl       The root URL for the HIRO API.
-     * @param username     HIRO Username
-     * @param password     HIRO Password
-     * @param clientId     HIRO APP clientId
-     * @param clientSecret HIRO APP clientSecret
-     * @param endpoint     Externally provided endpoint URI for token requests.
-     * @param client       Use a pre-defined {@link HttpClient}.
-     */
-    public PasswordAuthTokenAPIHandler(
-            String apiUrl,
-            String username,
-            String password,
-            String clientId,
-            String clientSecret,
-            String endpoint,
-            HttpClient client
-    ) {
-        super(apiUrl, "auth", endpoint, client);
-        this.username = username;
-        this.password = password;
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
+        this.tokenInfo = new TokenInfo()
+                .setFreshBuffer(builder.freshBuffer)
+                .setRefreshOffset(builder.refreshOffset);
     }
 
     /**
      * @param refreshOffset ms of offset for token expiry. This is subtracted from the instant given via "expires-at".
      * @param freshBuffer   ms of time, where no refresh calls are sent to the backend to avoid request flooding
-     * @return this
      */
-    public PasswordAuthTokenAPIHandler setTokenRefreshOptions(Long refreshOffset, Long freshBuffer) {
+    public void setTokenRefreshOptions(Long refreshOffset, Long freshBuffer) {
         this.tokenInfo.setRefreshOffset(refreshOffset).setFreshBuffer(freshBuffer);
-        return this;
     }
 
     /**
@@ -239,7 +231,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
             }
         }
 
-        return false;
+        return super.checkResponse(httpResponse, retry);
     }
 
     /**

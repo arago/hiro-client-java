@@ -1,77 +1,54 @@
 package co.arago.hiro.client.connection;
 
 import co.arago.hiro.client.model.VersionResponse;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.time.Instant;
 import java.util.Map;
 
 public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
 
-    private VersionResponse versionMap;
+    public abstract static class Conf<B extends Conf<B>> extends AbstractAPIClient.Conf<B> {
+        protected  String apiName;
+        protected  String endpoint;
 
-    private Map<String, String> customEndpoints;
+        /**
+         * @param apiName Name of the API
+         */
+        public B setApiName(String apiName) {
+            this.apiName = apiName;
+            return self();
+        }
 
-    protected final String apiName;
-    protected final String endpoint;
+        /**
+         * @param endpoint Custom endpoint for the API. If left alone, an endpoint will be fetched via an API call.
+         */
+        public B setEndpoint(String endpoint) {
+            this.endpoint = endpoint;
+            return self();
+        }
+
+        abstract AbstractTokenAPIHandler build();
+    }
+
+    private final String apiName;
+    private final String endpoint;
+
     protected URI endpointUri;
 
-    /**
-     * Constructor
-     *
-     * @param apiUrl  The root URL for the HIRO API.
-     * @param apiName The name of the API as per API call "/app/version".
-     * @throws IOException When the endpoint cannot be determined via API call.
-     * @throws InterruptedException When the API call gets interrupted.
-     */
-    public AbstractTokenAPIHandler(String apiUrl, String apiName) throws IOException, InterruptedException {
-        this(apiUrl, apiName, null, null);
-    }
+    private VersionResponse versionMap;
 
     /**
      * Constructor
      *
-     * @param apiUrl   The root URL for the HIRO API.
-     * @param apiName  The name of the API as per API call "/app/version".
-     * @param endpoint Externally provided endpoint URI.
+     * @param builder The builder to use.
      */
-    public AbstractTokenAPIHandler(String apiUrl, String apiName, String endpoint) {
-        this(apiUrl, apiName, endpoint, null);
-    }
-
-    /**
-     * Constructor
-     *
-     * @param apiUrl  The root URL for the HIRO API.
-     * @param apiName The name of the API as per API call "/app/version".
-     * @param client  Externally provided HttpClient to use.
-     * @throws IOException When the endpoint cannot be determined via API call.
-     * @throws InterruptedException When the API call gets interrupted.
-     */
-    public AbstractTokenAPIHandler(String apiUrl, String apiName, HttpClient client) throws IOException, InterruptedException {
-        this(apiUrl, apiName, null, client);
-    }
-
-    /**
-     * Constructor
-     *
-     * @param apiUrl   The root URL for the HIRO API.
-     * @param apiName  The name of the API as per API call "/app/version".
-     * @param endpoint Externally provided endpoint URI.
-     * @param client   Externally provided HttpClient to use.
-     */
-    public AbstractTokenAPIHandler(String apiUrl, String apiName, String endpoint, HttpClient client) {
-        super(apiUrl, client);
-        this.apiName = apiName;
-        this.endpoint = endpoint;
-    }
-
-    public void setCustomEndpoints(Map<String, String> customEndpoints) {
-        this.customEndpoints = customEndpoints;
+    protected AbstractTokenAPIHandler(Conf<?> builder) {
+        super(builder);
+        this.apiName = builder.apiName;
+        this.endpoint = builder.endpoint;
     }
 
     /**
@@ -90,6 +67,9 @@ public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
     }
 
     protected URI getEndpointUri() throws IOException, InterruptedException {
+        if (endpoint != null)
+            return buildURI(endpoint, null, null);
+
         if (endpointUri == null)
             endpointUri = getApiUriOf(apiName);
 
@@ -107,12 +87,6 @@ public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
      * @throws InterruptedException When interrupted.
      */
     public URI getApiUriOf(String apiName, Map<String, String> query, String fragment) throws IOException, InterruptedException {
-        if (customEndpoints != null) {
-            String endpoint = customEndpoints.get(apiName);
-            if (StringUtils.isNotBlank(endpoint))
-                return buildURI(endpoint, query, fragment);
-        }
-
         if (versionMap == null)
             versionMap = requestVersionMap();
 

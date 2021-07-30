@@ -29,8 +29,14 @@ class TokenAPIHandlerTest {
 
     @BeforeAll
     static void init() throws NoSuchAlgorithmException, KeyManagementException, IOException, InterruptedException {
-        handler = (PasswordAuthTokenAPIHandler) new PasswordAuthTokenAPIHandler(API_URL, USER, PASS, CLIENTID, CLIENTSECRET)
-                .setAcceptAllCerts(ACCEPT_ALL_CERTS);
+        handler = PasswordAuthTokenAPIHandler.newBuilder()
+                .setApiUrl(API_URL)
+                .setAcceptAllCerts(true)
+                .setUsername(USER)
+                .setPassword(PASS)
+                .setClientId(CLIENTID)
+                .setClientSecret(CLIENTSECRET)
+                .build();
     }
 
     @Test
