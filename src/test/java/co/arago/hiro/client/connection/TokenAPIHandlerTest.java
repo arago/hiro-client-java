@@ -32,7 +32,7 @@ class TokenAPIHandlerTest {
     static void init() throws NoSuchAlgorithmException, KeyManagementException, IOException, InterruptedException {
         handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setApiUrl(API_URL)
-                .setAcceptAllCerts(true)
+                .setAcceptAllCerts(ACCEPT_ALL_CERTS)
                 .setUsername(USER)
                 .setPassword(PASS)
                 .setClientId(CLIENTID)
