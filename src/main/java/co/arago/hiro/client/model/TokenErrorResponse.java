@@ -2,8 +2,6 @@ package co.arago.hiro.client.model;
 
 import co.arago.hiro.client.util.JsonTools;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -23,8 +21,8 @@ public class TokenErrorResponse extends LinkedHashMap<String, Object> {
         return null;
     }
 
-    public static TokenErrorResponse fromInputStream(InputStream inputStream) throws IOException {
-        return JsonTools.DEFAULT.toObject(inputStream, TokenErrorResponse.class);
+    public static TokenErrorResponse fromResponse(HiroResponse hiroResponse) {
+        return JsonTools.DEFAULT.toObject(hiroResponse, TokenErrorResponse.class);
     }
 
 }

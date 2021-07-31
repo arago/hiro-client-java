@@ -1,9 +1,9 @@
-package co.arago.hiro.client.util;
+package co.arago.hiro.client.exceptions;
 
 /**
  * An exception with authentication for HIRO
  */
-public class AuthenticationTokenException extends HiroException {
+public class AuthenticationTokenException extends HiroHttpException {
 
     public AuthenticationTokenException(final String message, final int code, final String body) {
         super(message, code, body);

@@ -1,5 +1,6 @@
 package co.arago.hiro.client.connection;
 
+import co.arago.hiro.client.exceptions.HiroException;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -36,11 +37,12 @@ class TokenAPIHandlerTest {
                 .setPassword(PASS)
                 .setClientId(CLIENTID)
                 .setClientSecret(CLIENTSECRET)
+                .setForceLogging(true)
                 .build();
     }
 
     @Test
-    void getApiUriOf() throws IOException, InterruptedException {
+    void getApiUriOf() throws IOException, InterruptedException, HiroException {
         URI uri = handler.getApiUriOf("graph");
         assert uri != null;
         log.info("URI {}", uri);
@@ -51,14 +53,14 @@ class TokenAPIHandlerTest {
     }
 
     @Test
-    void getToken() throws IOException, InterruptedException {
+    void getToken() throws IOException, InterruptedException, HiroException {
         String token = handler.getToken();
         assertFalse(StringUtils.isBlank(token));
         log.info("Token {}...", token.substring(0, 12));
     }
 
     @Test
-    void refreshToken() throws IOException, InterruptedException {
+    void refreshToken() throws IOException, InterruptedException, HiroException {
         String token1 = handler.getToken();
         assertFalse(StringUtils.isBlank(token1));
         log.info("Token 1 ...{}", token1.substring(token1.length() - 12));

@@ -1,9 +1,10 @@
 package co.arago.hiro.client.connection;
 
+import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.hiro.client.model.HiroResponse;
 import co.arago.hiro.client.model.VersionResponse;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.time.Instant;
 import java.util.Map;
@@ -11,13 +12,25 @@ import java.util.Map;
 public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
 
     public interface Conf extends AbstractAPIClient.Conf {
+        /**
+         * @param apiName Set the name of the api. This name will be used to determine the API endpoint.
+         * @return this
+         */
+        Conf setApiName(String apiName);
+
         String getApiName();
+
+        /**
+         * @param endpoint Set a custom endpoint directly, omitting automatic endpoint detection via apiName.
+         * @return this
+         */
+        Conf setEndpoint(String endpoint);
 
         String getEndpoint();
     }
 
-    private final String apiName;
-    private final String endpoint;
+    protected final String apiName;
+    protected final String endpoint;
 
     protected URI endpointUri;
 
@@ -37,19 +50,23 @@ public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
     /**
      * Get API Versions
      * <p>
-     * <i>HIRO REST query API: `GET {@link #getApiUrl()} + '/api/version'`</i>
+     * <i>HIRO REST query API: `GET {@link #apiUrl} + '/api/version'`</i>
      *
      * @return A map with the api versions
+     * @throws HiroException        When the request fails.
      * @throws IOException          When the connection fails.
      * @throws InterruptedException When interrupted.
      */
-    public VersionResponse requestVersionMap() throws IOException, InterruptedException {
-        InputStream inputStream = getBinary(buildURI("/api/version", null, null), null);
+    public VersionResponse requestVersionMap() throws IOException, InterruptedException, HiroException {
+        HiroResponse hiroResponse = get(
+                buildURI("/api/version", null, null),
+                null,
+                null);
 
-        return VersionResponse.fromInputStream(inputStream);
+        return VersionResponse.fromResponse(hiroResponse);
     }
 
-    protected URI getEndpointUri() throws IOException, InterruptedException {
+    protected URI getEndpointUri() throws IOException, InterruptedException, HiroException {
         if (endpoint != null)
             return buildURI(endpoint, null, null);
 
@@ -66,10 +83,11 @@ public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
      * @param query    Map of query parameters to set.
      * @param fragment URI Fragment
      * @return The URI for that API
+     * @throws HiroException        When the request fails.
      * @throws IOException          When the connection fails.
      * @throws InterruptedException When interrupted.
      */
-    public URI getApiUriOf(String apiName, Map<String, String> query, String fragment) throws IOException, InterruptedException {
+    public URI getApiUriOf(String apiName, Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
         if (versionMap == null)
             versionMap = requestVersionMap();
 
@@ -82,10 +100,11 @@ public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
      * @param apiName Name of the API
      * @param query   Map of query parameters to set.
      * @return The URI for that API
+     * @throws HiroException        When the request fails.
      * @throws IOException          When the connection fails.
      * @throws InterruptedException When interrupted.
      */
-    public URI getApiUriOf(String apiName, Map<String, String> query) throws IOException, InterruptedException {
+    public URI getApiUriOf(String apiName, Map<String, String> query) throws IOException, InterruptedException, HiroException {
         return getApiUriOf(apiName, query, null);
     }
 
@@ -94,10 +113,11 @@ public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
      *
      * @param apiName Name of the API
      * @return The URI for that API
+     * @throws HiroException        When the request fails.
      * @throws IOException          When the connection fails.
      * @throws InterruptedException When interrupted.
      */
-    public URI getApiUriOf(String apiName) throws IOException, InterruptedException {
+    public URI getApiUriOf(String apiName) throws IOException, InterruptedException, HiroException {
         return getApiUriOf(apiName, null, null);
     }
 
@@ -110,7 +130,7 @@ public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
      */
     @Override
     protected Map<String, String> getHeaders(Map<String, String> headers) {
-        return getBasicHeaders(headers);
+        return initializeHeaders(headers);
     }
 
     /**
@@ -118,12 +138,12 @@ public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
      *
      * @return The current token.
      */
-    public abstract String getToken() throws IOException, InterruptedException;
+    public abstract String getToken() throws IOException, InterruptedException, HiroException;
 
     /**
      * Refresh an invalid token.
      */
-    public abstract void refreshToken() throws IOException, InterruptedException;
+    public abstract void refreshToken() throws IOException, InterruptedException, HiroException;
 
     /**
      * Calculate the Instant after which the token should be refreshed.

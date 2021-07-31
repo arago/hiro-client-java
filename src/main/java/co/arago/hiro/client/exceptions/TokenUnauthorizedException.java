@@ -1,4 +1,4 @@
-package co.arago.hiro.client.util;
+package co.arago.hiro.client.exceptions;
 
 /**
  * Used when tokens expire with error 401.

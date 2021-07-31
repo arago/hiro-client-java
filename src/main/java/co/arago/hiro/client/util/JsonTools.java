@@ -83,13 +83,13 @@ public class JsonTools {
      * Constructor.
      *
      * @param options The options to set. <br/>
-     *                  FAIL_ON_UNKNOWN_PROPERTIES<br/>
-     *                  SKIP_NULL_MAP_VALUES<br/>
-     *                  FAIL_ON_EMPTY_BEANS<br/>
-     *                  LENIENT_PARSING<br/>
-     *                  ESCAPE_NON_ASCII<br/>
-     *                  SKIP_JDK8_TYPES<br/>
-     *                  WARN_ON_UNKNOWN_PROPERTIES<br/>
+     *                FAIL_ON_UNKNOWN_PROPERTIES<br/>
+     *                SKIP_NULL_MAP_VALUES<br/>
+     *                FAIL_ON_EMPTY_BEANS<br/>
+     *                LENIENT_PARSING<br/>
+     *                ESCAPE_NON_ASCII<br/>
+     *                SKIP_JDK8_TYPES<br/>
+     *                WARN_ON_UNKNOWN_PROPERTIES<br/>
      */
     private JsonTools(Integer options) {
         JsonMapper.Builder builder = JsonMapper.builder();
@@ -186,7 +186,7 @@ public class JsonTools {
      * @param targetClass The target type of object to create
      * @param injectMap   Map with additional inject values
      * @return The created Object
-     * @throws IOException          If something else goes wrong
+     * @throws IOException If something else goes wrong
      */
     public <T> T toObject(File file, Class<T> targetClass, Map<String, Object> injectMap) throws IOException {
         return mapper.reader(new InjectableValues.Std(injectMap)).forType(targetClass).readValue(file);
@@ -198,7 +198,7 @@ public class JsonTools {
      * @param file        The file with the JSON structure to convert
      * @param targetClass The target type of object to create
      * @return The created Object
-     * @throws IOException          If something else goes wrong
+     * @throws IOException If something else goes wrong
      */
     public <T> T toObject(File file, Class<T> targetClass) throws IOException {
         return mapper.readValue(file, targetClass);
@@ -210,7 +210,7 @@ public class JsonTools {
      * @param json        The JSON structure to convert (String)
      * @param targetClass The target type of object to create
      * @return The created Object
-     * @throws JsonProcessingException   On Json Error
+     * @throws JsonProcessingException On Json Error
      */
     public <T> T toObject(String json, Class<T> targetClass) throws JsonProcessingException {
         return mapper.readValue(json, targetClass);
@@ -273,7 +273,7 @@ public class JsonTools {
      * @param targetClass The target type of object to create
      * @return The created Object
      */
-    public <T> T toObject(Object json, Class<T> targetClass)  {
+    public <T> T toObject(Object json, Class<T> targetClass) {
         return mapper.convertValue(json, targetClass);
     }
 
@@ -293,7 +293,7 @@ public class JsonTools {
      * Transforms a JSON structure given as Object into an Object cast by
      * TypeReference.
      *
-     * @param inputStream Input stream with data
+     * @param inputStream   Input stream with data
      * @param typeReference The target type of object to create
      * @return The created Object
      */
@@ -419,8 +419,8 @@ public class JsonTools {
     /**
      * This function tries to transform either a String or any Object into another object via Jackson.
      *
-     * @param json      The json data. String or any Object. String uses {@link JsonTools#toObject(String, String)},
-     *                  everything else uses {@link JsonTools#toObject(Object, String)}. If the string is blank, null is returned.
+     * @param json The json data. String or any Object. String uses {@link JsonTools#toObject(String, String)},
+     *             everything else uses {@link JsonTools#toObject(Object, String)}. If the string is blank, null is returned.
      * @return The generated object or null if no object can be created (String is blank for instance).
      */
     public Object toObjectEx(Object json) throws IOException, ClassNotFoundException {
