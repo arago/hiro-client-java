@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,11 +28,33 @@ import java.util.Map;
  * }
  * </code>
  * </pre>
- *
  */
 public class VersionResponse extends HiroResponse {
 
     private static final long serialVersionUID = 1728631384531328476L;
+
+    /**
+     * Jackson Setter that transforms incoming maps into VersionEntries.
+     *
+     * @param key   Incoming JSON key
+     * @param value Incoming JSON value
+     */
+    @Override
+    public void setField(String key, Object value) {
+        super.setField(key, (value instanceof Map ? JsonTools.DEFAULT.toObject(value, VersionEntry.class) : value));
+    }
+
+    /**
+     * @param apiName Name of the API
+     * @return The {@link VersionEntry} of that API.
+     * @throws HiroException If no API with this name can be found.
+     */
+    public VersionEntry getVersionEntryOf(String apiName) throws HiroException {
+        Object versionEntry = getMap().get(apiName);
+        if (versionEntry == null)
+            throw new HiroException("No API named '" + apiName + "' found in versions.");
+        return (VersionEntry) versionEntry;
+    }
 
     public static class VersionEntry implements Serializable {
         private static final long serialVersionUID = 7356571409803847816L;
@@ -60,28 +81,5 @@ public class VersionResponse extends HiroResponse {
         public Map<String, Object> getMap() {
             return remainingFieldsMap;
         }
-    }
-
-    /**
-     * Jackson Setter that transforms incoming maps into VersionEntries.
-     *
-     * @param key   Incoming JSON key
-     * @param value Incoming JSON value
-     */
-    @Override
-    public void setField(String key, Object value) {
-        super.setField(key, (value instanceof Map ? JsonTools.DEFAULT.toObject(value, VersionEntry.class) : value));
-    }
-
-    /**
-     * @param apiName Name of the API
-     * @return The {@link VersionEntry} of that API.
-     * @throws HiroException If no API with this name can be found.
-     */
-    public VersionEntry getVersionEntryOf(String apiName) throws HiroException {
-        Object versionEntry = getMap().get(apiName);
-        if (versionEntry == null)
-            throw new HiroException("No API named '" + apiName + "' found in versions.");
-        return (VersionEntry) versionEntry;
     }
 }

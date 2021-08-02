@@ -18,7 +18,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * }
  * </pre>
  * </code>
- *
  */
 public class TokenResponse extends HiroResponse {
 

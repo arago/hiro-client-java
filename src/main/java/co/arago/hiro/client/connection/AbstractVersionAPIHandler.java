@@ -10,10 +10,11 @@ import java.util.Map;
 /**
  * Handles Version information for HIRO.
  */
-public abstract class AbstractVersionAPIHandler extends AbstractAPIClient {
+public abstract class AbstractVersionAPIHandler extends AbstractAPIHandler {
 
-    public interface Conf extends AbstractAPIClient.Conf {
+    public interface Conf extends AbstractAPIHandler.Conf {
     }
+
 
     private VersionResponse versionMap;
 

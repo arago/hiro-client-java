@@ -27,23 +27,27 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Root class for all API httpRequests
  */
-public abstract class AbstractAPIClient {
+public abstract class AbstractAPIHandler {
 
-    final Logger log = LoggerFactory.getLogger(AbstractAPIClient.class);
+    final Logger log = LoggerFactory.getLogger(AbstractAPIHandler.class);
 
     public interface Conf {
+        String getApiUrl();
+
         /**
          * @param apiUrl The root url for the API
          * @return this
          */
         Conf setApiUrl(String apiUrl);
 
-        String getApiUrl();
+        ProxySpec getProxy();
 
         /**
          * @param proxy Simple proxy with one address and port
@@ -51,7 +55,7 @@ public abstract class AbstractAPIClient {
          */
         Conf setProxy(ProxySpec proxy);
 
-        ProxySpec getProxy();
+        boolean isFollowRedirects();
 
         /**
          * @param followRedirects Enable Redirect.NORMAL. Default is true.
@@ -59,7 +63,7 @@ public abstract class AbstractAPIClient {
          */
         Conf setFollowRedirects(boolean followRedirects);
 
-        boolean isFollowRedirects();
+        long getConnectTimeout();
 
         /**
          * @param connectTimeout Connect timeout in milliseconds.
@@ -67,7 +71,7 @@ public abstract class AbstractAPIClient {
          */
         Conf setConnectTimeout(long connectTimeout);
 
-        long getConnectTimeout();
+        long getHttpRequestTimeout();
 
         /**
          * @param httpRequestTimeout Request timeout in ms.
@@ -75,7 +79,7 @@ public abstract class AbstractAPIClient {
          */
         Conf setHttpRequestTimeout(long httpRequestTimeout);
 
-        long getHttpRequestTimeout();
+        Boolean getAcceptAllCerts();
 
         /**
          * Skip SSL certificate verification. Leave this unset to use the default in HttpClient. Setting this to true
@@ -86,7 +90,7 @@ public abstract class AbstractAPIClient {
          */
         Conf setAcceptAllCerts(Boolean acceptAllCerts);
 
-        Boolean getAcceptAllCerts();
+        SSLContext getSslContext();
 
         /**
          * @param sslContext The specific SSLContext to use.
@@ -95,7 +99,7 @@ public abstract class AbstractAPIClient {
          */
         Conf setSslContext(SSLContext sslContext);
 
-        SSLContext getSslContext();
+        SSLParameters getSslParameters();
 
         /**
          * @param sslParameters The specific SSLParameters to use.
@@ -103,7 +107,7 @@ public abstract class AbstractAPIClient {
          */
         Conf setSslParameters(SSLParameters sslParameters);
 
-        SSLParameters getSslParameters();
+        String getUserAgent();
 
         /**
          * For header "User-Agent". Default is determined by the package.
@@ -113,7 +117,7 @@ public abstract class AbstractAPIClient {
          */
         Conf setUserAgent(String userAgent);
 
-        String getUserAgent();
+        HttpClient getClient();
 
         /**
          * Instance of an externally configured http client. An internal HttpClient will be built with parameters
@@ -124,8 +128,6 @@ public abstract class AbstractAPIClient {
          */
         Conf setClient(HttpClient client);
 
-        HttpClient getClient();
-
     }
 
     /**
@@ -135,17 +137,17 @@ public abstract class AbstractAPIClient {
         private final String address;
         private final int port;
 
+        public ProxySpec(String address, int port) {
+            this.address = address;
+            this.port = port;
+        }
+
         public String getAddress() {
             return address;
         }
 
         public int getPort() {
             return port;
-        }
-
-        public ProxySpec(String address, int port) {
-            this.address = address;
-            this.port = port;
         }
     }
 
@@ -164,26 +166,25 @@ public abstract class AbstractAPIClient {
         }
     }};
 
-    static {
-        String v = AbstractAPIClient.class.getPackage().getImplementationVersion();
-        version = (v != null ? v : "");
-        String t = AbstractAPIClient.class.getPackage().getImplementationTitle();
-        title = (t != null ? t : "java-hiro-client");
-    }
-
     public static String title;
     public static String version;
 
+    static {
+        String v = AbstractAPIHandler.class.getPackage().getImplementationVersion();
+        version = (v != null ? v : "");
+        String t = AbstractAPIHandler.class.getPackage().getImplementationTitle();
+        title = (t != null ? t : "java-hiro-client");
+    }
+
     protected final String apiUrl;
-    protected final AbstractAPIClient.ProxySpec proxy;
+    protected final AbstractAPIHandler.ProxySpec proxy;
     protected final boolean followRedirects;
     protected final long connectTimeout;
     protected final long httpRequestTimeout;
-    protected SSLContext sslContext;
     protected final SSLParameters sslParameters;
     protected final String userAgent;
     protected final HttpClient client;
-
+    protected SSLContext sslContext;
     protected HttpLogger httpLogger = new HttpLogger();
 
     // ###############################################################################################
@@ -195,7 +196,7 @@ public abstract class AbstractAPIClient {
      *
      * @param builder The builder to use.
      */
-    protected AbstractAPIClient(Conf builder) {
+    protected AbstractAPIHandler(Conf builder) {
         this.apiUrl = (StringUtils.endsWith(builder.getApiUrl(), "/") ? builder.getApiUrl() : builder.getApiUrl() + "/");
         this.proxy = builder.getProxy();
         this.followRedirects = builder.isFollowRedirects();
@@ -221,6 +222,10 @@ public abstract class AbstractAPIClient {
             }
         }
     }
+
+    // ###############################################################################################
+    // ## Tool methods ##
+    // ###############################################################################################
 
     /**
      * Build a new Java 11 HttpClient.
@@ -251,10 +256,6 @@ public abstract class AbstractAPIClient {
         return builder.build();
     }
 
-    // ###############################################################################################
-    // ## Tool methods ##
-    // ###############################################################################################
-
     /**
      * This creates the headerMap, set the User-Agent header and adds what is given in parameter 'headers'.
      *
@@ -271,6 +272,18 @@ public abstract class AbstractAPIClient {
     }
 
     /**
+     * Build a complete uri from the apiUrl and endpoint.
+     *
+     * @param endpoint The endpoint to append to {@link #apiUrl}.
+     * @return The constructed URI
+     */
+    protected URI buildURI(String endpoint) {
+        return URI.create(apiUrl).resolve(
+                StringUtils.startsWith(endpoint, "/") ? endpoint.substring(1) : endpoint
+        );
+    }
+
+    /**
      * Build a complete uri from the apiUrl and endpoint, optional query parameters
      * and an optional fragment
      *
@@ -280,10 +293,18 @@ public abstract class AbstractAPIClient {
      * @return The constructed URI
      */
     protected URI buildURI(String endpoint, Map<String, String> query, String fragment) {
+        return addQueryAndFragment(buildURI(endpoint), query, fragment);
+    }
 
-        URI uri = URI.create(apiUrl).resolve(
-                StringUtils.startsWith(endpoint, "/") ? endpoint.substring(1) : endpoint
-        );
+    /**
+     * Add query and fragment to a URI - if any.
+     *
+     * @param uri      The URI for the query and fragment.
+     * @param query    Map of query parameters to set. Can be null for no query parameters.
+     * @param fragment URI Fragment. Can be null for no fragment.
+     * @return The constructed URI
+     */
+    protected URI addQueryAndFragment(URI uri, Map<String, String> query, String fragment) {
 
         String queryString = null;
 
@@ -410,20 +431,17 @@ public abstract class AbstractAPIClient {
             throws HiroException, IOException, InterruptedException {
 
         HttpResponse<InputStream> httpResponse = null;
-        boolean retry = true;
+        int retryCount = 1;
 
-        while (retry) {
+        while (retryCount >= 0) {
             httpResponse = getOrBuildClient().send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
-            retry = checkResponse(httpResponse, retry);
+            if (!checkResponse(httpResponse, retryCount))
+                break;
+            retryCount--;
         }
 
         return httpResponse;
     }
-
-
-    // ###############################################################################################
-    // ## Public Request Methods ##
-    // ###############################################################################################
 
     /**
      * Basic method which returns a Map constructed via a JSON body httpResponse. Sets an appropriate Accept header.
@@ -506,6 +524,11 @@ public abstract class AbstractAPIClient {
 
         return httpResponse.body();
     }
+
+
+    // ###############################################################################################
+    // ## Public Request Methods ##
+    // ###############################################################################################
 
     /**
      * Basic GET method which returns a Map constructed via a JSON body
@@ -868,12 +891,11 @@ public abstract class AbstractAPIClient {
      * renewal if necessary.
      *
      * @param httpResponse The httpResponse from the HttpRequest
-     * @param retry        the current state of retry. If this is set to false,
-     *                     false will also be returned. (Ignored here)
+     * @param retryCount current counter for retries
      * @return true for a retry, false otherwise.
      * @throws HiroException if the check fails.
      */
-    protected boolean checkResponse(HttpResponse<InputStream> httpResponse, boolean retry) throws HiroException, IOException {
+    protected boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException, InterruptedException {
         int statusCode = httpResponse.statusCode();
 
         if (statusCode < 200 || statusCode > 399) {
@@ -899,5 +921,4 @@ public abstract class AbstractAPIClient {
 
         return false;
     }
-
 }

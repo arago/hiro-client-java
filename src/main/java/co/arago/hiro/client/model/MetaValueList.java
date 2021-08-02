@@ -20,11 +20,18 @@ import java.util.stream.Collectors;
  * ]
  * </pre>
  * </code>
- *
  */
 public class MetaValueList extends LinkedList<MetaValueList.MetaValueField> {
 
     private static final long serialVersionUID = 8233445177105381442L;
+
+    public static MetaValueList create(Object object) {
+        return JsonTools.DEFAULT.toObject(object, MetaValueList.class);
+    }
+
+    public String createSingleValue() {
+        return this.stream().map(v -> v.value).collect(Collectors.joining(","));
+    }
 
     public static class MetaValueField implements Serializable {
         public String value;
@@ -45,13 +52,5 @@ public class MetaValueList extends LinkedList<MetaValueList.MetaValueField> {
             return JsonTools.DEFAULT.toObject(object, MetaValueField.class);
         }
 
-    }
-
-    public static MetaValueList create(Object object) {
-        return JsonTools.DEFAULT.toObject(object, MetaValueList.class);
-    }
-
-    public String createSingleValue() {
-        return this.stream().map(v -> v.value).collect(Collectors.joining(","));
     }
 }

@@ -6,25 +6,26 @@ import co.arago.hiro.client.util.RequiredFieldChecker;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
+import java.io.IOException;
 import java.net.http.HttpClient;
 import java.time.Instant;
 
 public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
 
     public interface Conf extends AbstractTokenAPIHandler.Conf {
+        String getTokenEnv();
+
         /**
          * @param tokenEnv Name of the environment variable. Default is "HIRO_TOKEN".
          * @return this
          */
         Conf setTokenEnv(String tokenEnv);
-
-        String getTokenEnv();
     }
 
     public static final class Builder implements Conf {
 
         private String apiUrl;
-        private AbstractAPIClient.ProxySpec proxy;
+        private AbstractAPIHandler.ProxySpec proxy;
         private boolean followRedirects = true;
         private long connectTimeout;
         private long httpRequestTimeout;
@@ -37,6 +38,10 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         private String endpoint;
         private String tokenEnv;
 
+        @Override
+        public String getApiUrl() {
+            return apiUrl;
+        }
 
         /**
          * @param apiUrl The root url for the API
@@ -49,8 +54,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
-        public String getApiUrl() {
-            return apiUrl;
+        public ProxySpec getProxy() {
+            return proxy;
         }
 
         /**
@@ -64,8 +69,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
-        public ProxySpec getProxy() {
-            return proxy;
+        public boolean isFollowRedirects() {
+            return followRedirects;
         }
 
         /**
@@ -79,8 +84,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
-        public boolean isFollowRedirects() {
-            return followRedirects;
+        public long getConnectTimeout() {
+            return connectTimeout;
         }
 
         /**
@@ -94,8 +99,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
-        public long getConnectTimeout() {
-            return connectTimeout;
+        public long getHttpRequestTimeout() {
+            return httpRequestTimeout;
         }
 
         /**
@@ -109,8 +114,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
-        public long getHttpRequestTimeout() {
-            return httpRequestTimeout;
+        public Boolean getAcceptAllCerts() {
+            return acceptAllCerts;
         }
 
         /**
@@ -127,8 +132,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
-        public Boolean getAcceptAllCerts() {
-            return acceptAllCerts;
+        public SSLContext getSslContext() {
+            return sslContext;
         }
 
         /**
@@ -143,8 +148,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
-        public SSLContext getSslContext() {
-            return sslContext;
+        public SSLParameters getSslParameters() {
+            return sslParameters;
         }
 
         /**
@@ -158,8 +163,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
-        public SSLParameters getSslParameters() {
-            return sslParameters;
+        public String getUserAgent() {
+            return userAgent;
         }
 
         /**
@@ -175,8 +180,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
-        public String getUserAgent() {
-            return userAgent;
+        public HttpClient getClient() {
+            return client;
         }
 
         /**
@@ -193,38 +198,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
-        public HttpClient getClient() {
-            return client;
-        }
-
-        /**
-         * @param apiName Set the name of the api. This name will be used to determine the API endpoint.
-         * @return this
-         */
-        @Override
-        public Builder setApiName(String apiName) {
-            this.apiName = apiName;
-            return this;
-        }
-
-        @Override
-        public String getApiName() {
-            return apiName;
-        }
-
-        /**
-         * @param endpoint Set a custom endpoint directly, omitting automatic endpoint detection via apiName.
-         * @return this
-         */
-        @Override
-        public Builder setEndpoint(String endpoint) {
-            this.endpoint = endpoint;
-            return this;
-        }
-
-        @Override
-        public String getEndpoint() {
-            return endpoint;
+        public String getTokenEnv() {
+            return tokenEnv;
         }
 
         /**
@@ -237,11 +212,6 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
             return this;
         }
 
-        @Override
-        public String getTokenEnv() {
-            return tokenEnv;
-        }
-
         public EnvironmentTokenAPIHandler build() {
             RequiredFieldChecker.notBlank(apiUrl, "apiUrl");
             return new EnvironmentTokenAPIHandler(this);
@@ -251,10 +221,6 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
 
     protected final String tokenEnv;
 
-    public static Builder newBuilder() {
-        return new Builder();
-    }
-
     /**
      * Constructor.
      *
@@ -263,6 +229,10 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
     protected EnvironmentTokenAPIHandler(Conf builder) {
         super(builder);
         this.tokenEnv = builder.getTokenEnv();
+    }
+
+    public static Builder newBuilder() {
+        return new Builder();
     }
 
     /**
@@ -284,6 +254,14 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
     }
 
     /**
+     * Revoke a token
+     */
+    @Override
+    public void revokeToken() throws IOException, InterruptedException, HiroException {
+        throw new FixedTokenException("Cannot revoke a fixed token.");
+    }
+
+    /**
      * Calculate the Instant after which the token should be refreshed.
      *
      * @return The Instant after which the token shall be refreshed. null if token cannot be refreshed.
@@ -292,4 +270,5 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
     public Instant expiryInstant() {
         return null;
     }
+
 }
