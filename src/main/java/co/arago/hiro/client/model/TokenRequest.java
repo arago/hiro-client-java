@@ -4,6 +4,20 @@ import co.arago.hiro.client.util.JsonTools;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+/**
+ * JSON for a token request.
+ *
+ * <code>
+ * <pre>
+ * {
+ *     "username": "...",
+ *     "password": "...",
+ *     "client_id": "...",
+ *     "client_secret": "...",
+ * }
+ * </pre>
+ * </code>
+ */
 public class TokenRequest {
 
     // Match the JSON structure for the request.

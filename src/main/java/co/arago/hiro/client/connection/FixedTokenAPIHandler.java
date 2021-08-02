@@ -2,6 +2,7 @@ package co.arago.hiro.client.connection;
 
 import co.arago.hiro.client.exceptions.FixedTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.hiro.client.util.RequiredFieldChecker;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
@@ -244,7 +245,9 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
             return token;
         }
 
-        FixedTokenAPIHandler build() {
+        public FixedTokenAPIHandler build() {
+            RequiredFieldChecker.notBlank(apiUrl, "apiUrl");
+            RequiredFieldChecker.notBlank(token, "token");
             return new FixedTokenAPIHandler(this);
         }
     }

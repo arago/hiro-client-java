@@ -6,12 +6,23 @@ import java.util.List;
 
 /**
  * Represents a HIRO list of items.
+ *
+ * <code>
+ * <pre>
+ * {
+ *     "items": [
+ *        [HiroResponse],
+ *        ...
+ *     ]
+ * }
+ * </pre>
+ * </code>
  */
-public class HiroItemListResponse extends HiroResponse {
+public class HiroItemListResponse<T extends HiroResponse> extends HiroResponse {
 
     private static final long serialVersionUID = -8485209005414408396L;
 
     @JsonProperty("items")
-    public List<HiroResponse> items;
+    public List<T> items;
 
 }

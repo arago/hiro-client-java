@@ -41,7 +41,7 @@ public class HttpLogger {
     }
 
     /*+
-     * Remove an uri path to the filter
+     * Remove an uri path from the filter
      */
     public void removeFilter(URI uri) {
         filter.remove(parsePath(uri));

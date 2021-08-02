@@ -2,6 +2,7 @@ package co.arago.hiro.client.connection;
 
 import co.arago.hiro.client.exceptions.FixedTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.hiro.client.util.RequiredFieldChecker;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
@@ -241,7 +242,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
             return tokenEnv;
         }
 
-        EnvironmentTokenAPIHandler build() {
+        public EnvironmentTokenAPIHandler build() {
+            RequiredFieldChecker.notBlank(apiUrl, "apiUrl");
             return new EnvironmentTokenAPIHandler(this);
         }
 

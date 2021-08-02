@@ -4,6 +4,21 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * The token response from the auth API
+ *
+ * <code>
+ * <pre>
+ * {
+ *     "_TOKEN": "...",
+ *     "refresh_token": "...",
+ *     "expires-at": 1234567890,
+ *     "_IDENTITY": "...",
+ *     "_IDENTITY_ID": "...",
+ *     "_APPLICATION": "...",
+ *     "type": "..."
+ * }
+ * </pre>
+ * </code>
+ *
  */
 public class TokenResponse extends HiroResponse {
 

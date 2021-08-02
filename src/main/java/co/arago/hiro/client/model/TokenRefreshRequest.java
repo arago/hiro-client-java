@@ -4,6 +4,19 @@ import co.arago.hiro.client.util.JsonTools;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
+/**
+ * JSON for a token refresh request.
+ *
+ * <code>
+ * <pre>
+ * {
+ *     "client_id": "...",
+ *     "client_secret": "...",
+ *     "refresh_token": "..."
+ * }
+ * </pre>
+ * </code>
+ */
 public class TokenRefreshRequest {
 
     // Match the JSON structure for the request.

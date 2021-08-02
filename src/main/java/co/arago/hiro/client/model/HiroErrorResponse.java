@@ -1,9 +1,38 @@
 package co.arago.hiro.client.model;
 
+import co.arago.hiro.client.util.JsonTools;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 
 import java.io.Serializable;
+import java.util.Map;
 
+
+/**
+ * Handles error responses from HIRO of the format.
+ *
+ * <code>
+ * <pre>
+ * {
+ *     "error": {
+ *         "message": "error message",
+ *         "code": number
+ *     }
+ * }
+ * </pre>
+ * </code>
+ * <p>
+ * or
+ *
+ * <code>
+ * <pre>
+ * {
+ *     "error": "error message"
+ * }
+ * </pre>
+ * </code>
+ */
 public class HiroErrorResponse extends HiroResponse {
 
     private static final long serialVersionUID = -5474697322866873485L;
@@ -28,24 +57,31 @@ public class HiroErrorResponse extends HiroResponse {
     @JsonProperty("error")
     public HiroErrorEntry error;
 
+    /**
+     * Creates the intended {@link HiroErrorEntry} from either one of the two JSON data formats.
+     *
+     * @param errorObj The value for the key "error" in the source JSON. Must be either a Map or a String.
+     * @see HiroErrorResponse
+     */
+    @JsonSetter("error")
+    public void setError(Object errorObj) {
+        if (errorObj instanceof Map)
+            this.error = JsonTools.DEFAULT.toObject(errorObj, HiroErrorEntry.class);
+        if (errorObj instanceof String)
+            this.error = new HiroErrorEntry((String) errorObj, null);
+    }
+
+
     public HiroErrorResponse() {
     }
 
+    @JsonIgnore
     public String getHiroErrorMessage() {
         return (error != null ? error.message : null);
     }
 
+    @JsonIgnore
     public Integer getHiroErrorCode() {
         return (error != null ? error.code : null);
-    }
-
-    /**
-     * Creates an HiroErrorResponse from a simple error of the form { "error": "[text]" }.
-     * This error has no error code.
-     *
-     * @param error The error text.
-     */
-    public HiroErrorResponse(String error) {
-        this.error = new HiroErrorEntry(error, null);
     }
 }

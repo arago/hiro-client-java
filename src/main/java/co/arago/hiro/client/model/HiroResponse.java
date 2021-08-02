@@ -10,8 +10,17 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * This contains a LinkedHashMap&lt;String, Object&gt; for the generic incoming data.
+ * This contains a LinkedHashMap&lt;String, Object&gt; {@link #responseMap} for the generic incoming data.
  * Children will specify specific fields for JSON data, while all remaining data will be collected in this map.
+ *
+ * <code>
+ * <pre>
+ * {
+ *     "key": [any value]
+ *     ...
+ * }
+ * </pre>
+ * </code>
  */
 public class HiroResponse implements Serializable {
 
@@ -46,11 +55,7 @@ public class HiroResponse implements Serializable {
     @JsonIgnore
     public HiroErrorResponse getError() {
         if (isError()) {
-            Object errorObj = responseMap.get("error");
-            if (errorObj instanceof Map)
-                return JsonTools.DEFAULT.toObject(this, HiroErrorResponse.class);
-            if (errorObj instanceof String)
-                return new HiroErrorResponse((String) errorObj);
+            return JsonTools.DEFAULT.toObject(this, HiroErrorResponse.class);
         }
 
         return null;

@@ -8,6 +8,7 @@ import co.arago.hiro.client.model.TokenRefreshRequest;
 import co.arago.hiro.client.model.TokenRequest;
 import co.arago.hiro.client.model.TokenResponse;
 import co.arago.hiro.client.util.JsonTools;
+import co.arago.hiro.client.util.RequiredFieldChecker;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +61,17 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         String getClientSecret();
 
         /**
+         * Shorthand to set all credentials at once.
+         *
+         * @param username HIRO username for user account
+         * @param password HIRO password for user account
+         * @param clientId HIRO client_id of app
+         * @param clientSecret HIRO client_secret of app
+         * @return this
+         */
+        Conf setCredentials(String username, String password, String clientId, String clientSecret);
+
+        /**
          * Timespan that gets subtracted from the official expiration instant of a token so the token can be refreshed
          * before it runs out. Default is 5000 (5s).
          *
@@ -74,12 +86,12 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * Timespan where calls to refresh the token will be ignored and only the current token will be returned. Avoids
          * refresh floods that can happen with multiple threads using the same TokenAPIHandler. Default is 30000 (30s).
          *
-         * @param freshBuffer Buffer span in ms
+         * @param freshTimespan Buffer span in ms
          * @return this
          */
-        Conf setFreshBuffer(Long freshBuffer);
+        Conf setFreshTimespan(Long freshTimespan);
 
-        Long getFreshBuffer();
+        Long getFreshTimespan();
 
         /**
          * Force logging of insecure request / response data. USE ONLY FOR DEBUGGING PURPOSES!!!
@@ -366,6 +378,24 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         /**
+         * Shorthand to set all credentials at once.
+         *
+         * @param username     HIRO username for user account
+         * @param password     HIRO password for user account
+         * @param clientId     HIRO client_id of app
+         * @param clientSecret HIRO client_secret of app
+         * @return this
+         */
+        @Override
+        public Builder setCredentials(String username, String password, String clientId, String clientSecret) {
+            setUsername(username);
+            setPassword(password);
+            setClientId(clientId);
+            setClientSecret(clientSecret);
+            return this;
+        }
+
+        /**
          * Timespan that gets subtracted from the official expiration instant of a token so the token can be refreshed
          * before it runs out. Default is 5000 (5s).
          *
@@ -387,17 +417,17 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * Timespan where calls to refresh the token will be ignored and only the current token will be returned. Avoids
          * refresh floods that can happen with multiple threads using the same TokenAPIHandler. Default is 30000 (30s).
          *
-         * @param freshBuffer Buffer span in ms
+         * @param freshTimespan Buffer span in ms
          * @return this
          */
         @Override
-        public Builder setFreshBuffer(Long freshBuffer) {
-            this.freshBuffer = freshBuffer;
+        public Builder setFreshTimespan(Long freshTimespan) {
+            this.freshBuffer = freshTimespan;
             return this;
         }
 
         @Override
-        public Long getFreshBuffer() {
+        public Long getFreshTimespan() {
             return freshBuffer;
         }
 
@@ -418,7 +448,12 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
             return forceLogging;
         }
 
-        PasswordAuthTokenAPIHandler build() {
+        public PasswordAuthTokenAPIHandler build() {
+            RequiredFieldChecker.notBlank(apiUrl, "apiUrl");
+            RequiredFieldChecker.notBlank(username, "username");
+            RequiredFieldChecker.notBlank(password, "password");
+            RequiredFieldChecker.notBlank(clientId, "clientId");
+            RequiredFieldChecker.notBlank(clientSecret, "clientSecret");
             return new PasswordAuthTokenAPIHandler(this);
         }
     }
@@ -439,7 +474,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     /**
      * ms of time, where no refresh calls are sent to the backend to avoid request flooding
      */
-    public long freshBuffer = 30000L;
+    public long freshTimespan = 30000L;
     /**
      * The last token response
      */
@@ -456,7 +491,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         this.clientId = builder.getClientId();
         this.clientSecret = builder.getClientSecret();
         this.refreshOffset = builder.getRefreshOffset();
-        this.freshBuffer = builder.getFreshBuffer();
+        this.freshTimespan = builder.getFreshTimespan();
 
         if (!builder.getForceLogging()) {
             try {
@@ -480,15 +515,15 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         this.refreshOffset = refreshOffset;
     }
 
-    public long getFreshBuffer() {
-        return freshBuffer;
+    public long getFreshTimespan() {
+        return freshTimespan;
     }
 
     /**
-     * @param freshBuffer ms of time, where no refresh calls are sent to the backend to avoid request flooding
+     * @param freshTimespan ms of time, where no refresh calls are sent to the backend to avoid request flooding
      */
-    public void setFreshBuffer(long freshBuffer) {
-        this.freshBuffer = freshBuffer;
+    public void setFreshTimespan(long freshTimespan) {
+        this.freshTimespan = freshTimespan;
     }
 
     /**
@@ -503,12 +538,12 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     }
 
     /**
-     * Check, whether the token has been renewed within the last {@link #freshBuffer} ms.
+     * Check, whether the token has been renewed within the last {@link #freshTimespan} ms.
      *
      * @return true if within the timespan, false otherwise.
      */
     public boolean tokenFresh() {
-        return Instant.now().isBefore(lastUpdate.plus(freshBuffer, ChronoUnit.MILLIS));
+        return Instant.now().isBefore(lastUpdate.plus(freshTimespan, ChronoUnit.MILLIS));
     }
 
     /**

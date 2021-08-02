@@ -27,9 +27,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Root class for all API httpRequests
@@ -127,6 +125,7 @@ public abstract class AbstractAPIClient {
         Conf setClient(HttpClient client);
 
         HttpClient getClient();
+
     }
 
     /**

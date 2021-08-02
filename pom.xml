@@ -6,7 +6,22 @@
 
     <groupId>co.arago.hiro.client</groupId>
     <artifactId>java-hiro-clients</artifactId>
+    <name>${project.artifactId}</name>
     <version>3.0.0-SNAPSHOT</version>
+
+    <organization>
+        <name>arago GmbH</name>
+        <url>https://www.arago.co</url>
+    </organization>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
+
+
     <build>
         <plugins>
             <plugin>
@@ -30,6 +45,28 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addDefaultEntries>true</addDefaultEntries>
+                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
             </plugin>
             <!--            <plugin>-->
             <!--                <groupId>net.revelc.code.formatter</groupId>-->
@@ -71,19 +108,9 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.22.0</version>
-                <!--                <configuration>-->
-                <!--                    <additionalClasspathElements>-->
-                <!--                        <additionalClasspathElement>src/test/java/</additionalClasspathElement>-->
-                <!--                    </additionalClasspathElements>-->
-                <!--                </configuration>-->
             </plugin>
         </plugins>
     </build>
-
-    <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-    </properties>
 
     <dependencies>
         <dependency>
