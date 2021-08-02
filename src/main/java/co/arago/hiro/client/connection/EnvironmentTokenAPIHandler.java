@@ -37,6 +37,7 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         private String apiName;
         private String endpoint;
         private String tokenEnv;
+        private int maxRetries = 2;
 
         @Override
         public String getApiUrl() {
@@ -198,6 +199,21 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
+        public int getMaxRetries() {
+            return maxRetries;
+        }
+
+        /**
+         * @param maxRetries Max amount of retries when http errors are received.
+         * @return this
+         */
+        @Override
+        public Conf setMaxRetries(int maxRetries) {
+            this.maxRetries = maxRetries;
+            return this;
+        }
+
+        @Override
         public String getTokenEnv() {
             return tokenEnv;
         }
@@ -211,6 +227,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
             this.tokenEnv = tokenEnv;
             return this;
         }
+
+
 
         public EnvironmentTokenAPIHandler build() {
             RequiredFieldChecker.notBlank(apiUrl, "apiUrl");

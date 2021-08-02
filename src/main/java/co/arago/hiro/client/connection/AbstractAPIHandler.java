@@ -128,6 +128,14 @@ public abstract class AbstractAPIHandler {
          */
         Conf setClient(HttpClient client);
 
+
+        int getMaxRetries();
+
+        /**
+         * @param maxRetries Max amount of retries when http errors are received.
+         * @return this
+         */
+        Conf setMaxRetries(int maxRetries);
     }
 
     /**
@@ -186,6 +194,7 @@ public abstract class AbstractAPIHandler {
     protected final HttpClient client;
     protected SSLContext sslContext;
     protected HttpLogger httpLogger = new HttpLogger();
+    protected int maxRetries;
 
     // ###############################################################################################
     // ## Constructors ##
@@ -206,6 +215,7 @@ public abstract class AbstractAPIHandler {
         this.sslParameters = builder.getSslParameters();
         this.userAgent = (builder.getUserAgent() != null ? builder.getUserAgent() : (version != null ? title + " " + version : title));
         this.client = builder.getClient();
+        this.maxRetries = builder.getMaxRetries();
 
         if (acceptAllCerts == null) {
             this.sslContext = builder.getSslContext();
@@ -412,7 +422,7 @@ public abstract class AbstractAPIHandler {
         if (httpResponse == null)
             return null;
 
-        List<String> values = httpResponse.headers().map().get(headerName.toLowerCase());
+        List<String> values = httpResponse.headers().map().get(headerName);
         return String.join(",", values);
     }
 
@@ -430,7 +440,7 @@ public abstract class AbstractAPIHandler {
             throws HiroException, IOException, InterruptedException {
 
         HttpResponse<InputStream> httpResponse = null;
-        int retryCount = 1;
+        int retryCount = maxRetries;
 
         while (retryCount >= 0) {
             httpResponse = getOrBuildClient().send(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
@@ -441,6 +451,10 @@ public abstract class AbstractAPIHandler {
 
         return httpResponse;
     }
+
+    // ###############################################################################################
+    // ## Public Request Methods ##
+    // ###############################################################################################
 
     /**
      * Basic method which returns a Map constructed via a JSON body httpResponse. Sets an appropriate Accept header.
@@ -524,10 +538,6 @@ public abstract class AbstractAPIHandler {
         return httpResponse.body();
     }
 
-
-    // ###############################################################################################
-    // ## Public Request Methods ##
-    // ###############################################################################################
 
     /**
      * Basic GET method which returns a Map constructed via a JSON body

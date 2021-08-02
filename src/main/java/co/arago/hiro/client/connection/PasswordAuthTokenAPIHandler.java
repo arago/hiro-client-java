@@ -133,6 +133,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         private Long refreshOffset = 5000L;
         private Long freshBuffer = 30000L;
         private boolean forceLogging = false;
+        private int maxRetries = 2;
 
         @Override
         public String getApiUrl() {
@@ -290,6 +291,21 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         @Override
         public Builder setClient(HttpClient client) {
             this.client = client;
+            return this;
+        }
+
+        @Override
+        public int getMaxRetries() {
+            return maxRetries;
+        }
+
+        /**
+         * @param maxRetries Max amount of retries when http errors are received.
+         * @return this
+         */
+        @Override
+        public Conf setMaxRetries(int maxRetries) {
+            this.maxRetries = maxRetries;
             return this;
         }
 

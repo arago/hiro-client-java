@@ -39,6 +39,7 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
         private String apiName;
         private String endpoint;
         private String token;
+        private int maxRetries = 2;
 
         @Override
         public String getApiUrl() {
@@ -196,6 +197,21 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
         @Override
         public Builder setClient(HttpClient client) {
             this.client = client;
+            return this;
+        }
+
+        @Override
+        public int getMaxRetries() {
+            return maxRetries;
+        }
+
+        /**
+         * @param maxRetries Max amount of retries when http errors are received.
+         * @return this
+         */
+        @Override
+        public Conf setMaxRetries(int maxRetries) {
+            this.maxRetries = maxRetries;
             return this;
         }
 
