@@ -72,7 +72,7 @@ class TokenAPIHandlerTest {
         assertEquals(token1, token2);
         log.info("Token 2 ...{}", token2.substring(token2.length() - 12));
 
-        handler.setTokenRefreshOptions(0L, 0L);
+        handler.setFreshBuffer(0L);
         handler.refreshToken();
 
         String token3 = handler.getToken();

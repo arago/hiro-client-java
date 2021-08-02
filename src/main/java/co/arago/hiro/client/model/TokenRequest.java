@@ -1,16 +1,40 @@
 package co.arago.hiro.client.model;
 
-public class TokenRequest {
-    // Match the JSON structure for the request.
-    public String username;
-    public String password;
-    public String client_id;
-    public String client_secret;
+import co.arago.hiro.client.util.JsonTools;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
-    public TokenRequest(String username, String password, String client_id, String client_secret) {
+public class TokenRequest {
+
+    // Match the JSON structure for the request.
+
+    @JsonProperty("username")
+    public String username;
+
+    @JsonProperty("password")
+    public String password;
+
+    @JsonProperty("client_id")
+    public String clientId;
+
+    @JsonProperty("client_secret")
+    public String clientSecret;
+
+    public TokenRequest() {
+    }
+
+    public TokenRequest(String username, String password, String clientId, String clientSecret) {
         this.username = username;
         this.password = password;
-        this.client_id = client_id;
-        this.client_secret = client_secret;
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+    }
+
+    public String toJsonString() {
+        try {
+            return JsonTools.DEFAULT.toString(this);
+        } catch (JsonProcessingException e) {
+            return ""; // Should never happen
+        }
     }
 }

@@ -1,5 +1,6 @@
 package co.arago.hiro.client.util;
 
+import co.arago.hiro.client.model.HiroResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -152,13 +153,6 @@ public class HttpLogger {
         if (logBody && !(filterMatch(httpResponse.request().uri()) && httpResponse.statusCode() == 200)) {
             if (body instanceof String) {
                 stringBuilder.append(System.lineSeparator()).append((String) body);
-            } else if (body instanceof Serializable) {
-                stringBuilder.append(System.lineSeparator());
-                try {
-                    stringBuilder.append(JsonTools.DEFAULT.toString(body));
-                } catch (JsonProcessingException e) {
-                    stringBuilder.append("--- cannot parse body of type ").append(body.getClass().getName()).append(" ---");
-                }
             } else if (body instanceof InputStream) {
                 stringBuilder.append(System.lineSeparator()).append("--- stream ---");
             }

@@ -1,42 +1,33 @@
 package co.arago.hiro.client.model;
 
-import co.arago.hiro.client.util.JsonTools;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.LinkedHashMap;
+/**
+ * The token response from the auth API
+ */
+public class TokenResponse extends HiroResponse {
 
-public class TokenResponse extends LinkedHashMap<String, Object> {
+    private static final long serialVersionUID = -4007996463168969516L;
 
-    public String getToken() {
-        return (String) get("_TOKEN");
-    }
+    @JsonProperty("_TOKEN")
+    public String token;
 
-    public String getRefreshToken() {
-        return (String) get("refresh_token");
-    }
+    @JsonProperty("refresh_token")
+    public String refreshToken;
 
-    public Long getExpiresAt() {
-        return (Long) get("expires-at");
-    }
+    @JsonProperty("expires-at")
+    public Long expiresAt;
 
-    public String getIdentity() {
-        return (String) get("_IDENTITY");
-    }
+    @JsonProperty("_IDENTITY")
+    public String identity;
 
-    public String getIdentityId() {
-        return (String) get("_IDENTITY_ID");
-    }
+    @JsonProperty("_IDENTITY_ID")
+    public String indentityId;
 
-    public String getApplication() {
-        return (String) get("_APPLICATION");
-    }
+    @JsonProperty("_APPLICATION")
+    public String application;
 
-    public String getType() {
-        return (String) get("type");
-    }
-
-    public static TokenResponse fromResponse(HiroResponse hiroResponse) {
-        return JsonTools.DEFAULT.toObject(hiroResponse, TokenResponse.class);
-    }
-
+    @JsonProperty("type")
+    public String type;
 
 }

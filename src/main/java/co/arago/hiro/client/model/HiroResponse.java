@@ -1,78 +1,57 @@
 package co.arago.hiro.client.model;
 
 import co.arago.hiro.client.util.JsonTools;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import java.io.Serializable;
 import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.Map;
 
 /**
- * This is a renaming of a LinkedHashMap&lt;String, Object&gt; to avoid unmapped errors when using Jackson.
- * Also adds some HIRO specific functions like handling Lists under { "Items": [] }.
+ * This contains a LinkedHashMap&lt;String, Object&gt; for the generic incoming data.
+ * Children will specify specific fields for JSON data, while all remaining data will be collected in this map.
  */
-public class HiroResponse extends LinkedHashMap<String, Object> {
+public class HiroResponse implements Serializable {
+
+    private static final long serialVersionUID = 2382405135196485958L;
+    protected Map<String, Object> responseMap = new LinkedHashMap<>();
+
+    @JsonAnySetter
+    public void setField(String key, Object value) {
+        responseMap.put(key, value);
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getMap() {
+        return responseMap;
+    }
 
     /**
-     * Get an internal map of fields from the key "items" if it exists and is a list.
+     * Checks for a received error.
      *
-     * @return The list of items or null if no such list exists.
+     * @return true or false
      */
-    public List<HiroResponse> getItems() {
-        Object items = get("items");
-        if (items instanceof List) {
-            HiroItemData hiroItemMap = JsonTools.DEFAULT.toObject(this, HiroItemData.class);
-            return hiroItemMap.items;
+    @JsonIgnore
+    public boolean isError() {
+        return responseMap.containsKey("error");
+    }
+
+    /**
+     * Gets the received error in the response.
+     *
+     * @return The HiroErrorResponse or null if no error is present.
+     */
+    @JsonIgnore
+    public HiroErrorResponse getError() {
+        if (isError()) {
+            Object errorObj = responseMap.get("error");
+            if (errorObj instanceof Map)
+                return JsonTools.DEFAULT.toObject(this, HiroErrorResponse.class);
+            if (errorObj instanceof String)
+                return new HiroErrorResponse((String) errorObj);
         }
-
-        return null;
-    }
-
-    /**
-     * Check for a meta value field.
-     *
-     * @param key The key of the field.
-     * @return true if the field is a List, false otherwise.
-     */
-    public Boolean isMetaValueField(String key) {
-        return (get(key) instanceof List);
-    }
-
-    /**
-     * Get an attribute field value.
-     *
-     * @param key The key of the field.
-     * @return The value of the field as String. If the value is a MetaValueList, create a csv from all the values.
-     * If the value is a number or a boolean, null will be returned !!
-     */
-    public String getAttributeField(String key) {
-        Object value = get(key);
-
-        if (value instanceof String)
-            return (String) value;
-
-        if (value instanceof List)
-            return MetaValueList.create(value).createSingleValue();
-
-        return null;
-    }
-
-    /**
-     * Get an attribute field as MetaValueField
-     *
-     * @param key The key of the field.
-     * @return A MetaValueList. If the value is a String, a list with only one entry with the field 'value' will be
-     * returned. If the value is a number or a boolean, null will be returned !!
-     */
-    public MetaValueList getAttributeMetaValueField(String key) {
-        Object value = get(key);
-
-        if (value instanceof String) {
-            MetaValueList list = new MetaValueList();
-            list.add(new MetaValueField((String) value));
-            return list;
-        }
-
-        if (value instanceof List)
-            return MetaValueList.create(value);
 
         return null;
     }

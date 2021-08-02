@@ -3,7 +3,10 @@ package co.arago.hiro.client.connection;
 import co.arago.hiro.client.exceptions.AuthenticationTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
-import co.arago.hiro.client.model.*;
+import co.arago.hiro.client.model.HiroErrorResponse;
+import co.arago.hiro.client.model.TokenRefreshRequest;
+import co.arago.hiro.client.model.TokenRequest;
+import co.arago.hiro.client.model.TokenResponse;
 import co.arago.hiro.client.util.JsonTools;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -420,89 +423,27 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         }
     }
 
-    protected static class TokenInfo {
-        /**
-         * The token string
-         */
-        public String token;
-        /**
-         * Token expiration
-         */
-        public Instant expiresAt;
-        /**
-         * Refresh token to use - if any
-         */
-        public String refreshToken;
-        /**
-         * Timestamp of when the token has been fetched
-         */
-        public Instant lastUpdate;
-        /**
-         * ms of offset for token expiry
-         */
-        public Long refreshOffset = 5000L;
-
-        /**
-         * ms of time, where no refresh calls are sent to the backend to avoid request flooding
-         */
-        public Long freshBuffer = 30000L;
-
-        public TokenInfo setRefreshOffset(Long refreshOffset) {
-            this.refreshOffset = refreshOffset;
-            return this;
-        }
-
-        public TokenInfo setFreshBuffer(Long freshBuffer) {
-            this.freshBuffer = freshBuffer;
-            return this;
-        }
-
-        /**
-         * Get values from a {@link TokenResponse}. Also set {@link #lastUpdate}.
-         *
-         * @param response The TokenResponse
-         */
-        public void handleResponse(TokenResponse response) {
-            token = response.getToken();
-            expiresAt = Instant.ofEpochMilli(response.getExpiresAt());
-            refreshToken = response.getRefreshToken();
-            lastUpdate = Instant.now();
-        }
-
-        /**
-         * Check for token expiration
-         *
-         * @return true if expired, false otherwise.
-         */
-        public boolean expired() {
-            return Instant.now().isAfter(expiryInstant());
-        }
-
-        /**
-         * Check, whether the token has been renewed within the last {@link #freshBuffer} ms.
-         *
-         * @return true if within the timespan, false otherwise.
-         */
-        public boolean fresh() {
-            return Instant.now().isBefore(lastUpdate.plus(freshBuffer, ChronoUnit.MILLIS));
-        }
-
-        /**
-         * Calculate the expiresAt minus the {@link #refreshOffset}.
-         *
-         * @return The modified Instant.
-         */
-        public Instant expiryInstant() {
-            return expiresAt.minus(refreshOffset, ChronoUnit.MILLIS);
-        }
-    }
-
     protected final String username;
     protected final String password;
     protected final String clientId;
     protected final String clientSecret;
 
-    protected TokenInfo tokenInfo;
+    /**
+     * Timestamp of when the token has been fetched
+     */
+    protected Instant lastUpdate;
+    /**
+     * ms of offset for token expiry
+     */
+    protected long refreshOffset = 5000L;
+    /**
+     * ms of time, where no refresh calls are sent to the backend to avoid request flooding
+     */
+    public long freshBuffer = 30000L;
+    /**
+     * The last token response
+     */
+    protected TokenResponse tokenResponse;
 
     public static Builder newBuilder() {
         return new Builder();
@@ -514,10 +455,8 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         this.password = builder.getPassword();
         this.clientId = builder.getClientId();
         this.clientSecret = builder.getClientSecret();
-
-        this.tokenInfo = new TokenInfo()
-                .setFreshBuffer(builder.getFreshBuffer())
-                .setRefreshOffset(builder.getRefreshOffset());
+        this.refreshOffset = builder.getRefreshOffset();
+        this.freshBuffer = builder.getFreshBuffer();
 
         if (!builder.getForceLogging()) {
             try {
@@ -530,12 +469,57 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         }
     }
 
+    public long getRefreshOffset() {
+        return refreshOffset;
+    }
+
     /**
      * @param refreshOffset ms of offset for token expiry. This is subtracted from the instant given via "expires-at".
-     * @param freshBuffer   ms of time, where no refresh calls are sent to the backend to avoid request flooding
      */
-    public void setTokenRefreshOptions(Long refreshOffset, Long freshBuffer) {
-        this.tokenInfo.setRefreshOffset(refreshOffset).setFreshBuffer(freshBuffer);
+    public void setRefreshOffset(long refreshOffset) {
+        this.refreshOffset = refreshOffset;
+    }
+
+    public long getFreshBuffer() {
+        return freshBuffer;
+    }
+
+    /**
+     * @param freshBuffer ms of time, where no refresh calls are sent to the backend to avoid request flooding
+     */
+    public void setFreshBuffer(long freshBuffer) {
+        this.freshBuffer = freshBuffer;
+    }
+
+    /**
+     * Check for token expiration
+     *
+     * @return true if expired or no token is available, false otherwise.
+     */
+    public boolean tokenExpired() {
+        if (tokenResponse != null)
+            return Instant.now().isAfter(expiryInstant());
+        return true;
+    }
+
+    /**
+     * Check, whether the token has been renewed within the last {@link #freshBuffer} ms.
+     *
+     * @return true if within the timespan, false otherwise.
+     */
+    public boolean tokenFresh() {
+        return Instant.now().isBefore(lastUpdate.plus(freshBuffer, ChronoUnit.MILLIS));
+    }
+
+    /**
+     * Calculate the Instant after which the token should be refreshed (expiresAt minus the {@link #refreshOffset}).
+     *
+     * @return The Instant after which the token shall be refreshed. null if token cannot be refreshed.
+     */
+    public Instant expiryInstant() {
+        if (tokenResponse != null)
+            return Instant.ofEpochMilli(tokenResponse.expiresAt).minus(refreshOffset, ChronoUnit.MILLIS);
+        return null;
     }
 
     /**
@@ -554,19 +538,23 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         int statusCode = httpResponse.statusCode();
 
         if (statusCode < 200 || statusCode > 399) {
-            HiroResponse hiroResponse = JsonTools.DEFAULT.toObject(httpResponse.body(), HiroResponse.class);
-            httpLogger.logResponse(httpResponse, hiroResponse);
+            String body = getBodyAsString(httpResponse.body());
+            httpLogger.logResponse(httpResponse, body);
 
-            TokenErrorResponse errorResponse = TokenErrorResponse.fromResponse(hiroResponse);
+            if (contentIsJson(httpResponse)) {
+                HiroErrorResponse errorResponse = JsonTools.DEFAULT.toObject(body, HiroErrorResponse.class);
 
-            if (errorResponse.getCode() == 401) {
-                throw new TokenUnauthorizedException(errorResponse.getMessage(), errorResponse.getCode(), null);
+                if (errorResponse.getHiroErrorCode() == 401) {
+                    throw new TokenUnauthorizedException(errorResponse.getHiroErrorMessage(), errorResponse.getHiroErrorCode(), body);
+                } else {
+                    throw new AuthenticationTokenException(errorResponse.getHiroErrorMessage(), errorResponse.getHiroErrorCode(), body);
+                }
             } else {
-                throw new AuthenticationTokenException(errorResponse.getMessage(), errorResponse.getCode(), null);
+                throw new AuthenticationTokenException("Unknown response", 500, body);
             }
         }
 
-        return super.checkResponse(httpResponse, retry);
+        return false;
     }
 
     /**
@@ -576,13 +564,13 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
      */
     @Override
     public synchronized String getToken() throws IOException, InterruptedException, HiroException {
-        if (StringUtils.isBlank(tokenInfo.token)) {
+        if (tokenResponse == null || StringUtils.isBlank(tokenResponse.token)) {
             requestToken();
-        } else if (tokenInfo.expired()) {
+        } else if (tokenExpired()) {
             refreshToken();
         }
 
-        return tokenInfo.token;
+        return tokenResponse.token;
     }
 
     /**
@@ -592,13 +580,14 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
         TokenRequest tokenRequest = new TokenRequest(username, password, clientId, clientSecret);
 
-        HiroResponse hiroResponse = post(
+        this.tokenResponse = post(
+                TokenResponse.class,
                 getEndpointUri().resolve("app"),
-                JsonTools.DEFAULT.toString(tokenRequest),
+                tokenRequest.toJsonString(),
                 Map.of("Content-Type", "application/json"),
                 null);
 
-        tokenInfo.handleResponse(TokenResponse.fromResponse(hiroResponse));
+        lastUpdate = Instant.now();
     }
 
     /**
@@ -607,33 +596,25 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     @Override
     public synchronized void refreshToken() throws IOException, InterruptedException, HiroException {
 
-        if (StringUtils.isBlank(tokenInfo.refreshToken)) {
+        if (tokenResponse == null || StringUtils.isBlank(tokenResponse.refreshToken)) {
             requestToken();
             return;
         }
 
-        if (tokenInfo.fresh()) {
+        if (tokenFresh()) {
             return;
         }
 
-        TokenRefreshRequest tokenRequest = new TokenRefreshRequest(clientId, clientSecret, tokenInfo.refreshToken);
+        TokenRefreshRequest tokenRequest = new TokenRefreshRequest(clientId, clientSecret, tokenResponse.refreshToken);
 
-        HiroResponse hiroResponse = post(
+        this.tokenResponse = post(
+                TokenResponse.class,
                 getEndpointUri().resolve("refresh"),
-                JsonTools.DEFAULT.toString(tokenRequest),
+                tokenRequest.toJsonString(),
                 Map.of("Content-Type", "application/json"),
                 null);
 
-        tokenInfo.handleResponse(TokenResponse.fromResponse(hiroResponse));
+        lastUpdate = Instant.now();
     }
 
-    /**
-     * Calculate the Instant after which the token should be refreshed.
-     *
-     * @return The Instant after which the token shall be refreshed. null if token cannot be refreshed.
-     */
-    @Override
-    public synchronized Instant expiryInstant() {
-        return tokenInfo.expiryInstant();
-    }
 }

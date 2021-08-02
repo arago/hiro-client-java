@@ -1,7 +1,6 @@
 package co.arago.hiro.client.connection;
 
 import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.model.HiroResponse;
 import co.arago.hiro.client.model.VersionResponse;
 
 import java.io.IOException;
@@ -34,7 +33,7 @@ public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
 
     protected URI endpointUri;
 
-    private VersionResponse versionMap;
+    private VersionResponse versionResponse;
 
     /**
      * Constructor
@@ -57,13 +56,11 @@ public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
      * @throws IOException          When the connection fails.
      * @throws InterruptedException When interrupted.
      */
-    public VersionResponse requestVersionMap() throws IOException, InterruptedException, HiroException {
-        HiroResponse hiroResponse = get(
+    public VersionResponse requestVersionData() throws IOException, InterruptedException, HiroException {
+        return get(VersionResponse.class,
                 buildURI("/api/version", null, null),
                 null,
                 null);
-
-        return VersionResponse.fromResponse(hiroResponse);
     }
 
     protected URI getEndpointUri() throws IOException, InterruptedException, HiroException {
@@ -83,15 +80,15 @@ public abstract class AbstractTokenAPIHandler extends AbstractAPIClient {
      * @param query    Map of query parameters to set.
      * @param fragment URI Fragment
      * @return The URI for that API
-     * @throws HiroException        When the request fails.
+     * @throws HiroException        When the request fails or the apiName cannot be found in {@link #versionResponse}.
      * @throws IOException          When the connection fails.
      * @throws InterruptedException When interrupted.
      */
     public URI getApiUriOf(String apiName, Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
-        if (versionMap == null)
-            versionMap = requestVersionMap();
+        if (versionResponse == null)
+            versionResponse = requestVersionData();
 
-        return buildURI(versionMap.getValueOf(apiName, "endpoint"), query, fragment);
+        return buildURI(versionResponse.getVersionEntryOf(apiName).endpoint, query, fragment);
     }
 
     /**

@@ -2,6 +2,7 @@ package co.arago.hiro.client.connection;
 
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
+import co.arago.hiro.client.model.HiroErrorResponse;
 import co.arago.hiro.client.model.HiroResponse;
 import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.JsonTools;
@@ -348,19 +349,13 @@ public abstract class AbstractAPIClient {
         String reason = "HttpResponse code " + statusCode;
 
         if (hiroResponse != null) {
-
-            Object error = hiroResponse.get("error");
-
-            if (error instanceof String) {
-                reason = (String) error;
-            } else if (error instanceof Map) {
-                Map<?, ?> errorMap = (Map<?, ?>) error;
-                Object message = errorMap.get("message");
-
-                if (message instanceof String) {
-                    reason = (String) message;
-                }
+            HiroErrorResponse hiroErrorResponse = hiroResponse.getError();
+            String message = (hiroErrorResponse != null ? hiroErrorResponse.getHiroErrorMessage() : null);
+            if (StringUtils.isNotBlank(message)) {
+                Integer errorCode = hiroErrorResponse.getHiroErrorCode();
+                return (errorCode != null ? message + " (code: " + errorCode + ")" : message);
             }
+
         }
 
         return reason;
@@ -378,6 +373,13 @@ public abstract class AbstractAPIClient {
             return null;
 
         return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Check the header for a Content-Type of application/json.
+     */
+    protected boolean contentIsJson(HttpResponse<?> httpResponse) {
+        return StringUtils.startsWithIgnoreCase(getFromHeader(httpResponse, "Content-Type"), "application/json");
     }
 
     /**
@@ -427,17 +429,19 @@ public abstract class AbstractAPIClient {
     /**
      * Basic method which returns a Map constructed via a JSON body httpResponse. Sets an appropriate Accept header.
      *
+     * @param clazz              The class to create from the incoming JSON data.
      * @param uri                The uri to use.
      * @param method             The method to use.
      * @param body               The body as String. Can be null for methods that do not supply a body.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
      * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
-     * @return A map constructed from the JSON result.
+     * @return An object of clazz constructed from the JSON result or null if the response has no body.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse execute(
+    public <T extends HiroResponse> T execute(
+            Class<T> clazz,
             URI uri,
             String method,
             String body,
@@ -461,11 +465,11 @@ public abstract class AbstractAPIClient {
         httpLogger.logRequest(httpRequest, body);
         HttpResponse<InputStream> httpResponse = send(httpRequest);
 
-        HiroResponse response = JsonTools.DEFAULT.toObject(httpResponse.body(), HiroResponse.class);
+        String responseBody = getBodyAsString(httpResponse.body());
 
-        httpLogger.logResponse(httpResponse, response);
+        httpLogger.logResponse(httpResponse, responseBody);
 
-        return response;
+        return (StringUtils.isNotBlank(responseBody) ? JsonTools.DEFAULT.toObject(responseBody, clazz) : null);
     }
 
     /**
@@ -508,6 +512,7 @@ public abstract class AbstractAPIClient {
      * Basic GET method which returns a Map constructed via a JSON body
      * httpResponse.
      *
+     * @param clazz   The class to create from the incoming JSON data.
      * @param uri     The uri to use.
      * @param headers Initial headers for the httpRequest. Can be null for no additional headers.
      * @return A map constructed from the JSON result.
@@ -515,16 +520,17 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse get(URI uri, Map<String, String> headers)
+    public <T extends HiroResponse> T get(Class<T> clazz, URI uri, Map<String, String> headers)
             throws HiroException, IOException, InterruptedException {
 
-        return get(uri, headers, null);
+        return get(clazz, uri, headers, null);
     }
 
     /**
      * Basic GET method which returns a Map constructed via a JSON body
      * httpResponse.
      *
+     * @param clazz              The class to create from the incoming JSON data.
      * @param uri                The uri to use.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
      * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
@@ -533,16 +539,17 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse get(URI uri, Map<String, String> headers, Long httpRequestTimeout)
+    public <T extends HiroResponse> T get(Class<T> clazz, URI uri, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
-        return execute(uri, "GET", null, headers, httpRequestTimeout);
+        return execute(clazz, uri, "GET", null, headers, httpRequestTimeout);
     }
 
     /**
      * Basic POST method which returns a Map constructed via a JSON body
      * httpResponse.
      *
+     * @param clazz   The class to create from the incoming JSON data.
      * @param uri     The uri to use.
      * @param body    The body as String.
      * @param headers Initial headers for the httpRequest. Can be null for no additional headers.
@@ -551,16 +558,17 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse post(URI uri, String body, Map<String, String> headers)
+    public <T extends HiroResponse> T post(Class<T> clazz, URI uri, String body, Map<String, String> headers)
             throws HiroException, IOException, InterruptedException {
 
-        return post(uri, body, headers, null);
+        return post(clazz, uri, body, headers, null);
     }
 
     /**
      * Basic POST method which returns a Map constructed via a JSON body
      * httpResponse.
      *
+     * @param clazz              The class to create from the incoming JSON data.
      * @param uri                The uri to use.
      * @param body               The body as String.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
@@ -570,16 +578,17 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse post(URI uri, String body, Map<String, String> headers, Long httpRequestTimeout)
+    public <T extends HiroResponse> T post(Class<T> clazz, URI uri, String body, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
-        return execute(uri, "POST", body, headers, httpRequestTimeout);
+        return execute(clazz, uri, "POST", body, headers, httpRequestTimeout);
     }
 
     /**
      * Basic PUT method which returns a Map constructed via a JSON body
      * httpResponse.
      *
+     * @param clazz   The class to create from the incoming JSON data.
      * @param uri     The uri to use.
      * @param body    The body as String.
      * @param headers Initial headers for the httpRequest. Can be null for no additional headers.
@@ -588,16 +597,17 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse put(URI uri, String body, Map<String, String> headers)
+    public <T extends HiroResponse> T put(Class<T> clazz, URI uri, String body, Map<String, String> headers)
             throws HiroException, IOException, InterruptedException {
 
-        return put(uri, body, headers, null);
+        return put(clazz, uri, body, headers, null);
     }
 
     /**
      * Basic PUT method which returns a Map constructed via a JSON body
      * httpResponse.
      *
+     * @param clazz              The class to create from the incoming JSON data.
      * @param uri                The uri to use.
      * @param body               The body as String.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
@@ -607,16 +617,17 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse put(URI uri, String body, Map<String, String> headers, Long httpRequestTimeout)
+    public <T extends HiroResponse> T put(Class<T> clazz, URI uri, String body, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
-        return execute(uri, "PUT", body, headers, httpRequestTimeout);
+        return execute(clazz, uri, "PUT", body, headers, httpRequestTimeout);
     }
 
     /**
      * Basic PATCH method which returns a Map constructed via a JSON body
      * httpResponse.
      *
+     * @param clazz   The class to create from the incoming JSON data.
      * @param uri     The uri to use.
      * @param body    The body as String.
      * @param headers Initial headers for the httpRequest. Can be null for no additional headers.
@@ -625,16 +636,17 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse patch(URI uri, String body, Map<String, String> headers)
+    public <T extends HiroResponse> T patch(Class<T> clazz, URI uri, String body, Map<String, String> headers)
             throws HiroException, IOException, InterruptedException {
 
-        return patch(uri, body, headers, null);
+        return patch(clazz, uri, body, headers, null);
     }
 
     /**
      * Basic PATCH method which returns a Map constructed via a JSON body
      * httpResponse.
      *
+     * @param clazz              The class to create from the incoming JSON data.
      * @param uri                The uri to use.
      * @param body               The body as String.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
@@ -644,16 +656,17 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse patch(URI uri, String body, Map<String, String> headers, Long httpRequestTimeout)
+    public <T extends HiroResponse> T patch(Class<T> clazz, URI uri, String body, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
-        return execute(uri, "PATCH", body, headers, httpRequestTimeout);
+        return execute(clazz, uri, "PATCH", body, headers, httpRequestTimeout);
     }
 
     /**
      * Basic DELETE method which returns a Map constructed via a JSON body
      * httpResponse.
      *
+     * @param clazz   The class to create from the incoming JSON data.
      * @param uri     The uri to use.
      * @param headers Initial headers for the httpRequest. Can be null for no additional headers.
      * @return A map constructed from the JSON result.
@@ -661,16 +674,17 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse delete(URI uri, Map<String, String> headers)
+    public <T extends HiroResponse> T delete(Class<T> clazz, URI uri, Map<String, String> headers)
             throws HiroException, IOException, InterruptedException {
 
-        return delete(uri, headers, null);
+        return delete(clazz, uri, headers, null);
     }
 
     /**
      * Basic DELETE method which returns a Map constructed via a JSON body
      * httpResponse.
      *
+     * @param clazz              The class to create from the incoming JSON data.
      * @param uri                The uri to use.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
      * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
@@ -679,10 +693,10 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse delete(URI uri, Map<String, String> headers, Long httpRequestTimeout)
+    public <T extends HiroResponse> T delete(Class<T> clazz, URI uri, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
-        return execute(uri, "DELETE", null, headers, httpRequestTimeout);
+        return execute(clazz, uri, "DELETE", null, headers, httpRequestTimeout);
     }
 
     /**
@@ -721,6 +735,7 @@ public abstract class AbstractAPIClient {
     /**
      * Basic POST method which sends an InputStream.
      *
+     * @param clazz   The class to create from the incoming JSON data.
      * @param uri     The uri to use.
      * @param body    Body as inputStream.
      * @param headers Initial headers for the httpRequest. Can be null for no additional headers.
@@ -729,15 +744,16 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse postBinary(URI uri, InputStream body, Map<String, String> headers)
+    public <T extends HiroResponse> T postBinary(Class<T> clazz, URI uri, InputStream body, Map<String, String> headers)
             throws HiroException, IOException, InterruptedException {
 
-        return postBinary(uri, body, headers, null);
+        return postBinary(clazz, uri, body, headers, null);
     }
 
     /**
      * Basic POST method which sends an InputStream.
      *
+     * @param clazz              The class to create from the incoming JSON data.
      * @param uri                The uri to use.
      * @param body               Body as inputStream.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
@@ -747,17 +763,18 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse postBinary(URI uri, InputStream body, Map<String, String> headers, Long httpRequestTimeout)
+    public <T extends HiroResponse> T postBinary(Class<T> clazz, URI uri, InputStream body, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
         InputStream resultBody = executeBinary(uri, "POST", body, headers, httpRequestTimeout);
 
-        return JsonTools.DEFAULT.toObject(resultBody, HiroResponse.class);
+        return JsonTools.DEFAULT.toObject(resultBody, clazz);
     }
 
     /**
      * Basic PUT method which sends an InputStream.
      *
+     * @param clazz   The class to create from the incoming JSON data.
      * @param uri     The uri to use.
      * @param body    Body as inputStream.
      * @param headers Initial headers for the httpRequest. Can be null for no additional headers.
@@ -766,15 +783,16 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse putBinary(URI uri, InputStream body, Map<String, String> headers)
+    public <T extends HiroResponse> T putBinary(Class<T> clazz, URI uri, InputStream body, Map<String, String> headers)
             throws HiroException, IOException, InterruptedException {
 
-        return putBinary(uri, body, headers, null);
+        return putBinary(clazz, uri, body, headers, null);
     }
 
     /**
      * Basic PUT method which sends an InputStream.
      *
+     * @param clazz              The class to create from the incoming JSON data.
      * @param uri                The uri to use.
      * @param body               Body as inputStream.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
@@ -784,17 +802,18 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse putBinary(URI uri, InputStream body, Map<String, String> headers, Long httpRequestTimeout)
+    public <T extends HiroResponse> T putBinary(Class<T> clazz, URI uri, InputStream body, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
         InputStream resultBody = executeBinary(uri, "PUT", body, headers, httpRequestTimeout);
 
-        return JsonTools.DEFAULT.toObject(resultBody, HiroResponse.class);
+        return JsonTools.DEFAULT.toObject(resultBody, clazz);
     }
 
     /**
      * Basic PATCH method which sends an InputStream.
      *
+     * @param clazz   The class to create from the incoming JSON data.
      * @param uri     The uri to use.
      * @param body    Body as inputStream.
      * @param headers Initial headers for the httpRequest. Can be null for no additional headers.
@@ -803,15 +822,16 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse patchBinary(URI uri, InputStream body, Map<String, String> headers)
+    public <T extends HiroResponse> T patchBinary(Class<T> clazz, URI uri, InputStream body, Map<String, String> headers)
             throws HiroException, IOException, InterruptedException {
 
-        return patchBinary(uri, body, headers, null);
+        return patchBinary(clazz, uri, body, headers, null);
     }
 
     /**
      * Basic PATCH method which sends an InputStream.
      *
+     * @param clazz              The class to create from the incoming JSON data.
      * @param uri                The uri to use.
      * @param body               Body as inputStream.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
@@ -821,12 +841,12 @@ public abstract class AbstractAPIClient {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HiroResponse patchBinary(URI uri, InputStream body, Map<String, String> headers, Long httpRequestTimeout)
+    public <T extends HiroResponse> T patchBinary(Class<T> clazz, URI uri, InputStream body, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
         InputStream resultBody = executeBinary(uri, "PATCH", body, headers, httpRequestTimeout);
 
-        return JsonTools.DEFAULT.toObject(resultBody, HiroResponse.class);
+        return JsonTools.DEFAULT.toObject(resultBody, clazz);
     }
 
     // ###############################################################################################
@@ -861,16 +881,18 @@ public abstract class AbstractAPIClient {
             String body;
             try {
                 body = getBodyAsString(httpResponse.body());
-                String contentType = getFromHeader(httpResponse, "Content-Type");
+                httpLogger.logResponse(httpResponse, body);
 
-                if (StringUtils.containsIgnoreCase(contentType, "application/json")) {
+                String message;
+
+                if (contentIsJson(httpResponse)) {
                     HiroResponse response = JsonTools.DEFAULT.toObject(body, HiroResponse.class);
-                    httpLogger.logResponse(httpResponse, response);
-                    throw new HiroHttpException(getErrorMessage(statusCode, response), statusCode, body);
+                    message = getErrorMessage(statusCode, response);
                 } else {
-                    httpLogger.logResponse(httpResponse, body);
-                    throw new HiroHttpException("Response has error", statusCode, body);
+                    message = "Response has error";
                 }
+
+                throw new HiroHttpException(message, statusCode, body);
             } catch (IOException e) {
                 throw new HiroHttpException(getErrorMessage(statusCode, null), statusCode, null, e);
             }
