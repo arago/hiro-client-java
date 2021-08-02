@@ -336,12 +336,11 @@ public abstract class AbstractAPIHandler {
      * Create a HttpRequest.Builder with common options and headers.
      *
      * @param uri                The uri for the httpRequest.
-     * @param method             The method for the request (used for logging).
      * @param headers            Initial headers for the httpRequest.
      * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
      * @return The HttpRequest.Builder
      */
-    protected HttpRequest.Builder getRequestBuilder(URI uri, String method, Map<String, String> headers, Long httpRequestTimeout) {
+    protected HttpRequest.Builder getRequestBuilder(URI uri, Map<String, String> headers, Long httpRequestTimeout) {
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri);
         Map<String, String> allHeaders = getHeaders(headers);
 
@@ -473,7 +472,7 @@ public abstract class AbstractAPIHandler {
         }
         finalHeaders.put("Accept", "application/json");
 
-        HttpRequest httpRequest = getRequestBuilder(uri, method, finalHeaders, httpRequestTimeout)
+        HttpRequest httpRequest = getRequestBuilder(uri, finalHeaders, httpRequestTimeout)
                 .method(method, (body != null ?
                         HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8) :
                         HttpRequest.BodyPublishers.noBody()))
@@ -510,7 +509,7 @@ public abstract class AbstractAPIHandler {
             Long httpRequestTimeout
     ) throws HiroException, IOException, InterruptedException {
 
-        HttpRequest httpRequest = getRequestBuilder(uri, method, headers, httpRequestTimeout)
+        HttpRequest httpRequest = getRequestBuilder(uri, headers, httpRequestTimeout)
                 .method(method, (body != null ?
                         HttpRequest.BodyPublishers.ofInputStream(() -> body) :
                         HttpRequest.BodyPublishers.noBody()))
