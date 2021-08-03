@@ -27,7 +27,7 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
     public static final class Builder implements Conf {
 
         private String apiUrl;
-        private AbstractAPIHandler.ProxySpec proxy;
+        private AbstractClientAPIHandler.ProxySpec proxy;
         private boolean followRedirects = true;
         private long connectTimeout;
         private long httpRequestTimeout;

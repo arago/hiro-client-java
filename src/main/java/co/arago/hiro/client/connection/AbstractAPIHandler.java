@@ -8,35 +8,25 @@ import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.JsonTools;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLParameters;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.*;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * Root class for all API httpRequests
+ * Root class with fields and tool methods for all API Handlers
  */
 public abstract class AbstractAPIHandler {
-
-    final Logger log = LoggerFactory.getLogger(AbstractAPIHandler.class);
 
     public interface Conf {
         String getApiUrl();
@@ -45,31 +35,7 @@ public abstract class AbstractAPIHandler {
          * @param apiUrl The root url for the API
          * @return this
          */
-        Conf setApiUrl(String apiUrl);
-
-        ProxySpec getProxy();
-
-        /**
-         * @param proxy Simple proxy with one address and port
-         * @return this
-         */
-        Conf setProxy(ProxySpec proxy);
-
-        boolean isFollowRedirects();
-
-        /**
-         * @param followRedirects Enable Redirect.NORMAL. Default is true.
-         * @return this
-         */
-        Conf setFollowRedirects(boolean followRedirects);
-
-        long getConnectTimeout();
-
-        /**
-         * @param connectTimeout Connect timeout in milliseconds.
-         * @return this
-         */
-        Conf setConnectTimeout(long connectTimeout);
+        AbstractClientAPIHandler.Conf setApiUrl(String apiUrl);
 
         long getHttpRequestTimeout();
 
@@ -77,35 +43,15 @@ public abstract class AbstractAPIHandler {
          * @param httpRequestTimeout Request timeout in ms.
          * @return this
          */
-        Conf setHttpRequestTimeout(long httpRequestTimeout);
+        AbstractClientAPIHandler.Conf setHttpRequestTimeout(long httpRequestTimeout);
 
-        Boolean getAcceptAllCerts();
-
-        /**
-         * Skip SSL certificate verification. Leave this unset to use the default in HttpClient. Setting this to true
-         * installs a permissive SSLContext, setting it to false removes the SSLContext to use the default.
-         *
-         * @param acceptAllCerts the toggle
-         * @return this
-         */
-        Conf setAcceptAllCerts(Boolean acceptAllCerts);
-
-        SSLContext getSslContext();
+        int getMaxRetries();
 
         /**
-         * @param sslContext The specific SSLContext to use.
-         * @return this
-         * @see #setAcceptAllCerts(Boolean)
-         */
-        Conf setSslContext(SSLContext sslContext);
-
-        SSLParameters getSslParameters();
-
-        /**
-         * @param sslParameters The specific SSLParameters to use.
+         * @param maxRetries Max amount of retries when http errors are received.
          * @return this
          */
-        Conf setSslParameters(SSLParameters sslParameters);
+        AbstractClientAPIHandler.Conf setMaxRetries(int maxRetries);
 
         String getUserAgent();
 
@@ -115,170 +61,31 @@ public abstract class AbstractAPIHandler {
          * @param userAgent The line for the User-Agent header.
          * @return this
          */
-        Conf setUserAgent(String userAgent);
-
-        HttpClient getClient();
-
-        /**
-         * Instance of an externally configured http client. An internal HttpClient will be built with parameters
-         * given by this Builder if this is not set.
-         *
-         * @param client Instance of an HttpClient.
-         * @return this
-         */
-        Conf setClient(HttpClient client);
-
-
-        int getMaxRetries();
-
-        /**
-         * @param maxRetries Max amount of retries when http errors are received.
-         * @return this
-         */
-        Conf setMaxRetries(int maxRetries);
+        AbstractClientAPIHandler.Conf setUserAgent(String userAgent);
     }
-
-    /**
-     * A simple data class for a proxy
-     */
-    public static class ProxySpec {
-        private final String address;
-        private final int port;
-
-        public ProxySpec(String address, int port) {
-            this.address = address;
-            this.port = port;
-        }
-
-        public String getAddress() {
-            return address;
-        }
-
-        public int getPort() {
-            return port;
-        }
-    }
-
-    /**
-     * A TrustManager trusting all certificates
-     */
-    private final static TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
-        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-            return null;
-        }
-
-        public void checkClientTrusted(X509Certificate[] certs, String authType) {
-        }
-
-        public void checkServerTrusted(X509Certificate[] certs, String authType) {
-        }
-    }};
 
     public static String title;
     public static String version;
 
     static {
-        String v = AbstractAPIHandler.class.getPackage().getImplementationVersion();
+        String v = AbstractClientAPIHandler.class.getPackage().getImplementationVersion();
         version = (v != null ? v : "");
-        String t = AbstractAPIHandler.class.getPackage().getImplementationTitle();
+        String t = AbstractClientAPIHandler.class.getPackage().getImplementationTitle();
         title = (t != null ? t : "java-hiro-client");
     }
 
+
     protected final String apiUrl;
-    protected final AbstractAPIHandler.ProxySpec proxy;
-    protected final boolean followRedirects;
-    protected final long connectTimeout;
-    protected final long httpRequestTimeout;
-    protected final SSLParameters sslParameters;
     protected final String userAgent;
-    protected final HttpClient client;
-    protected SSLContext sslContext;
-    protected HttpLogger httpLogger = new HttpLogger();
+    protected final long httpRequestTimeout;
     protected int maxRetries;
 
-    // ###############################################################################################
-    // ## Constructors ##
-    // ###############################################################################################
-
-    /**
-     * Protected Constructor. Attributes shall be filled via builders.
-     *
-     * @param builder The builder to use.
-     */
     protected AbstractAPIHandler(Conf builder) {
         this.apiUrl = (StringUtils.endsWith(builder.getApiUrl(), "/") ? builder.getApiUrl() : builder.getApiUrl() + "/");
-        this.proxy = builder.getProxy();
-        this.followRedirects = builder.isFollowRedirects();
-        this.connectTimeout = builder.getConnectTimeout();
-        this.httpRequestTimeout = builder.getHttpRequestTimeout();
-        Boolean acceptAllCerts = builder.getAcceptAllCerts();
-        this.sslParameters = builder.getSslParameters();
-        this.userAgent = (builder.getUserAgent() != null ? builder.getUserAgent() : (version != null ? title + " " + version : title));
-        this.client = builder.getClient();
         this.maxRetries = builder.getMaxRetries();
+        this.httpRequestTimeout = builder.getHttpRequestTimeout();
+        this.userAgent = (builder.getUserAgent() != null ? builder.getUserAgent() : (version != null ? title + " " + version : title));
 
-        if (acceptAllCerts == null) {
-            this.sslContext = builder.getSslContext();
-        } else {
-            if (acceptAllCerts) {
-                try {
-                    this.sslContext = SSLContext.getInstance("TLS");
-                    this.sslContext.init(null, trustAllCerts, new SecureRandom());
-                } catch (NoSuchAlgorithmException | KeyManagementException e) {
-                    // ignore
-                }
-            } else {
-                this.sslContext = null;
-            }
-        }
-    }
-
-    // ###############################################################################################
-    // ## Tool methods ##
-    // ###############################################################################################
-
-    /**
-     * Build a new Java 11 HttpClient.
-     *
-     * @return The HttpClient
-     */
-    public HttpClient getOrBuildClient() {
-        if (client != null)
-            return client;
-
-        HttpClient.Builder builder = HttpClient.newBuilder();
-
-        if (followRedirects)
-            builder.followRedirects(HttpClient.Redirect.NORMAL);
-
-        if (proxy != null)
-            builder.proxy(ProxySelector.of(new InetSocketAddress(proxy.getAddress(), proxy.getPort())));
-
-        if (connectTimeout > 0)
-            builder.connectTimeout(Duration.ofMillis(connectTimeout));
-
-        if (sslContext != null)
-            builder.sslContext(sslContext);
-
-        if (sslParameters != null)
-            builder.sslParameters(sslParameters);
-
-        return builder.build();
-    }
-
-    /**
-     * This creates the headerMap, set the User-Agent header and adds what is given in parameter 'headers'.
-     *
-     * @param headers Initial headers. Can be null to use default headers only.
-     * @return Map of basic headers
-     */
-    public Map<String, String> initializeHeaders(Map<String, String> headers) {
-        Map<String, String> headerMap = new HashMap<>(Map.of("User-Agent", userAgent));
-
-        if (headers != null)
-            headerMap.putAll(headers);
-
-        return headerMap;
     }
 
     /**
@@ -287,7 +94,7 @@ public abstract class AbstractAPIHandler {
      * @param endpoint The endpoint to append to {@link #apiUrl}.
      * @return The constructed URI
      */
-    protected URI buildURI(String endpoint) {
+    public URI buildURI(String endpoint) {
         return URI.create(apiUrl).resolve(
                 StringUtils.startsWith(endpoint, "/") ? endpoint.substring(1) : endpoint
         );
@@ -302,7 +109,7 @@ public abstract class AbstractAPIHandler {
      * @param fragment URI Fragment. Can be null for no fragment.
      * @return The constructed URI
      */
-    protected URI buildURI(String endpoint, Map<String, String> query, String fragment) {
+    public URI buildURI(String endpoint, Map<String, String> query, String fragment) {
         return addQueryAndFragment(buildURI(endpoint), query, fragment);
     }
 
@@ -314,7 +121,7 @@ public abstract class AbstractAPIHandler {
      * @param fragment URI Fragment. Can be null for no fragment.
      * @return The constructed URI
      */
-    protected URI addQueryAndFragment(URI uri, Map<String, String> query, String fragment) {
+    public URI addQueryAndFragment(URI uri, Map<String, String> query, String fragment) {
 
         String queryString = null;
 
@@ -343,6 +150,21 @@ public abstract class AbstractAPIHandler {
     }
 
     /**
+     * This creates the headerMap, set the User-Agent header and adds what is given in parameter 'headers'.
+     *
+     * @param headers Initial headers. Can be null to use default headers only.
+     * @return Map of basic headers
+     */
+    public Map<String, String> initializeHeaders(Map<String, String> headers) {
+        Map<String, String> headerMap = new HashMap<>(Map.of("User-Agent", userAgent));
+
+        if (headers != null)
+            headerMap.putAll(headers);
+
+        return headerMap;
+    }
+
+    /**
      * Create a HttpRequest.Builder with common options and headers.
      *
      * @param uri                The uri for the httpRequest.
@@ -350,7 +172,7 @@ public abstract class AbstractAPIHandler {
      * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
      * @return The HttpRequest.Builder
      */
-    protected HttpRequest.Builder getRequestBuilder(URI uri, Map<String, String> headers, Long httpRequestTimeout) {
+    public HttpRequest.Builder getRequestBuilder(URI uri, Map<String, String> headers, Long httpRequestTimeout) {
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri);
         Map<String, String> allHeaders = getHeaders(headers);
 
@@ -374,7 +196,7 @@ public abstract class AbstractAPIHandler {
      * @return A string representing the error extracted from the body or from the
      * status code.
      */
-    protected String getErrorMessage(int statusCode, HiroResponse hiroResponse) {
+    public String getErrorMessage(int statusCode, HiroResponse hiroResponse) {
         String reason = "HttpResponse code " + statusCode;
 
         if (hiroResponse != null) {
@@ -397,7 +219,7 @@ public abstract class AbstractAPIHandler {
      * @return The String constructed from the inputStream.
      * @throws IOException If the inputStream cannot be read.
      */
-    protected String getBodyAsString(InputStream inputStream) throws IOException {
+    public String getBodyAsString(InputStream inputStream) throws IOException {
         if (inputStream == null)
             return null;
 
@@ -407,7 +229,7 @@ public abstract class AbstractAPIHandler {
     /**
      * Check the header for a Content-Type of application/json.
      */
-    protected boolean contentIsJson(HttpResponse<?> httpResponse) {
+    public boolean contentIsJson(HttpResponse<?> httpResponse) {
         return StringUtils.startsWithIgnoreCase(getFromHeader(httpResponse, "Content-Type"), "application/json");
     }
 
@@ -418,7 +240,7 @@ public abstract class AbstractAPIHandler {
      * @param headerName   The name of the header field to read.
      * @return The value of the header field or null if no such header exists.
      */
-    protected String getFromHeader(HttpResponse<?> httpResponse, String headerName) {
+    public String getFromHeader(HttpResponse<?> httpResponse, String headerName) {
         if (httpResponse == null)
             return null;
 
@@ -436,7 +258,7 @@ public abstract class AbstractAPIHandler {
      * @throws IOException          On IO errors with the connection.
      * @throws InterruptedException When the call gets interrupted.
      */
-    protected HttpResponse<InputStream> send(HttpRequest httpRequest)
+    public HttpResponse<InputStream> send(HttpRequest httpRequest)
             throws HiroException, IOException, InterruptedException {
 
         HttpResponse<InputStream> httpResponse = null;
@@ -492,12 +314,12 @@ public abstract class AbstractAPIHandler {
                         HttpRequest.BodyPublishers.noBody()))
                 .build();
 
-        httpLogger.logRequest(httpRequest, body);
+        getHttpLogger().logRequest(httpRequest, body);
         HttpResponse<InputStream> httpResponse = send(httpRequest);
 
         String responseBody = getBodyAsString(httpResponse.body());
 
-        httpLogger.logResponse(httpResponse, responseBody);
+        getHttpLogger().logResponse(httpResponse, responseBody);
 
         return (StringUtils.isNotBlank(responseBody) ? JsonTools.DEFAULT.toObject(responseBody, clazz) : null);
     }
@@ -529,11 +351,11 @@ public abstract class AbstractAPIHandler {
                         HttpRequest.BodyPublishers.noBody()))
                 .build();
 
-        httpLogger.logRequest(httpRequest, body);
+        getHttpLogger().logRequest(httpRequest, body);
 
         HttpResponse<InputStream> httpResponse = send(httpRequest);
 
-        httpLogger.logResponse(httpResponse, httpResponse.body());
+        getHttpLogger().logResponse(httpResponse, httpResponse.body());
 
         return httpResponse.body();
     }
@@ -885,6 +707,20 @@ public abstract class AbstractAPIHandler {
     // ###############################################################################################
 
     /**
+     * Abstract class that needs to be overwritten by a supplier of a HttpLogger.
+     *
+     * @return The HttpLogger to use with this class.
+     */
+    abstract public HttpLogger getHttpLogger();
+
+    /**
+     * Abstract class that needs to be overwritten by a supplier of a HttpClient.
+     *
+     * @return The HttpClient to use with this class.
+     */
+    abstract public HttpClient getOrBuildClient();
+
+    /**
      * Override this to add authentication tokens. Call {@link #initializeHeaders(Map)} to get the initial map of
      * headers to adjust.
      *
@@ -893,7 +729,7 @@ public abstract class AbstractAPIHandler {
      * @return The headers for this httpRequest.
      * @see #initializeHeaders(Map)
      */
-    abstract protected Map<String, String> getHeaders(Map<String, String> headers);
+    abstract public Map<String, String> getHeaders(Map<String, String> headers);
 
     /**
      * The default way to check responses for errors and extract error messages. Override this to add automatic token
@@ -904,14 +740,14 @@ public abstract class AbstractAPIHandler {
      * @return true for a retry, false otherwise.
      * @throws HiroException if the check fails.
      */
-    protected boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException, InterruptedException {
+    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException, InterruptedException {
         int statusCode = httpResponse.statusCode();
 
         if (statusCode < 200 || statusCode > 399) {
             String body;
             try {
                 body = getBodyAsString(httpResponse.body());
-                httpLogger.logResponse(httpResponse, body);
+                getHttpLogger().logResponse(httpResponse, body);
 
                 String message;
 
@@ -930,4 +766,5 @@ public abstract class AbstractAPIHandler {
 
         return false;
     }
+
 }

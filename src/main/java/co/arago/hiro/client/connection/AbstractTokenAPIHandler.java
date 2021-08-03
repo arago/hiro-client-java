@@ -11,8 +11,6 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
     public interface Conf extends AbstractVersionAPIHandler.Conf {
     }
 
-    protected Conf conf;
-
     /**
      * Constructor
      *
@@ -20,16 +18,6 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      */
     protected AbstractTokenAPIHandler(Conf builder) {
         super(builder);
-        this.conf = builder;
-    }
-
-    /**
-     * Access the conf to copy for AuthenticatedAPIHandlers
-     *
-     * @return The Conf for this API
-     */
-    public Conf getConf() {
-        return conf;
     }
 
     /**
@@ -40,7 +28,7 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      * @return The headers for this request.
      */
     @Override
-    protected Map<String, String> getHeaders(Map<String, String> headers) {
+    public Map<String, String> getHeaders(Map<String, String> headers) {
         return initializeHeaders(headers);
     }
 

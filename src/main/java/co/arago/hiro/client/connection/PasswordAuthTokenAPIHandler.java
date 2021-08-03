@@ -116,7 +116,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     public static final class Builder implements Conf {
 
         private String apiUrl;
-        private AbstractAPIHandler.ProxySpec proxy;
+        private AbstractClientAPIHandler.ProxySpec proxy;
         private boolean followRedirects = true;
         private long connectTimeout;
         private long httpRequestTimeout;
@@ -586,17 +586,18 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     }
 
     /**
-     * Check for the kind of error. 401 throws TokenUnauthorizedException, all other throw AuthenticationTokenException.
+     * Check for the kind of error. 401 tries to refresh the token or throws TokenUnauthorizedException, all other
+     * throw AuthenticationTokenException.
      *
      * @param httpResponse The httpResponse from the HttpRequest
-     * @param retryCount current counter for retries
-     * @return always false.
-     * @throws TokenUnauthorizedException   On error 401
+     * @param retryCount   current counter for retries
+     * @return true when the token has been refreshed, false otherwise.
+     * @throws TokenUnauthorizedException   On error 401 when no retries are left
      * @throws AuthenticationTokenException On all other status errors
      * @throws IOException                  When reading the inputStream fails.
      */
     @Override
-    protected boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException {
+    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException, InterruptedException {
         int statusCode = httpResponse.statusCode();
 
         if (statusCode < 200 || statusCode > 399) {
@@ -607,7 +608,13 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                 HiroErrorResponse errorResponse = JsonTools.DEFAULT.toObject(body, HiroErrorResponse.class);
 
                 if (errorResponse.getHiroErrorCode() == 401) {
-                    throw new TokenUnauthorizedException(errorResponse.getHiroErrorMessage(), errorResponse.getHiroErrorCode(), body);
+                    if (retryCount > 0) {
+                        log.info("Refreshing token because of '{}'.", errorResponse.getHiroErrorMessage());
+                        refreshToken();
+                        return true;
+                    } else {
+                        throw new TokenUnauthorizedException(errorResponse.getHiroErrorMessage(), errorResponse.getHiroErrorCode(), body);
+                    }
                 } else {
                     throw new AuthenticationTokenException(errorResponse.getHiroErrorMessage(), errorResponse.getHiroErrorCode(), body);
                 }
