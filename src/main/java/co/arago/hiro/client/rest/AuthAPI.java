@@ -126,10 +126,6 @@ public class AuthAPI extends AuthenticatedAPIHandler {
     }
 
     public HiroVertexResponse meAccount(Map<String, String> query) throws HiroException, IOException, InterruptedException {
-        return get(
-                HiroVertexResponse.class,
-                getUri("me/account", query),
-                null,
-                httpRequestTimeout);
+        return get(HiroVertexResponse.class, getUri("me/account", query), null);
     }
 }

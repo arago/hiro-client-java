@@ -72,8 +72,7 @@ public abstract class AbstractAPIHandler {
     public static final String version;
 
     static {
-        String v = AbstractClientAPIHandler.class.getPackage().getImplementationVersion();
-        version = (v != null ? v : "");
+        version =  AbstractClientAPIHandler.class.getPackage().getImplementationVersion();
         String t = AbstractClientAPIHandler.class.getPackage().getImplementationTitle();
         title = (t != null ? t : "java-hiro-client");
     }
@@ -89,7 +88,6 @@ public abstract class AbstractAPIHandler {
         this.maxRetries = builder.getMaxRetries();
         this.httpRequestTimeout = builder.getHttpRequestTimeout();
         this.userAgent = (builder.getUserAgent() != null ? builder.getUserAgent() : (version != null ? title + " " + version : title));
-
     }
 
     public String getApiUrl() {
