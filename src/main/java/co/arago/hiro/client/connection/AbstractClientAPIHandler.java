@@ -1,13 +1,6 @@
 package co.arago.hiro.client.connection;
 
-import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.exceptions.HiroHttpException;
-import co.arago.hiro.client.model.HiroErrorResponse;
-import co.arago.hiro.client.model.HiroResponse;
 import co.arago.hiro.client.util.HttpLogger;
-import co.arago.hiro.client.util.JsonTools;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,24 +8,18 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.*;
+import java.net.InetSocketAddress;
+import java.net.ProxySelector;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.Executors;
 
 /**
- * Class for API httpRequests that contains a HttpClient
+ * Class for API httpRequests that contains a HttpClient and a HttpLogger.
  */
 public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
 
@@ -56,21 +43,21 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
          */
         Conf setFollowRedirects(boolean followRedirects);
 
-        long getConnectTimeout();
+        Long getConnectTimeout();
 
         /**
          * @param connectTimeout Connect timeout in milliseconds.
          * @return this
          */
-        Conf setConnectTimeout(long connectTimeout);
+        Conf setConnectTimeout(Long connectTimeout);
 
-        long getHttpRequestTimeout();
+        Long getHttpRequestTimeout();
 
         /**
          * @param httpRequestTimeout Request timeout in ms.
          * @return this
          */
-        Conf setHttpRequestTimeout(long httpRequestTimeout);
+        Conf setHttpRequestTimeout(Long httpRequestTimeout);
 
         Boolean getAcceptAllCerts();
 
@@ -111,7 +98,16 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
          */
         Conf setClient(HttpClient client);
 
+        Integer getMaxConnectionPool();
 
+        /**
+         * Set the maximum of open connections for this HttpClient (This sets the fixedThreadPool for the
+         * Executor of the HttpClient).
+         *
+         * @param maxConnectionPool Maximum size of the pool. Default is 8.
+         * @return this
+         */
+        Conf setMaxConnectionPool(Integer maxConnectionPool);
     }
 
     /**
@@ -152,11 +148,12 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
 
     protected final AbstractClientAPIHandler.ProxySpec proxy;
     protected final boolean followRedirects;
-    protected final long connectTimeout;
+    protected final Long connectTimeout;
     protected final SSLParameters sslParameters;
     protected final HttpClient client;
     protected SSLContext sslContext;
-    protected HttpLogger httpLogger = new HttpLogger();
+    protected final Integer maxConnectionPool;
+    protected final HttpLogger httpLogger = new HttpLogger();
 
     // ###############################################################################################
     // ## Constructors ##
@@ -175,6 +172,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
         Boolean acceptAllCerts = builder.getAcceptAllCerts();
         this.sslParameters = builder.getSslParameters();
         this.client = builder.getClient();
+        this.maxConnectionPool = builder.getMaxConnectionPool() != null ? builder.getMaxConnectionPool() : 8;
 
         if (acceptAllCerts == null) {
             this.sslContext = builder.getSslContext();
@@ -193,7 +191,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
     }
 
     // ###############################################################################################
-    // ## Tool methods ##
+    // ## Overwritten methods ##
     // ###############################################################################################
 
     /**
@@ -214,7 +212,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
         if (proxy != null)
             builder.proxy(ProxySelector.of(new InetSocketAddress(proxy.getAddress(), proxy.getPort())));
 
-        if (connectTimeout > 0)
+        if (connectTimeout != null)
             builder.connectTimeout(Duration.ofMillis(connectTimeout));
 
         if (sslContext != null)
@@ -222,6 +220,8 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
 
         if (sslParameters != null)
             builder.sslParameters(sslParameters);
+
+        builder.executor(Executors.newFixedThreadPool(maxConnectionPool));
 
         return builder.build();
     }

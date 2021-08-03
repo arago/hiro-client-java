@@ -34,12 +34,14 @@ public class MetaValueList extends LinkedList<MetaValueList.MetaValueField> {
     }
 
     public static class MetaValueField implements Serializable {
-        public String value;
-        public Long created;
-        public String key;
+        public final String value;
+        public final Long created;
+        public final String key;
 
         public MetaValueField(String value) {
             this.value = value;
+            this.created = null;
+            this.key = null;
         }
 
         public MetaValueField(String value, Long created, String key) {

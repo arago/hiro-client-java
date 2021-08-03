@@ -25,7 +25,7 @@ import java.util.Map;
 public class HiroResponse implements Serializable {
 
     private static final long serialVersionUID = 2382405135196485958L;
-    protected Map<String, Object> responseMap = new LinkedHashMap<>();
+    protected final Map<String, Object> responseMap = new LinkedHashMap<>();
 
     @JsonAnySetter
     public void setField(String key, Object value) {

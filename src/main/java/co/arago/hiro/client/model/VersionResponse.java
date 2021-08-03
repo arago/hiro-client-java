@@ -70,7 +70,7 @@ public class VersionResponse extends HiroResponse {
          * All unknown keys - if any - of the JSON will be collected here
          */
         @JsonIgnore
-        public Map<String, Object> remainingFieldsMap = new LinkedHashMap<>();
+        public final Map<String, Object> remainingFieldsMap = new LinkedHashMap<>();
 
         @JsonAnySetter
         public void setField(String key, Object value) {

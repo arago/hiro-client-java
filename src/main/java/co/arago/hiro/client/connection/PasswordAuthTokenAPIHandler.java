@@ -83,16 +83,16 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          */
         Conf setRefreshOffset(Long refreshOffset);
 
-        Long getFreshTimespan();
+        Long getRefreshPause();
 
         /**
          * Timespan where calls to refresh the token will be ignored and only the current token will be returned. Avoids
          * refresh floods that can happen with multiple threads using the same TokenAPIHandler. Default is 30000 (30s).
          *
-         * @param freshTimespan Buffer span in ms
+         * @param refreshPause Buffer span in ms
          * @return this
          */
-        Conf setFreshTimespan(Long freshTimespan);
+        Conf setRefreshPause(Long refreshPause);
 
         boolean getForceLogging();
 
@@ -118,12 +118,13 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         private String apiUrl;
         private AbstractClientAPIHandler.ProxySpec proxy;
         private boolean followRedirects = true;
-        private long connectTimeout;
-        private long httpRequestTimeout;
+        private Long connectTimeout;
+        private Long httpRequestTimeout;
         private Boolean acceptAllCerts;
         private SSLContext sslContext;
         private SSLParameters sslParameters;
         private String userAgent;
+        private Integer maxConnectionPool;
         private HttpClient client;
         private String endpoint;
         private String username;
@@ -131,7 +132,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         private String clientId;
         private String clientSecret;
         private Long refreshOffset = 5000L;
-        private Long freshBuffer = 30000L;
+        private Long refreshPause = 30000L;
         private boolean forceLogging = false;
         private int maxRetries = 2;
 
@@ -181,7 +182,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
-        public long getConnectTimeout() {
+        public Long getConnectTimeout() {
             return connectTimeout;
         }
 
@@ -190,13 +191,13 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * @return this
          */
         @Override
-        public Builder setConnectTimeout(long connectTimeout) {
+        public Builder setConnectTimeout(Long connectTimeout) {
             this.connectTimeout = connectTimeout;
             return this;
         }
 
         @Override
-        public long getHttpRequestTimeout() {
+        public Long getHttpRequestTimeout() {
             return httpRequestTimeout;
         }
 
@@ -205,7 +206,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * @return this
          */
         @Override
-        public Builder setHttpRequestTimeout(long httpRequestTimeout) {
+        public Builder setHttpRequestTimeout(Long httpRequestTimeout) {
             this.httpRequestTimeout = httpRequestTimeout;
             return this;
         }
@@ -295,6 +296,24 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
+        public Integer getMaxConnectionPool() {
+            return maxConnectionPool;
+        }
+
+        /**
+         * Set the maximum of open connections for this HttpClient (This sets the fixedThreadPool for the
+         * Executor of the HttpClient).
+         *
+         * @param maxConnectionPool Maximum size of the pool. Default is 8.
+         * @return this
+         */
+        @Override
+        public Builder setMaxConnectionPool(Integer maxConnectionPool) {
+            this.maxConnectionPool = maxConnectionPool;
+            return this;
+        }
+
+        @Override
         public int getMaxRetries() {
             return maxRetries;
         }
@@ -304,7 +323,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * @return this
          */
         @Override
-        public Conf setMaxRetries(int maxRetries) {
+        public Builder setMaxRetries(int maxRetries) {
             this.maxRetries = maxRetries;
             return this;
         }
@@ -421,20 +440,20 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
-        public Long getFreshTimespan() {
-            return freshBuffer;
+        public Long getRefreshPause() {
+            return refreshPause;
         }
 
         /**
          * Timespan where calls to refresh the token will be ignored and only the current token will be returned. Avoids
          * refresh floods that can happen with multiple threads using the same TokenAPIHandler. Default is 30000 (30s).
          *
-         * @param freshTimespan Buffer span in ms
+         * @param refreshPause Buffer span in ms
          * @return this
          */
         @Override
-        public Builder setFreshTimespan(Long freshTimespan) {
-            this.freshBuffer = freshTimespan;
+        public Builder setRefreshPause(Long refreshPause) {
+            this.refreshPause = refreshPause;
             return this;
         }
 
@@ -474,7 +493,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     /**
      * ms of time, where no refresh calls are sent to the backend to avoid request flooding
      */
-    public long freshTimespan = 30000L;
+    public long refreshPause;
     /**
      * Timestamp of when the token has been fetched
      */
@@ -482,13 +501,13 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     /**
      * ms of offset for token expiry
      */
-    protected long refreshOffset = 5000L;
+    protected long refreshOffset;
     /**
      * The last token response
      */
     protected TokenResponse tokenResponse;
 
-    protected URI endpointUri;
+    protected URI apiUri;
 
 
     protected PasswordAuthTokenAPIHandler(Conf builder) {
@@ -498,15 +517,14 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         this.clientId = builder.getClientId();
         this.clientSecret = builder.getClientSecret();
         this.refreshOffset = builder.getRefreshOffset();
-        this.freshTimespan = builder.getFreshTimespan();
+        this.refreshPause = builder.getRefreshPause();
         this.endpoint = builder.getEndpoint();
 
         if (!builder.getForceLogging()) {
             try {
-                URI uri = getUri();
-                httpLogger.addFilter(uri.resolve("app"));
-                httpLogger.addFilter(uri.resolve("refresh"));
-                httpLogger.addFilter(uri.resolve("revoke"));
+                httpLogger.addFilter(getUri("app"));
+                httpLogger.addFilter(getUri("refresh"));
+                httpLogger.addFilter(getUri("revoke"));
             } catch (IOException | InterruptedException | HiroException e) {
                 log.error("Cannot get endpoint URI. Disable logging of http bodies.", e);
                 httpLogger.setLogBody(false);
@@ -529,29 +547,32 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         this.refreshOffset = refreshOffset;
     }
 
-    public long getFreshTimespan() {
-        return freshTimespan;
+    public long getRefreshPause() {
+        return refreshPause;
     }
 
     /**
-     * @param freshTimespan ms of time, where no refresh calls are sent to the backend to avoid request flooding
+     * @param refreshPause ms of time, where no refresh calls are sent to the backend to avoid request flooding
      */
-    public void setFreshTimespan(long freshTimespan) {
-        this.freshTimespan = freshTimespan;
+    public void setRefreshPause(long refreshPause) {
+        this.refreshPause = refreshPause;
     }
 
-    public URI getUri() throws IOException, InterruptedException, HiroException {
-        return getUri(null, null);
-    }
+    /**
+     * Construct my URI.
+     * This method will query /api/version once to construct the URI unless {@link #endpoint} is set.
+     *
+     * @param path The path to append to the API path.
+     * @return The URI without query or fragment.
+     * @throws IOException          On a failed call to /api/version
+     * @throws InterruptedException Call got interrupted
+     * @throws HiroException        When calling /api/version responds with an error
+     */
+    public URI getUri(String path) throws IOException, InterruptedException, HiroException {
+        if (apiUri == null)
+            apiUri = (endpoint != null ? buildURI(endpoint) : getApiUriOf(apiName));
 
-    public URI getUri(Map<String, String> query) throws IOException, InterruptedException, HiroException {
-        return getUri(query, null);
-    }
-
-    public URI getUri(Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
-        if (endpointUri == null)
-            endpointUri = (endpoint != null ? buildURI(endpoint) : getApiUriOf(apiName));
-        return addQueryAndFragment(endpointUri, query, fragment);
+        return apiUri.resolve(StringUtils.startsWith(path, "/") ? path.substring(1) : path);
     }
 
     /**
@@ -566,12 +587,12 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     }
 
     /**
-     * Check, whether the token has been renewed within the last {@link #freshTimespan} ms.
+     * Check, whether the token has been renewed within the last {@link #refreshPause} ms.
      *
      * @return true if within the timespan, false otherwise.
      */
     public boolean tokenFresh() {
-        return Instant.now().isBefore(lastUpdate.plus(freshTimespan, ChronoUnit.MILLIS));
+        return Instant.now().isBefore(lastUpdate.plus(refreshPause, ChronoUnit.MILLIS));
     }
 
     /**
@@ -586,7 +607,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     }
 
     /**
-     * Check for the kind of error. 401 tries to refresh the token or throws TokenUnauthorizedException, all other
+     * Check for the kind of error. 401  throws TokenUnauthorizedException, all other
      * throw AuthenticationTokenException.
      *
      * @param httpResponse The httpResponse from the HttpRequest
@@ -597,7 +618,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
      * @throws IOException                  When reading the inputStream fails.
      */
     @Override
-    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException, InterruptedException {
+    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException {
         int statusCode = httpResponse.statusCode();
 
         if (statusCode < 200 || statusCode > 399) {
@@ -608,13 +629,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                 HiroErrorResponse errorResponse = JsonTools.DEFAULT.toObject(body, HiroErrorResponse.class);
 
                 if (errorResponse.getHiroErrorCode() == 401) {
-                    if (retryCount > 0) {
-                        log.info("Refreshing token because of '{}'.", errorResponse.getHiroErrorMessage());
-                        refreshToken();
-                        return true;
-                    } else {
-                        throw new TokenUnauthorizedException(errorResponse.getHiroErrorMessage(), errorResponse.getHiroErrorCode(), body);
-                    }
+                    throw new TokenUnauthorizedException(errorResponse.getHiroErrorMessage(), errorResponse.getHiroErrorCode(), body);
                 } else {
                     throw new AuthenticationTokenException(errorResponse.getHiroErrorMessage(), errorResponse.getHiroErrorCode(), body);
                 }
@@ -651,7 +666,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
         this.tokenResponse = post(
                 TokenResponse.class,
-                getUri().resolve("app"),
+                getUri("app"),
                 tokenRequest.toJsonString(),
                 Map.of("Content-Type", "application/json"),
                 null);
@@ -678,7 +693,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
         this.tokenResponse = post(
                 TokenResponse.class,
-                getUri().resolve("refresh"),
+                getUri("refresh"),
                 tokenRequest.toJsonString(),
                 Map.of("Content-Type", "application/json"),
                 null);
@@ -704,7 +719,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         // This should set tokenResponse to null, since a request to "revoke" does not return any data.
         this.tokenResponse = post(
                 TokenResponse.class,
-                getUri().resolve("revoke"),
+                getUri("revoke"),
                 tokenRequest.toJsonString(),
                 Map.of("Content-Type", "application/json"),
                 null);

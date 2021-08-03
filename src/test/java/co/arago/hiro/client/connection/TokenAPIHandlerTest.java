@@ -9,34 +9,26 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class TokenAPIHandlerTest {
 
+    public static String API_URL = "https://ec2-3-250-135-44.eu-west-1.compute.amazonaws.com:8443";
+    public static String USER = "haas1000-connector-core";
+    public static String PASS = "j9dad7gond4ls2taol37ulk56%1aZ";
+    public static String CLIENTID = "cju16o7cf0000mz77pbwbhl3q_ckqjkfc0q08r90883i7x521sy";
+    public static String CLIENTSECRET = "978fa4385da282ed8190b12e9ac70ed6e65ea750f6b5282c0205a9d049913ae9f2841998c2ef13bb14db2d6cee0fd1ca9834563865b8f45c555e6ad3dd1be36a";
+    public static Boolean ACCEPT_ALL_CERTS = true;
+    public static PasswordAuthTokenAPIHandler handler;
     final Logger log = LoggerFactory.getLogger(TokenAPIHandlerTest.class);
 
-
-    public static String API_URL = "https://core.arago.co";
-    public static String USER = "";
-    public static String PASS = "";
-    public static String CLIENTID = "";
-    public static String CLIENTSECRET = "";
-    public static Boolean ACCEPT_ALL_CERTS = true;
-
-    public static PasswordAuthTokenAPIHandler handler;
-
     @BeforeAll
-    static void init() throws NoSuchAlgorithmException, KeyManagementException, IOException, InterruptedException {
+    static void init() {
         handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setApiUrl(API_URL)
+                .setCredentials(USER, PASS, CLIENTID, CLIENTSECRET)
                 .setAcceptAllCerts(ACCEPT_ALL_CERTS)
-                .setUsername(USER)
-                .setPassword(PASS)
-                .setClientId(CLIENTID)
-                .setClientSecret(CLIENTSECRET)
                 .setForceLogging(true)
                 .build();
     }
@@ -50,13 +42,18 @@ class TokenAPIHandlerTest {
         uri = handler.getApiUriOf("auth");
         assert uri != null;
         log.info("URI {}", uri);
+
+        assertThrows(
+                HiroException.class,
+                () -> handler.getApiUriOf("no_such_api")
+        );
     }
 
     @Test
     void getToken() throws IOException, InterruptedException, HiroException {
         String token = handler.getToken();
         assertFalse(StringUtils.isBlank(token));
-        log.info("Token {}...", token.substring(0, 12));
+        log.info("Token ...{}", token.substring(token.length() - 12));
     }
 
     @Test
@@ -72,7 +69,7 @@ class TokenAPIHandlerTest {
         assertEquals(token1, token2);
         log.info("Token 2 ...{}", token2.substring(token2.length() - 12));
 
-        handler.setFreshBuffer(0L);
+        handler.setRefreshPause(0L);
         handler.refreshToken();
 
         String token3 = handler.getToken();

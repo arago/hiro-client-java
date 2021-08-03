@@ -24,7 +24,7 @@ public class HttpLogger {
     /**
      * A list of paths from an URI. If such a filter matches, do not log body data.
      */
-    protected Set<String> filter = new HashSet<>();
+    protected final Set<String> filter = new HashSet<>();
 
     private String parsePath(URI uri) {
         return StringUtils.endsWith(uri.getPath(), "/") ? uri.getPath() : uri.getPath() + "/";
@@ -33,14 +33,14 @@ public class HttpLogger {
     /*+
      * Add an uri path to the filter
      */
-    public void addFilter(URI uri) {
+    public synchronized void addFilter(URI uri) {
         filter.add(parsePath(uri));
     }
 
     /*+
      * Remove an uri path from the filter
      */
-    public void removeFilter(URI uri) {
+    public synchronized void removeFilter(URI uri) {
         filter.remove(parsePath(uri));
     }
 
@@ -67,8 +67,8 @@ public class HttpLogger {
     protected String processHeaderField(String key, List<String> value) {
         if (StringUtils.equalsAnyIgnoreCase(key, "Authorization", "Cookie", "Set-Cookie")) {
             String result = value.get(0);
-            if (result.length() > 12) {
-                return result.substring(0, 9) + "..." + result.substring(result.length() - 3) + " (len: " + result.length() + ")";
+            if (result.length() > 20) {
+                return result.substring(0, 10) + "...--- FIELD OBSCURED INTENTIONALLY ---..." + result.substring(result.length() - 10) + " (len: " + result.length() + ")";
             } else {
                 return "<hidden>";
             }
@@ -106,15 +106,18 @@ public class HttpLogger {
                     .append(System.lineSeparator());
         }
 
-
-        if (logBody && !filterMatch(httpRequest.uri())) {
-            if (body instanceof String) {
-                stringBuilder.append(System.lineSeparator()).append(body);
-            } else if (body instanceof InputStream) {
-                stringBuilder.append(System.lineSeparator()).append("--- stream ---");
+        if (body != null) {
+            synchronized (this) {
+                if (logBody && !filterMatch(httpRequest.uri())) {
+                    if (body instanceof String) {
+                        stringBuilder.append(System.lineSeparator()).append(body);
+                    } else if (body instanceof InputStream) {
+                        stringBuilder.append(System.lineSeparator()).append("--- stream ---");
+                    }
+                } else {
+                    stringBuilder.append(System.lineSeparator()).append("--- BODY HIDDEN INTENTIONALLY ---");
+                }
             }
-        } else if (body != null) {
-            stringBuilder.append(System.lineSeparator()).append("--- BODY HIDDEN INTENTIONALLY ---");
         }
 
         stringBuilder.append(System.lineSeparator());
@@ -147,15 +150,19 @@ public class HttpLogger {
                     .append(System.lineSeparator());
         }
 
-        if (logBody && !(filterMatch(httpResponse.request().uri()) && httpResponse.statusCode() == 200)) {
-            if (body instanceof String) {
-                stringBuilder.append(System.lineSeparator()).append((String) body);
-            } else if (body instanceof InputStream) {
-                stringBuilder.append(System.lineSeparator()).append("--- stream ---");
-            }
+        if (body != null) {
+            synchronized (this) {
+                if (logBody && !(filterMatch(httpResponse.request().uri()) && httpResponse.statusCode() == 200)) {
+                    if (body instanceof String) {
+                        stringBuilder.append(System.lineSeparator()).append((String) body);
+                    } else if (body instanceof InputStream) {
+                        stringBuilder.append(System.lineSeparator()).append("--- stream ---");
+                    }
 
-        } else if (body != null) {
-            stringBuilder.append(System.lineSeparator()).append("--- BODY HIDDEN INTENTIONALLY ---");
+                } else {
+                    stringBuilder.append(System.lineSeparator()).append("--- BODY HIDDEN INTENTIONALLY ---");
+                }
+            }
         }
 
         stringBuilder.append(System.lineSeparator());

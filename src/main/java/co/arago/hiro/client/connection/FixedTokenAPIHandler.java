@@ -6,7 +6,6 @@ import co.arago.hiro.client.util.RequiredFieldChecker;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
-import java.io.IOException;
 import java.net.http.HttpClient;
 import java.time.Instant;
 
@@ -29,12 +28,13 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
         private String apiUrl;
         private AbstractClientAPIHandler.ProxySpec proxy;
         private boolean followRedirects = true;
-        private long connectTimeout;
-        private long httpRequestTimeout;
+        private Long connectTimeout;
+        private Long httpRequestTimeout;
         private Boolean acceptAllCerts;
         private SSLContext sslContext;
         private SSLParameters sslParameters;
         private String userAgent;
+        private Integer maxConnectionPool;
         private HttpClient client;
         private String apiName;
         private String endpoint;
@@ -87,7 +87,7 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
-        public long getConnectTimeout() {
+        public Long getConnectTimeout() {
             return connectTimeout;
         }
 
@@ -96,13 +96,13 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
          * @return this
          */
         @Override
-        public Builder setConnectTimeout(long connectTimeout) {
+        public Builder setConnectTimeout(Long connectTimeout) {
             this.connectTimeout = connectTimeout;
             return this;
         }
 
         @Override
-        public long getHttpRequestTimeout() {
+        public Long getHttpRequestTimeout() {
             return httpRequestTimeout;
         }
 
@@ -111,7 +111,7 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
          * @return this
          */
         @Override
-        public Builder setHttpRequestTimeout(long httpRequestTimeout) {
+        public Builder setHttpRequestTimeout(Long httpRequestTimeout) {
             this.httpRequestTimeout = httpRequestTimeout;
             return this;
         }
@@ -201,6 +201,24 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         @Override
+        public Integer getMaxConnectionPool() {
+            return maxConnectionPool;
+        }
+
+        /**
+         * Set the maximum of open connections for this HttpClient (This sets the fixedThreadPool for the
+         * Executor of the HttpClient).
+         *
+         * @param maxConnectionPool Maximum size of the pool. Default is 8.
+         * @return this
+         */
+        @Override
+        public Builder setMaxConnectionPool(Integer maxConnectionPool) {
+            this.maxConnectionPool = maxConnectionPool;
+            return this;
+        }
+
+        @Override
         public int getMaxRetries() {
             return maxRetries;
         }
@@ -210,7 +228,7 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
          * @return this
          */
         @Override
-        public Conf setMaxRetries(int maxRetries) {
+        public Builder setMaxRetries(int maxRetries) {
             this.maxRetries = maxRetries;
             return this;
         }
@@ -277,7 +295,7 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
      * Revoke a token
      */
     @Override
-    public void revokeToken() throws IOException, InterruptedException, HiroException {
+    public void revokeToken() throws HiroException {
         throw new FixedTokenException("Cannot revoke a fixed token.");
     }
 

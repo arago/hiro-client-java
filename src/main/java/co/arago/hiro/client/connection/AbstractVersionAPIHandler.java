@@ -5,7 +5,6 @@ import co.arago.hiro.client.model.VersionResponse;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Map;
 
 /**
  * Handles Version information for HIRO.
@@ -48,45 +47,16 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
      * Determine the API URI endpoint for a named API.
      *
      * @param apiName  Name of the API
-     * @param query    Map of query parameters to set.
-     * @param fragment URI Fragment
-     * @return The URI for that API
-     * @throws HiroException        When the request fails.
-     * @throws IOException          When the connection fails.
-     * @throws InterruptedException When interrupted.
-     */
-    public URI getApiUriOf(String apiName, Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
-        if (versionMap == null)
-            versionMap = requestVersionMap();
-
-        return buildURI(versionMap.getVersionEntryOf(apiName).endpoint, query, fragment);
-    }
-
-    /**
-     * Determine the API URI endpoint for a named API.
-     *
-     * @param apiName Name of the API
-     * @param query   Map of query parameters to set.
-     * @return The URI for that API
-     * @throws HiroException        When the request fails.
-     * @throws IOException          When the connection fails.
-     * @throws InterruptedException When interrupted.
-     */
-    public URI getApiUriOf(String apiName, Map<String, String> query) throws IOException, InterruptedException, HiroException {
-        return getApiUriOf(apiName, query, null);
-    }
-
-    /**
-     * Determine the API URI endpoint for a named API.
-     *
-     * @param apiName Name of the API
      * @return The URI for that API
      * @throws HiroException        When the request fails.
      * @throws IOException          When the connection fails.
      * @throws InterruptedException When interrupted.
      */
     public URI getApiUriOf(String apiName) throws IOException, InterruptedException, HiroException {
-        return getApiUriOf(apiName, null, null);
+        if (versionMap == null)
+            versionMap = requestVersionMap();
+
+        return buildURI(versionMap.getVersionEntryOf(apiName).endpoint, null, null);
     }
 
 }

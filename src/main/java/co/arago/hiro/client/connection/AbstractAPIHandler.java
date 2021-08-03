@@ -22,38 +22,42 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 /**
  * Root class with fields and tool methods for all API Handlers
  */
 public abstract class AbstractAPIHandler {
 
-    public interface Conf {
+    public interface GetterConf {
         String getApiUrl();
 
+        Long getHttpRequestTimeout();
+
+        int getMaxRetries();
+
+        String getUserAgent();
+    }
+
+    public interface Conf extends GetterConf {
         /**
          * @param apiUrl The root url for the API
          * @return this
          */
-        AbstractClientAPIHandler.Conf setApiUrl(String apiUrl);
-
-        long getHttpRequestTimeout();
+        Conf setApiUrl(String apiUrl);
 
         /**
          * @param httpRequestTimeout Request timeout in ms.
          * @return this
          */
-        AbstractClientAPIHandler.Conf setHttpRequestTimeout(long httpRequestTimeout);
-
-        int getMaxRetries();
+        Conf setHttpRequestTimeout(Long httpRequestTimeout);
 
         /**
          * @param maxRetries Max amount of retries when http errors are received.
          * @return this
          */
-        AbstractClientAPIHandler.Conf setMaxRetries(int maxRetries);
-
-        String getUserAgent();
+        Conf setMaxRetries(int maxRetries);
 
         /**
          * For header "User-Agent". Default is determined by the package.
@@ -61,11 +65,11 @@ public abstract class AbstractAPIHandler {
          * @param userAgent The line for the User-Agent header.
          * @return this
          */
-        AbstractClientAPIHandler.Conf setUserAgent(String userAgent);
+        Conf setUserAgent(String userAgent);
     }
 
-    public static String title;
-    public static String version;
+    public static final String title;
+    public static final String version;
 
     static {
         String v = AbstractClientAPIHandler.class.getPackage().getImplementationVersion();
@@ -77,15 +81,35 @@ public abstract class AbstractAPIHandler {
 
     protected final String apiUrl;
     protected final String userAgent;
-    protected final long httpRequestTimeout;
+    protected final Long httpRequestTimeout;
     protected int maxRetries;
 
-    protected AbstractAPIHandler(Conf builder) {
+    protected AbstractAPIHandler(GetterConf builder) {
         this.apiUrl = (StringUtils.endsWith(builder.getApiUrl(), "/") ? builder.getApiUrl() : builder.getApiUrl() + "/");
         this.maxRetries = builder.getMaxRetries();
         this.httpRequestTimeout = builder.getHttpRequestTimeout();
         this.userAgent = (builder.getUserAgent() != null ? builder.getUserAgent() : (version != null ? title + " " + version : title));
 
+    }
+
+    public String getApiUrl() {
+        return apiUrl;
+    }
+
+    public String getUserAgent() {
+        return userAgent;
+    }
+
+    public Long getHttpRequestTimeout() {
+        return httpRequestTimeout;
+    }
+
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    public void setMaxRetries(int maxRetries) {
+        this.maxRetries = maxRetries;
     }
 
     /**
@@ -176,8 +200,8 @@ public abstract class AbstractAPIHandler {
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri);
         Map<String, String> allHeaders = getHeaders(headers);
 
-        long finalTimeout = (httpRequestTimeout == null ? this.httpRequestTimeout : httpRequestTimeout);
-        if (finalTimeout > 0)
+        Long finalTimeout = (httpRequestTimeout == null ? this.httpRequestTimeout : httpRequestTimeout);
+        if (finalTimeout != null)
             builder.timeout(Duration.ofMillis(finalTimeout));
 
         for (Map.Entry<String, String> headerEntry : allHeaders.entrySet()) {
@@ -248,6 +272,10 @@ public abstract class AbstractAPIHandler {
         return String.join(",", values);
     }
 
+    // ###############################################################################################
+    // ## Synchronous sending and receiving ##
+    // ###############################################################################################
+
     /**
      * Send a HttpRequest synchronously and return the httpResponse
      *
@@ -272,6 +300,78 @@ public abstract class AbstractAPIHandler {
         }
 
         return httpResponse;
+    }
+
+
+    // ###############################################################################################
+    // ## Asynchronous sending and receiving ##
+    // ###############################################################################################
+
+    /**
+     * Send a HttpRequest asynchronously and return a future for httpResponse
+     *
+     * @param httpRequest The httpRequest to send
+     * @return A future for the HttpResponse&lt;InputStream&gt;.
+     * @see #checkAsyncResponse(CompletableFuture)
+     * @see #getFromAsyncResponse(CompletableFuture, Class)
+     */
+    public CompletableFuture<HttpResponse<InputStream>> sendAsync(HttpRequest httpRequest) {
+        return getOrBuildClient().sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
+    }
+
+    /**
+     * Check the future for the incoming response and appy the internal {@link #checkResponse(HttpResponse, int)}.
+     * The retry counter is irrelevant here. When the token expires, you need to handle this
+     * {@link co.arago.hiro.client.exceptions.TokenUnauthorizedException} externally by trying the same HttpRequest
+     * again.
+     * Also logs the response.
+     *
+     * @param asyncRequestFuture The future from {@link #sendAsync(HttpRequest)}
+     * @return A future for the HttpResponse&lt;InputStream&gt;.
+     */
+    public CompletableFuture<HttpResponse<InputStream>> checkAsyncResponse(
+            CompletableFuture<HttpResponse<InputStream>> asyncRequestFuture
+    ) {
+        return asyncRequestFuture
+                .thenApply(response -> {
+                    try {
+                        checkResponse(response, 0);
+                        getHttpLogger().logResponse(response, response.body());
+                    } catch (HiroException | IOException | InterruptedException e) {
+                        throw new CompletionException(e);
+                    }
+                    return response;
+                });
+    }
+
+    /**
+     * Check the future for the incoming response and apply the internal {@link #checkResponse(HttpResponse, int)},
+     * then convert the body to an object of Class&lt;T&gt;.
+     * The retry counter is irrelevant here. When the token expires, you need to handle this
+     * {@link co.arago.hiro.client.exceptions.TokenUnauthorizedException} externally by trying the same HttpRequest
+     * again.
+     * Also logs the response.
+     *
+     * @param asyncRequestFuture The future from {@link #sendAsync(HttpRequest)}
+     * @return A future for the T.
+     */
+    public <T extends HiroResponse> CompletableFuture<T> getFromAsyncResponse(
+            CompletableFuture<HttpResponse<InputStream>> asyncRequestFuture,
+            final Class<T> clazz
+    ) {
+        return asyncRequestFuture
+                .thenApply(httpResponse -> {
+                    try {
+                        checkResponse(httpResponse, 0);
+
+                        String responseBody = getBodyAsString(httpResponse.body());
+                        getHttpLogger().logResponse(httpResponse, responseBody);
+
+                        return StringUtils.isNotBlank(responseBody) ? JsonTools.DEFAULT.toObject(responseBody, clazz) : null;
+                    } catch (HiroException | IOException | InterruptedException e) {
+                        throw new CompletionException(e);
+                    }
+                });
     }
 
     // ###############################################################################################
@@ -360,6 +460,62 @@ public abstract class AbstractAPIHandler {
         return httpResponse.body();
     }
 
+    /**
+     * Method to communicate asynchronously via String body.
+     * This logs only the request, not the result.
+     *
+     * @param uri                The uri to use.
+     * @param method             The method to use.
+     * @param body               The body as String. Can be null for methods that do not supply a body.
+     * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
+     * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
+     * @return A future for the HttpResponse&lt;InputStream&gt;.
+     */
+    public CompletableFuture<HttpResponse<InputStream>> execute(
+            URI uri,
+            String method,
+            String body,
+            Map<String, String> headers,
+            Long httpRequestTimeout
+    ) {
+        HttpRequest httpRequest = getRequestBuilder(uri, headers, httpRequestTimeout)
+                .method(method, (body != null ?
+                        HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8) :
+                        HttpRequest.BodyPublishers.noBody()))
+                .build();
+
+        getHttpLogger().logRequest(httpRequest, body);
+        return sendAsync(httpRequest);
+    }
+
+    /**
+     * Method to communicate asynchronously via InputStreams.
+     * This logs only the request, not the result.
+     *
+     * @param uri                The uri to use.
+     * @param method             The method to use.
+     * @param body               The body as InputStream. Can be null for methods that do not supply a body.
+     * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
+     * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
+     * @return A future for the HttpResponse&lt;InputStream&gt;.
+     */
+    public CompletableFuture<HttpResponse<InputStream>> executeBinaryAsync(
+            URI uri,
+            String method,
+            InputStream body,
+            Map<String, String> headers,
+            Long httpRequestTimeout
+    ) {
+
+        HttpRequest httpRequest = getRequestBuilder(uri, headers, httpRequestTimeout)
+                .method(method, (body != null ?
+                        HttpRequest.BodyPublishers.ofInputStream(() -> body) :
+                        HttpRequest.BodyPublishers.noBody()))
+                .build();
+
+        getHttpLogger().logRequest(httpRequest, body);
+        return sendAsync(httpRequest);
+    }
 
     /**
      * Basic GET method which returns a Map constructed via a JSON body
@@ -736,7 +892,7 @@ public abstract class AbstractAPIHandler {
      * renewal if necessary.
      *
      * @param httpResponse The httpResponse from the HttpRequest
-     * @param retryCount current counter for retries
+     * @param retryCount   current counter for retries
      * @return true for a retry, false otherwise.
      * @throws HiroException if the check fails.
      */
