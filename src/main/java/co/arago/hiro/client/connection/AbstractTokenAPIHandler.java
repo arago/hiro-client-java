@@ -24,12 +24,11 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      * Override this to add authentication tokens. TokenHandlers do not have tokens, so this only returns default
      * headers.
      *
-     * @param headers Map of headers with initial values. Can be null to use only default headers.
-     * @return The headers for this request.
+     * @param headers Map of headers with initial values.
      */
     @Override
-    public Map<String, String> getHeaders(Map<String, String> headers) {
-        return addHeader(headers, "User-Agent", userAgent);
+    public void addToHeaders(Map<String, String> headers) {
+        headers.put("User-Agent", userAgent);
     }
 
     /**

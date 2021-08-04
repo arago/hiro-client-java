@@ -3,9 +3,13 @@ package co.arago.hiro.client.connection;
 import co.arago.hiro.client.exceptions.AuthenticationTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
-import co.arago.hiro.client.model.*;
+import co.arago.hiro.client.model.HiroErrorResponse;
+import co.arago.hiro.client.model.TokenRefreshRequest;
+import co.arago.hiro.client.model.TokenRequest;
+import co.arago.hiro.client.model.TokenResponse;
 import co.arago.hiro.client.util.JsonTools;
 import co.arago.hiro.client.util.RequiredFieldChecker;
+import co.arago.hiro.client.util.httpclient.HttpResponseContainer;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -619,12 +623,11 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         int statusCode = httpResponse.statusCode();
 
         if (statusCode < 200 || statusCode > 399) {
-            HiroStreamContainer streamContainer = new HiroStreamContainer(httpResponse);
+            HttpResponseContainer responseContainer = new HttpResponseContainer(httpResponse, getHttpLogger());
 
-            String body = streamContainer.getBodyAsString();
-            httpLogger.logResponse(httpResponse, body);
+            String body = responseContainer.consumeResponseAsString();
 
-            if (streamContainer.contentIsJson()) {
+            if (responseContainer.contentIsJson()) {
                 HiroErrorResponse errorResponse = JsonTools.DEFAULT.toObject(body, HiroErrorResponse.class);
 
                 if (errorResponse.getHiroErrorCode() == 401) {
@@ -667,8 +670,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                 TokenResponse.class,
                 getUri("app"),
                 tokenRequest.toJsonString(),
-                Map.of("Content-Type", "application/json"),
-                null);
+                Map.of("Content-Type", "application/json"));
 
         lastUpdate = Instant.now();
     }
@@ -694,8 +696,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                 TokenResponse.class,
                 getUri("refresh"),
                 tokenRequest.toJsonString(),
-                Map.of("Content-Type", "application/json"),
-                null);
+                Map.of("Content-Type", "application/json"));
 
         lastUpdate = Instant.now();
     }
@@ -720,8 +721,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                 TokenResponse.class,
                 getUri("revoke"),
                 tokenRequest.toJsonString(),
-                Map.of("Content-Type", "application/json"),
-                null);
+                Map.of("Content-Type", "application/json"));
 
         lastUpdate = Instant.now();
     }

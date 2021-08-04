@@ -58,6 +58,13 @@ public class HttpLogger {
     }
 
     /**
+     * @return Return true when the logger is logging
+     */
+    public boolean active() {
+        return log.isDebugEnabled();
+    }
+
+    /**
      * Hide critical data from header logging
      *
      * @param key   Header name
@@ -84,13 +91,12 @@ public class HttpLogger {
      * @param body        The body of the httpRequest.
      */
     public void logRequest(HttpRequest httpRequest, Object body) {
-        if (!log.isDebugEnabled())
+        if (!active())
             return;
 
         StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder
-                .append(System.lineSeparator())
                 .append("####### HttpRequest #######")
                 .append(System.lineSeparator())
                 .append(httpRequest.method())
@@ -129,17 +135,15 @@ public class HttpLogger {
      * Log a response from the data inside HttpResponse.
      *
      * @param httpResponse The httpResponse to log.
-     * @param body         The body of the httpResponse.
      */
-    public void logResponse(HttpResponse<?> httpResponse, Object body) {
-        if (!log.isDebugEnabled())
+    public void logResponseHeaders(HttpResponse<?> httpResponse) {
+        if (!active())
             return;
 
         StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder
-                .append(System.lineSeparator())
-                .append("####### HttpResponse #######")
+                .append("####### HttpResponse HEADERS #######")
                 .append(System.lineSeparator());
 
         for (Map.Entry<String, List<String>> headerEntry : httpResponse.headers().map().entrySet()) {
@@ -149,6 +153,27 @@ public class HttpLogger {
                     .append(processHeaderField(headerEntry.getKey(), headerEntry.getValue()))
                     .append(System.lineSeparator());
         }
+
+        stringBuilder.append(System.lineSeparator());
+
+        log.debug(stringBuilder.toString());
+    }
+
+    /**
+     * Log a response from the data inside HttpResponse.
+     *
+     * @param httpResponse The httpResponse to log.
+     * @param body         The body of the httpResponse.
+     */
+    public void logResponseBody(HttpResponse<?> httpResponse, Object body) {
+        if (!active())
+            return;
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        stringBuilder
+                .append("####### HttpResponse BODY #######")
+                .append(System.lineSeparator());
 
         if (body != null) {
             synchronized (this) {
@@ -169,5 +194,4 @@ public class HttpLogger {
 
         log.debug(stringBuilder.toString());
     }
-
 }

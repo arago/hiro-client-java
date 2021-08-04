@@ -165,24 +165,18 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     }
 
     /**
-     * Add Authorization. Call {@link #initializeHeaders(Map)} to get the initial map of
-     * headers to adjust.
+     * Add Authorization.
      *
-     * @param headers Map of headers with initial values. Can be null to use only
-     *                default headers.
-     * @return The headers for this httpRequest.
-     * @see #initializeHeaders(Map)
+     * @param headers Map of headers with initial values.
      */
-    public Map<String, String> getHeaders(Map<String, String> headers) {
-        Map<String, String> finalHeaders = addHeader(headers, "User-Agent", userAgent);
-
+    @Override
+    public void addToHeaders(Map<String, String> headers) {
         try {
-            finalHeaders = addHeader(finalHeaders, "Authorization", "Bearer " + hiroClient.getToken());
+            headers.put("User-Agent", userAgent);
+            headers.put("Authorization", "Bearer " + hiroClient.getToken());
         } catch (IOException | InterruptedException | HiroException e) {
             log.error("Cannot get token: '{}'", e.getMessage());
         }
-
-        return finalHeaders;
     }
 
     /**

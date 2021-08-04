@@ -1,27 +1,18 @@
-package co.arago.hiro.client.model;
+package co.arago.hiro.client.util.httpclient;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.http.HttpResponse;
+import java.net.http.HttpHeaders;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalLong;
 import java.util.stream.Collectors;
 
 /**
- * Contains the inputStream for the body and decodes the headers Content-Type and Content-Length for further
- * information about that stream.
+ * Decodes / Encodes the headers Content-Type and Content-Length.
  */
-public class HiroStreamContainer {
-    /**
-     * The inputStream for the response body
-     */
-    public InputStream inputStream;
+public class HeaderContainer {
     /**
      * The Content-Type as read from the response header. This might be null when this header is missing.
      */
@@ -45,16 +36,14 @@ public class HiroStreamContainer {
     public String boundary;
 
     /**
-     * Constructor. Creates this object with all its data from the incoming httpResponse.
+     * Constructor. Creates this object with all its data from the incoming httpHeaders.
      *
-     * @param httpResponse The httpResponse to decode.
+     * @param httpHeaders The httpHeaders to decode.
      */
-    public HiroStreamContainer(HttpResponse<InputStream> httpResponse) {
-        this.inputStream = httpResponse.body();
+    public HeaderContainer(HttpHeaders httpHeaders) {
+        this.contentType = httpHeaders.firstValue("content-type").orElse(null);
 
-        this.contentType = httpResponse.headers().firstValue("content-type").orElse(null);
-
-        OptionalLong contentLength = httpResponse.headers().firstValueAsLong("content-length");
+        OptionalLong contentLength = httpHeaders.firstValueAsLong("content-length");
         this.contentLength = (contentLength.isPresent() ? contentLength.getAsLong() : null);
 
         // Decode Content-Type
@@ -80,18 +69,13 @@ public class HiroStreamContainer {
     }
 
     /**
-     * Constructor used when streams have to be sent.
+     * Constructor used when Content-Headers have to be constructed.
      *
-     * @param inputStream   The inputStream with the data.
      * @param mediaType     The mime type for the data.
      * @param charset       The charset - if any. Can be null.
      * @param contentLength The length of the content - if any. Can be null.
      */
-    public HiroStreamContainer(InputStream inputStream, String mediaType, Charset charset, Long contentLength) {
-        if (inputStream == null)
-            throw new IllegalArgumentException("InputStream must not be null");
-
-        this.inputStream = inputStream;
+    public HeaderContainer(String mediaType, Charset charset, Long contentLength) {
         this.mediaType = mediaType;
         this.charset = charset;
         this.contentLength = contentLength;
@@ -104,20 +88,6 @@ public class HiroStreamContainer {
             }
         }
     }
-
-    /**
-     * Read the inputStream and return it as String in UTF-8 or the charset provided .
-     *
-     * @return The String constructed from the {@link #inputStream} or null if the {@link #inputStream} is null.
-     * @throws IOException If the {@link #inputStream} cannot be read.
-     */
-    public String getBodyAsString() throws IOException {
-        if (inputStream == null)
-            return null;
-
-        return IOUtils.toString(inputStream, (charset != null ? charset : StandardCharsets.UTF_8));
-    }
-
 
     /**
      * Check whether the mediaType is application/json

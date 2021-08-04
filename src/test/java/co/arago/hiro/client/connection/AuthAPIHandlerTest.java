@@ -3,12 +3,16 @@ package co.arago.hiro.client.connection;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.util.JsonTools;
+import co.arago.hiro.client.util.httpclient.HttpResponseContainer;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 class AuthAPIHandlerTest {
@@ -37,12 +41,22 @@ class AuthAPIHandlerTest {
     }
 
     @Test
-    void checkConnection() throws HiroException, IOException, InterruptedException {
+    void checkMeAccount() throws HiroException, IOException, InterruptedException {
         System.out.println(
                 JsonTools.DEFAULT.toPrettyString(
                         authAPI.meAccount(Map.of("profile", "true"))
                 )
         );
+    }
+
+    @Test
+    void checkMeAvatar() throws HiroException, IOException, InterruptedException {
+        HttpResponseContainer responseContainer = authAPI.meAvatar();
+        System.out.println(responseContainer.mediaType);
+        System.out.println(responseContainer.contentLength);
+        try (InputStream inputStream = responseContainer.getInputStream()) {
+            System.out.println(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+        }
     }
 }
 

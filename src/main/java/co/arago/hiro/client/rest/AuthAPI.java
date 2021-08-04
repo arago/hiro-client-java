@@ -5,6 +5,7 @@ import co.arago.hiro.client.connection.AuthenticatedAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.HiroVertexResponse;
 import co.arago.hiro.client.util.RequiredFieldChecker;
+import co.arago.hiro.client.util.httpclient.HttpResponseContainer;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
@@ -156,12 +157,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
     public HiroVertexResponse meAccount(Map<String, String> query) throws HiroException, IOException, InterruptedException {
         return get(HiroVertexResponse.class, getUri("me/account", query), null);
     }
-//
-//    public InputStream meAvatar() throws HiroException, IOException, InterruptedException {
-//        return meAvatar(null);
-//    }
-//
-//    public InputStream meAvatar(Map<String, String> query) throws HiroException, IOException, InterruptedException {
-//        return getBinary(getUri("me/avatar", query), null);
-//    }
+
+    public HttpResponseContainer meAvatar() throws HiroException, IOException, InterruptedException {
+        return meAvatar(null);
+    }
+
+    public HttpResponseContainer meAvatar(Map<String, String> query) throws HiroException, IOException, InterruptedException {
+        return getBinary(getUri("me/avatar", query), null);
+    }
 }
