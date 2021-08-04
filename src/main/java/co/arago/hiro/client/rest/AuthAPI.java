@@ -125,7 +125,43 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         return new Builder("auth", tokenAPIHandler);
     }
 
+    /**
+     * get account information about current token
+     * <p>
+     * API /api/auth/[version]/me/account
+     *
+     * @param profile Query parameter "profile=[true|false]". Set null to omit the parameter.
+     * @return A HiroVertexResponse with the result data.
+     * @throws HiroException        When the call returns a http status error.
+     * @throws IOException          When the call got an IO error.
+     * @throws InterruptedException When the call gets interrupted.
+     * @see <a href=https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity>API Documentation</a>
+     */
+    public HiroVertexResponse meAccount(Boolean profile) throws HiroException, IOException, InterruptedException {
+        return meAccount(profile != null ? Map.of("profile", profile.toString()) : null);
+    }
+
+    /**
+     * get account information about current token
+     * <p>
+     * API /api/auth/[version]/me/account
+     *
+     * @param query Any query parameter.
+     * @return A HiroVertexResponse with the result data.
+     * @throws HiroException        When the call returns a http status error.
+     * @throws IOException          When the call got an IO error.
+     * @throws InterruptedException When the call gets interrupted.
+     * @see <a href=https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity>API Documentation</a>
+     */
     public HiroVertexResponse meAccount(Map<String, String> query) throws HiroException, IOException, InterruptedException {
         return get(HiroVertexResponse.class, getUri("me/account", query), null);
     }
+//
+//    public InputStream meAvatar() throws HiroException, IOException, InterruptedException {
+//        return meAvatar(null);
+//    }
+//
+//    public InputStream meAvatar(Map<String, String> query) throws HiroException, IOException, InterruptedException {
+//        return getBinary(getUri("me/avatar", query), null);
+//    }
 }

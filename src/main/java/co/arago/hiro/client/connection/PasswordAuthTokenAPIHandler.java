@@ -3,10 +3,7 @@ package co.arago.hiro.client.connection;
 import co.arago.hiro.client.exceptions.AuthenticationTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
-import co.arago.hiro.client.model.HiroErrorResponse;
-import co.arago.hiro.client.model.TokenRefreshRequest;
-import co.arago.hiro.client.model.TokenRequest;
-import co.arago.hiro.client.model.TokenResponse;
+import co.arago.hiro.client.model.*;
 import co.arago.hiro.client.util.JsonTools;
 import co.arago.hiro.client.util.RequiredFieldChecker;
 import org.apache.commons.lang3.StringUtils;
@@ -622,10 +619,12 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         int statusCode = httpResponse.statusCode();
 
         if (statusCode < 200 || statusCode > 399) {
-            String body = getBodyAsString(httpResponse.body());
+            HiroStreamContainer streamContainer = new HiroStreamContainer(httpResponse);
+
+            String body = streamContainer.getBodyAsString();
             httpLogger.logResponse(httpResponse, body);
 
-            if (contentIsJson(httpResponse)) {
+            if (streamContainer.contentIsJson()) {
                 HiroErrorResponse errorResponse = JsonTools.DEFAULT.toObject(body, HiroErrorResponse.class);
 
                 if (errorResponse.getHiroErrorCode() == 401) {

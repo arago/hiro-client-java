@@ -174,10 +174,10 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @see #initializeHeaders(Map)
      */
     public Map<String, String> getHeaders(Map<String, String> headers) {
-        Map<String, String> finalHeaders = initializeHeaders(headers);
+        Map<String, String> finalHeaders = addHeader(headers, "User-Agent", userAgent);
 
         try {
-            finalHeaders.put("Authorization", "Bearer " + hiroClient.getToken());
+            finalHeaders = addHeader(finalHeaders, "Authorization", "Bearer " + hiroClient.getToken());
         } catch (IOException | InterruptedException | HiroException e) {
             log.error("Cannot get token: '{}'", e.getMessage());
         }

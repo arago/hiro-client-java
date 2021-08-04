@@ -29,7 +29,7 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      */
     @Override
     public Map<String, String> getHeaders(Map<String, String> headers) {
-        return initializeHeaders(headers);
+        return addHeader(headers, "User-Agent", userAgent);
     }
 
     /**

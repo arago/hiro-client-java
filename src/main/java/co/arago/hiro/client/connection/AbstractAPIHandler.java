@@ -4,10 +4,12 @@ import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.model.HiroErrorResponse;
 import co.arago.hiro.client.model.HiroResponse;
+import co.arago.hiro.client.model.HiroStreamContainer;
 import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.JsonTools;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,6 +31,8 @@ import java.util.concurrent.CompletionException;
  * Root class with fields and tool methods for all API Handlers
  */
 public abstract class AbstractAPIHandler {
+
+    final Logger log = LoggerFactory.getLogger(AbstractAPIHandler.class);
 
     public interface GetterConf {
         String getApiUrl();
@@ -72,7 +76,7 @@ public abstract class AbstractAPIHandler {
     public static final String version;
 
     static {
-        version =  AbstractClientAPIHandler.class.getPackage().getImplementationVersion();
+        version = AbstractClientAPIHandler.class.getPackage().getImplementationVersion();
         String t = AbstractClientAPIHandler.class.getPackage().getImplementationTitle();
         title = (t != null ? t : "java-hiro-client");
     }
@@ -187,6 +191,23 @@ public abstract class AbstractAPIHandler {
     }
 
     /**
+     * Add an entry to the header map. A new map will be created. The contents of headers will be copied into it if it is not null.
+     *
+     * @param headers The initial header map.
+     * @param key     The name of the Header.
+     * @param value   The value for the Header.
+     * @return The updated header map.
+     */
+    protected Map<String, String> addHeader(Map<String, String> headers, String key, String value) {
+        Map<String, String> finalHeaders = new HashMap<>();
+        if (headers != null) {
+            finalHeaders.putAll(headers);
+        }
+        finalHeaders.put(key, value);
+        return finalHeaders;
+    }
+
+    /**
      * Create a HttpRequest.Builder with common options and headers.
      *
      * @param uri                The uri for the httpRequest.
@@ -235,27 +256,6 @@ public abstract class AbstractAPIHandler {
     }
 
     /**
-     * Read the inputStream from the httpResponse and return it as String.
-     *
-     * @param inputStream The inputStream to read.
-     * @return The String constructed from the inputStream.
-     * @throws IOException If the inputStream cannot be read.
-     */
-    public String getBodyAsString(InputStream inputStream) throws IOException {
-        if (inputStream == null)
-            return null;
-
-        return IOUtils.toString(inputStream, StandardCharsets.UTF_8);
-    }
-
-    /**
-     * Check the header for a Content-Type of application/json.
-     */
-    public boolean contentIsJson(HttpResponse<?> httpResponse) {
-        return StringUtils.startsWithIgnoreCase(getFromHeader(httpResponse, "Content-Type"), "application/json");
-    }
-
-    /**
      * Get header content from a httpResponse. If multiple values are present, a CSV from all values is created.
      *
      * @param httpResponse The response with headers.
@@ -268,6 +268,99 @@ public abstract class AbstractAPIHandler {
 
         List<String> values = httpResponse.headers().map().get(headerName);
         return String.join(",", values);
+    }
+
+    // ###############################################################################################
+    // ## Tool methods for sending and receiving ##
+    // ###############################################################################################
+
+    /**
+     * Build a httpRequest from a {@link HiroStreamContainer}.
+     *
+     * @param uri                The uri to use.
+     * @param method             The method to use.
+     * @param body               The body as {@link HiroStreamContainer}. Can be null for methods that do not supply
+     *                           a body.
+     * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
+     * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
+     * @return The constructed HttpRequest.
+     */
+    private HttpRequest createStreamRequest(URI uri,
+                                            String method,
+                                            HiroStreamContainer body,
+                                            Map<String, String> headers,
+                                            Long httpRequestTimeout) {
+
+        Map<String, String> finalHeaders = new HashMap<>();
+
+        if (headers != null) {
+            finalHeaders.putAll(headers);
+        }
+
+        if (body != null) {
+            if (body.contentType != null) {
+                finalHeaders.put("Content-Type", body.contentType);
+            }
+            if (body.contentLength != null) {
+                finalHeaders.put("Content-Length", body.contentLength.toString());
+            }
+        }
+
+        return getRequestBuilder(uri, finalHeaders, httpRequestTimeout)
+                .method(method, (body != null ?
+                        HttpRequest.BodyPublishers.ofInputStream(() -> body.inputStream) :
+                        HttpRequest.BodyPublishers.noBody()))
+                .build();
+    }
+
+    /**
+     * Build a httpRequest from a String.
+     *
+     * @param uri                The uri to use.
+     * @param method             The method to use.
+     * @param body               The body as String. Can be null for methods that do not supply a body.
+     * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
+     * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
+     * @return The constructed HttpRequest.
+     */
+    private HttpRequest createStringRequest(URI uri,
+                                            String method,
+                                            String body,
+                                            Map<String, String> headers,
+                                            Long httpRequestTimeout) {
+
+        return getRequestBuilder(uri, headers, httpRequestTimeout)
+                .method(method, (body != null ?
+                        HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8) :
+                        HttpRequest.BodyPublishers.noBody()))
+                .build();
+    }
+
+    /**
+     * Logs the httpResponse, checks for the correct contentType and casts the httpResponse InputStream to the object
+     * of class "clazz"
+     *
+     * @param httpResponse The incoming HttpResponse
+     * @param clazz        The type of object you want to create from the incoming InputStream.
+     * @param <T>          Typecast
+     * @return The object of type "clazz" or null if there is no response body or the body is blank.
+     * @throws IOException   When the JSON has errors.
+     * @throws HiroException When the contentType  of the httpResponse is not "application/json".
+     */
+    private <T extends HiroResponse> T handleAndCastResponseData(HttpResponse<InputStream> httpResponse, Class<T> clazz) throws IOException, HiroException {
+        HiroStreamContainer streamContainer = new HiroStreamContainer(httpResponse);
+
+        String responseBody = streamContainer.getBodyAsString();
+
+        getHttpLogger().logResponse(httpResponse, responseBody);
+
+        if (StringUtils.isBlank(responseBody))
+            return null;
+
+        if (!streamContainer.contentIsJson())
+            throw new HiroException("Incoming data is not of type 'application/json'");
+
+        return JsonTools.DEFAULT.toObject(responseBody, clazz);
     }
 
     // ###############################################################################################
@@ -362,10 +455,7 @@ public abstract class AbstractAPIHandler {
                     try {
                         checkResponse(httpResponse, 0);
 
-                        String responseBody = getBodyAsString(httpResponse.body());
-                        getHttpLogger().logResponse(httpResponse, responseBody);
-
-                        return StringUtils.isNotBlank(responseBody) ? JsonTools.DEFAULT.toObject(responseBody, clazz) : null;
+                        return handleAndCastResponseData(httpResponse, clazz);
                     } catch (HiroException | IOException | InterruptedException e) {
                         throw new CompletionException(e);
                     }
@@ -377,7 +467,7 @@ public abstract class AbstractAPIHandler {
     // ###############################################################################################
 
     /**
-     * Basic method which returns a Map constructed via a JSON body httpResponse. Sets an appropriate Accept header.
+     * Basic method which returns an object of type {@link HiroResponse} constructed via a JSON body httpResponse. Sets an appropriate Accept header.
      *
      * @param clazz              The class to create from the incoming JSON data.
      * @param uri                The uri to use.
@@ -390,7 +480,7 @@ public abstract class AbstractAPIHandler {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public <T extends HiroResponse> T execute(
+    public <T extends HiroResponse> T executeWithStringBody(
             Class<T> clazz,
             URI uri,
             String method,
@@ -399,27 +489,55 @@ public abstract class AbstractAPIHandler {
             Long httpRequestTimeout
     ) throws HiroException, IOException, InterruptedException {
 
-        // Set Accept to application/json.
-        Map<String, String> finalHeaders = new HashMap<>();
-        if (headers != null) {
-            finalHeaders.putAll(headers);
-        }
-        finalHeaders.put("Accept", "application/json");
-
-        HttpRequest httpRequest = getRequestBuilder(uri, finalHeaders, httpRequestTimeout)
-                .method(method, (body != null ?
-                        HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8) :
-                        HttpRequest.BodyPublishers.noBody()))
-                .build();
+        HttpRequest httpRequest = createStringRequest(
+                uri,
+                method,
+                body,
+                addHeader(headers, "Accept", "application/json"),
+                httpRequestTimeout);
 
         getHttpLogger().logRequest(httpRequest, body);
+
         HttpResponse<InputStream> httpResponse = send(httpRequest);
 
-        String responseBody = getBodyAsString(httpResponse.body());
+        return handleAndCastResponseData(httpResponse, clazz);
+    }
 
-        getHttpLogger().logResponse(httpResponse, responseBody);
+    /**
+     * Basic method which returns an object of type {@link HiroResponse} constructed via a JSON body httpResponse. Sets an appropriate Accept header.
+     *
+     * @param clazz              The class to create from the incoming JSON data.
+     * @param uri                The uri to use.
+     * @param method             The method to use.
+     * @param body               The body as {@link HiroStreamContainer}. Can be null for methods that do not supply a body.
+     * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
+     * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
+     * @return An object of clazz constructed from the JSON result or null if the response has no body.
+     * @throws HiroException        On errors indicated by http status codes.
+     * @throws IOException          On io errors
+     * @throws InterruptedException When the connection gets interrupted.
+     */
+    public <T extends HiroResponse> T executeWithStreamBody(
+            Class<T> clazz,
+            URI uri,
+            String method,
+            HiroStreamContainer body,
+            Map<String, String> headers,
+            Long httpRequestTimeout
+    ) throws HiroException, IOException, InterruptedException {
 
-        return (StringUtils.isNotBlank(responseBody) ? JsonTools.DEFAULT.toObject(responseBody, clazz) : null);
+        HttpRequest httpRequest = createStreamRequest(
+                uri,
+                method,
+                body,
+                addHeader(headers, "Accept", "application/json"),
+                httpRequestTimeout);
+
+        getHttpLogger().logRequest(httpRequest, body);
+
+        HttpResponse<InputStream> httpResponse = send(httpRequest);
+
+        return handleAndCastResponseData(httpResponse, clazz);
     }
 
     /**
@@ -427,27 +545,22 @@ public abstract class AbstractAPIHandler {
      *
      * @param uri                The uri to use.
      * @param method             The method to use.
-     * @param body               The body as InputStream. Can be null for methods that do not supply a body.
+     * @param body               The body as {@link HiroStreamContainer}. Can be null for methods that do not supply a body.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
      * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
-     * @return An InputStream with the result body.
+     * @return A {@link HiroStreamContainer} with the result body as InputStream and associated header information.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public InputStream executeBinary(
+    public HiroStreamContainer executeBinary(
             URI uri,
             String method,
-            InputStream body,
+            HiroStreamContainer body,
             Map<String, String> headers,
             Long httpRequestTimeout
     ) throws HiroException, IOException, InterruptedException {
-
-        HttpRequest httpRequest = getRequestBuilder(uri, headers, httpRequestTimeout)
-                .method(method, (body != null ?
-                        HttpRequest.BodyPublishers.ofInputStream(() -> body) :
-                        HttpRequest.BodyPublishers.noBody()))
-                .build();
+        HttpRequest httpRequest = createStreamRequest(uri, method, body, headers, httpRequestTimeout);
 
         getHttpLogger().logRequest(httpRequest, body);
 
@@ -455,7 +568,7 @@ public abstract class AbstractAPIHandler {
 
         getHttpLogger().logResponse(httpResponse, httpResponse.body());
 
-        return httpResponse.body();
+        return new HiroStreamContainer(httpResponse);
     }
 
     /**
@@ -469,18 +582,14 @@ public abstract class AbstractAPIHandler {
      * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
      * @return A future for the HttpResponse&lt;InputStream&gt;.
      */
-    public CompletableFuture<HttpResponse<InputStream>> execute(
+    public CompletableFuture<HttpResponse<InputStream>> executeAsyncWithStringBody(
             URI uri,
             String method,
             String body,
             Map<String, String> headers,
             Long httpRequestTimeout
     ) {
-        HttpRequest httpRequest = getRequestBuilder(uri, headers, httpRequestTimeout)
-                .method(method, (body != null ?
-                        HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8) :
-                        HttpRequest.BodyPublishers.noBody()))
-                .build();
+        HttpRequest httpRequest = createStringRequest(uri, method, body, headers, httpRequestTimeout);
 
         getHttpLogger().logRequest(httpRequest, body);
         return sendAsync(httpRequest);
@@ -492,24 +601,19 @@ public abstract class AbstractAPIHandler {
      *
      * @param uri                The uri to use.
      * @param method             The method to use.
-     * @param body               The body as InputStream. Can be null for methods that do not supply a body.
+     * @param body               The body as {@link HiroStreamContainer}. Can be null for methods that do not supply a body.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
      * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
      * @return A future for the HttpResponse&lt;InputStream&gt;.
      */
-    public CompletableFuture<HttpResponse<InputStream>> executeBinaryAsync(
+    public CompletableFuture<HttpResponse<InputStream>> executeAsyncWithStreamBody(
             URI uri,
             String method,
-            InputStream body,
+            HiroStreamContainer body,
             Map<String, String> headers,
             Long httpRequestTimeout
     ) {
-
-        HttpRequest httpRequest = getRequestBuilder(uri, headers, httpRequestTimeout)
-                .method(method, (body != null ?
-                        HttpRequest.BodyPublishers.ofInputStream(() -> body) :
-                        HttpRequest.BodyPublishers.noBody()))
-                .build();
+        HttpRequest httpRequest = createStreamRequest(uri, method, body, headers, httpRequestTimeout);
 
         getHttpLogger().logRequest(httpRequest, body);
         return sendAsync(httpRequest);
@@ -549,7 +653,7 @@ public abstract class AbstractAPIHandler {
     public <T extends HiroResponse> T get(Class<T> clazz, URI uri, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
-        return execute(clazz, uri, "GET", null, headers, httpRequestTimeout);
+        return executeWithStringBody(clazz, uri, "GET", null, headers, httpRequestTimeout);
     }
 
     /**
@@ -588,7 +692,7 @@ public abstract class AbstractAPIHandler {
     public <T extends HiroResponse> T post(Class<T> clazz, URI uri, String body, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
-        return execute(clazz, uri, "POST", body, headers, httpRequestTimeout);
+        return executeWithStringBody(clazz, uri, "POST", body, headers, httpRequestTimeout);
     }
 
     /**
@@ -627,7 +731,7 @@ public abstract class AbstractAPIHandler {
     public <T extends HiroResponse> T put(Class<T> clazz, URI uri, String body, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
-        return execute(clazz, uri, "PUT", body, headers, httpRequestTimeout);
+        return executeWithStringBody(clazz, uri, "PUT", body, headers, httpRequestTimeout);
     }
 
     /**
@@ -666,7 +770,7 @@ public abstract class AbstractAPIHandler {
     public <T extends HiroResponse> T patch(Class<T> clazz, URI uri, String body, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
-        return execute(clazz, uri, "PATCH", body, headers, httpRequestTimeout);
+        return executeWithStringBody(clazz, uri, "PATCH", body, headers, httpRequestTimeout);
     }
 
     /**
@@ -703,7 +807,7 @@ public abstract class AbstractAPIHandler {
     public <T extends HiroResponse> T delete(Class<T> clazz, URI uri, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
-        return execute(clazz, uri, "DELETE", null, headers, httpRequestTimeout);
+        return executeWithStringBody(clazz, uri, "DELETE", null, headers, httpRequestTimeout);
     }
 
     /**
@@ -711,12 +815,12 @@ public abstract class AbstractAPIHandler {
      *
      * @param uri     The uri to use.
      * @param headers Initial headers for the httpRequest. Can be null for no additional headers.
-     * @return An InputStream with the result body.
+     * @return A {@link HiroStreamContainer} with the result body as InputStream and associated header information.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public InputStream getBinary(URI uri, Map<String, String> headers)
+    public HiroStreamContainer getBinary(URI uri, Map<String, String> headers)
             throws HiroException, IOException, InterruptedException {
 
         return getBinary(uri, headers, null);
@@ -728,12 +832,12 @@ public abstract class AbstractAPIHandler {
      * @param uri                The uri to use.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
      * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
-     * @return An InputStream with the result body.
+     * @return A {@link HiroStreamContainer} with the result body as InputStream and associated header information.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public InputStream getBinary(URI uri, Map<String, String> headers, Long httpRequestTimeout)
+    public HiroStreamContainer getBinary(URI uri, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
         return executeBinary(uri, "GET", null, headers, httpRequestTimeout);
@@ -744,14 +848,14 @@ public abstract class AbstractAPIHandler {
      *
      * @param clazz   The class to create from the incoming JSON data.
      * @param uri     The uri to use.
-     * @param body    Body as inputStream.
+     * @param body    Body as {@link HiroStreamContainer}.
      * @param headers Initial headers for the httpRequest. Can be null for no additional headers.
      * @return A map constructed from the JSON result.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public <T extends HiroResponse> T postBinary(Class<T> clazz, URI uri, InputStream body, Map<String, String> headers)
+    public <T extends HiroResponse> T postBinary(Class<T> clazz, URI uri, HiroStreamContainer body, Map<String, String> headers)
             throws HiroException, IOException, InterruptedException {
 
         return postBinary(clazz, uri, body, headers, null);
@@ -762,7 +866,7 @@ public abstract class AbstractAPIHandler {
      *
      * @param clazz              The class to create from the incoming JSON data.
      * @param uri                The uri to use.
-     * @param body               Body as inputStream.
+     * @param body               Body as {@link HiroStreamContainer}.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
      * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
      * @return A map constructed from the JSON result.
@@ -770,12 +874,10 @@ public abstract class AbstractAPIHandler {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public <T extends HiroResponse> T postBinary(Class<T> clazz, URI uri, InputStream body, Map<String, String> headers, Long httpRequestTimeout)
+    public <T extends HiroResponse> T postBinary(Class<T> clazz, URI uri, HiroStreamContainer body, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
-        InputStream resultBody = executeBinary(uri, "POST", body, headers, httpRequestTimeout);
-
-        return JsonTools.DEFAULT.toObject(resultBody, clazz);
+        return executeWithStreamBody(clazz, uri, "POST", body, addHeader(headers, "Accept", "application/json"), httpRequestTimeout);
     }
 
     /**
@@ -783,14 +885,14 @@ public abstract class AbstractAPIHandler {
      *
      * @param clazz   The class to create from the incoming JSON data.
      * @param uri     The uri to use.
-     * @param body    Body as inputStream.
+     * @param body    Body as {@link HiroStreamContainer}.
      * @param headers Initial headers for the httpRequest. Can be null for no additional headers.
      * @return A map constructed from the JSON result.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public <T extends HiroResponse> T putBinary(Class<T> clazz, URI uri, InputStream body, Map<String, String> headers)
+    public <T extends HiroResponse> T putBinary(Class<T> clazz, URI uri, HiroStreamContainer body, Map<String, String> headers)
             throws HiroException, IOException, InterruptedException {
 
         return putBinary(clazz, uri, body, headers, null);
@@ -801,7 +903,7 @@ public abstract class AbstractAPIHandler {
      *
      * @param clazz              The class to create from the incoming JSON data.
      * @param uri                The uri to use.
-     * @param body               Body as inputStream.
+     * @param body               Body as {@link HiroStreamContainer}.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
      * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
      * @return A map constructed from the JSON result.
@@ -809,12 +911,10 @@ public abstract class AbstractAPIHandler {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public <T extends HiroResponse> T putBinary(Class<T> clazz, URI uri, InputStream body, Map<String, String> headers, Long httpRequestTimeout)
+    public <T extends HiroResponse> T putBinary(Class<T> clazz, URI uri, HiroStreamContainer body, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
-        InputStream resultBody = executeBinary(uri, "PUT", body, headers, httpRequestTimeout);
-
-        return JsonTools.DEFAULT.toObject(resultBody, clazz);
+        return executeWithStreamBody(clazz, uri, "PUT", body, addHeader(headers, "Accept", "application/json"), httpRequestTimeout);
     }
 
     /**
@@ -822,14 +922,14 @@ public abstract class AbstractAPIHandler {
      *
      * @param clazz   The class to create from the incoming JSON data.
      * @param uri     The uri to use.
-     * @param body    Body as inputStream.
+     * @param body    Body as {@link HiroStreamContainer}.
      * @param headers Initial headers for the httpRequest. Can be null for no additional headers.
      * @return A map constructed from the JSON result.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public <T extends HiroResponse> T patchBinary(Class<T> clazz, URI uri, InputStream body, Map<String, String> headers)
+    public <T extends HiroResponse> T patchBinary(Class<T> clazz, URI uri, HiroStreamContainer body, Map<String, String> headers)
             throws HiroException, IOException, InterruptedException {
 
         return patchBinary(clazz, uri, body, headers, null);
@@ -840,7 +940,7 @@ public abstract class AbstractAPIHandler {
      *
      * @param clazz              The class to create from the incoming JSON data.
      * @param uri                The uri to use.
-     * @param body               Body as inputStream.
+     * @param body               Body as {@link HiroStreamContainer}.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
      * @param httpRequestTimeout The timeout for the response. Set this to null to use the internal default.
      * @return A map constructed from the JSON result.
@@ -848,12 +948,10 @@ public abstract class AbstractAPIHandler {
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public <T extends HiroResponse> T patchBinary(Class<T> clazz, URI uri, InputStream body, Map<String, String> headers, Long httpRequestTimeout)
+    public <T extends HiroResponse> T patchBinary(Class<T> clazz, URI uri, HiroStreamContainer body, Map<String, String> headers, Long httpRequestTimeout)
             throws HiroException, IOException, InterruptedException {
 
-        InputStream resultBody = executeBinary(uri, "PATCH", body, headers, httpRequestTimeout);
-
-        return JsonTools.DEFAULT.toObject(resultBody, clazz);
+        return executeWithStreamBody(clazz, uri, "PATCH", body, addHeader(headers, "Accept", "application/json"), httpRequestTimeout);
     }
 
     // ###############################################################################################
@@ -900,12 +998,14 @@ public abstract class AbstractAPIHandler {
         if (statusCode < 200 || statusCode > 399) {
             String body;
             try {
-                body = getBodyAsString(httpResponse.body());
+                HiroStreamContainer streamContainer = new HiroStreamContainer(httpResponse);
+
+                body = streamContainer.getBodyAsString();
                 getHttpLogger().logResponse(httpResponse, body);
 
                 String message;
 
-                if (contentIsJson(httpResponse)) {
+                if (streamContainer.contentIsJson()) {
                     HiroResponse response = JsonTools.DEFAULT.toObject(body, HiroResponse.class);
                     message = getErrorMessage(statusCode, response);
                 } else {
