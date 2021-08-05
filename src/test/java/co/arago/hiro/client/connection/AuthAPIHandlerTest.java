@@ -44,14 +44,14 @@ class AuthAPIHandlerTest {
     void checkMeAccount() throws HiroException, IOException, InterruptedException {
         System.out.println(
                 JsonTools.DEFAULT.toPrettyString(
-                        authAPI.meAccount(Map.of("profile", "true"))
+                        authAPI.newGetMeAccount().setProfile(true).execute()
                 )
         );
     }
 
     @Test
     void checkMeAvatar() throws HiroException, IOException, InterruptedException {
-        HttpResponseContainer responseContainer = authAPI.meAvatar();
+        HttpResponseContainer responseContainer = authAPI.newGetMeAvatar().execute();
         System.out.println(responseContainer.mediaType);
         System.out.println(responseContainer.contentLength);
         try (InputStream inputStream = responseContainer.getInputStream()) {

@@ -9,104 +9,29 @@ import co.arago.hiro.client.util.httpclient.HttpResponseContainer;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 public class AuthAPI extends AuthenticatedAPIHandler {
 
-    public interface Conf extends AuthenticatedAPIHandler.Conf {
+    public static abstract class Conf<T extends Conf<T>> extends AuthenticatedAPIHandler.Conf<T> {
     }
 
-    public static final class Builder implements Conf {
-
-        private String apiName;
-        private String endpoint;
-        private Long httpRequestTimeout;
-        private int maxRetries = 2;
-        private AbstractTokenAPIHandler tokenAPIHandler;
+    public static final class Builder extends Conf<Builder> {
 
         public Builder(String apiName, AbstractTokenAPIHandler tokenAPIHandler) {
-            this.apiName = apiName;
-            this.tokenAPIHandler = tokenAPIHandler;
+            setApiName(apiName);
+            setTokenApiHandler(tokenAPIHandler);
         }
 
         @Override
-        public Long getHttpRequestTimeout() {
-            return httpRequestTimeout;
-        }
-
-        /**
-         * @param httpRequestTimeout Request timeout in ms.
-         * @return this
-         */
-        @Override
-        public Builder setHttpRequestTimeout(Long httpRequestTimeout) {
-            this.httpRequestTimeout = httpRequestTimeout;
-            return this;
-        }
-
-        @Override
-        public int getMaxRetries() {
-            return maxRetries;
-        }
-
-        /**
-         * @param maxRetries Max amount of retries when http errors are received.
-         * @return this
-         */
-        @Override
-        public Builder setMaxRetries(int maxRetries) {
-            this.maxRetries = maxRetries;
-            return this;
-        }
-
-        @Override
-        public String getApiName() {
-            return apiName;
-        }
-
-        /**
-         * @param apiName Set the name of the api. This name will be used to determine the API endpoint.
-         * @return this
-         */
-        @Override
-        public Builder setApiName(String apiName) {
-            this.apiName = apiName;
-            return this;
-        }
-
-        @Override
-        public String getEndpoint() {
-            return endpoint;
-        }
-
-        /**
-         * @param endpoint Set a custom endpoint directly, omitting automatic endpoint detection via apiName.
-         * @return this
-         */
-        @Override
-        public Builder setEndpoint(String endpoint) {
-            this.endpoint = endpoint;
-            return this;
-        }
-
-        @Override
-        public AbstractTokenAPIHandler getTokenApiHandler() {
-            return tokenAPIHandler;
-        }
-
-        /**
-         * @param tokenAPIHandler The tokenAPIHandler for this API.
-         * @return this
-         */
-        @Override
-        public Builder setTokenApiHandler(AbstractTokenAPIHandler tokenAPIHandler) {
-            this.tokenAPIHandler = tokenAPIHandler;
+        protected Builder self() {
             return this;
         }
 
         public AuthAPI build() {
-            RequiredFieldChecker.notNull(tokenAPIHandler, "tokenApiHandler");
-            if (StringUtils.isBlank(apiName) && StringUtils.isBlank(endpoint))
+            RequiredFieldChecker.notNull(getTokenApiHandler(), "tokenApiHandler");
+            if (StringUtils.isBlank(getApiName()) && StringUtils.isBlank(getEndpoint()))
                 RequiredFieldChecker.anyError("Either 'apiName' or 'endpoint' have to be set.");
             return new AuthAPI(this);
         }
@@ -118,7 +43,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @param builder The builder to use.
      */
-    protected AuthAPI(Conf builder) {
+    protected AuthAPI(Conf<?> builder) {
         super(builder);
     }
 
@@ -126,43 +51,88 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         return new Builder("auth", tokenAPIHandler);
     }
 
-    /**
-     * get account information about current token
-     * <p>
-     * API /api/auth/[version]/me/account
-     *
-     * @param profile Query parameter "profile=[true|false]". Set null to omit the parameter.
-     * @return A HiroVertexResponse with the result data.
-     * @throws HiroException        When the call returns a http status error.
-     * @throws IOException          When the call got an IO error.
-     * @throws InterruptedException When the call gets interrupted.
-     * @see <a href=https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity>API Documentation</a>
-     */
-    public HiroVertexResponse meAccount(Boolean profile) throws HiroException, IOException, InterruptedException {
-        return meAccount(profile != null ? Map.of("profile", profile.toString()) : null);
-    }
+    // ###############################################################################################
+    // ## API Requests ##
+    // ###############################################################################################
 
     /**
      * get account information about current token
      * <p>
-     * API /api/auth/[version]/me/account
-     *
-     * @param query Any query parameter.
-     * @return A HiroVertexResponse with the result data.
-     * @throws HiroException        When the call returns a http status error.
-     * @throws IOException          When the call got an IO error.
-     * @throws InterruptedException When the call gets interrupted.
+     * API GET /api/auth/[version]/me/account
      * @see <a href=https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity>API Documentation</a>
      */
-    public HiroVertexResponse meAccount(Map<String, String> query) throws HiroException, IOException, InterruptedException {
-        return get(HiroVertexResponse.class, getUri("me/account", query), null);
+    public class GetMeAccount extends APIRequestConf<GetMeAccount, HiroVertexResponse> {
+
+        /**
+         * @param profile Query parameter "profile=[true|false]".
+         * @return this
+         */
+        public GetMeAccount setProfile(Boolean profile) {
+            if (query == null)
+                query = new HashMap<>();
+
+            query.put("profile", String.valueOf(profile));
+            return self();
+        }
+
+        @Override
+        protected GetMeAccount self() {
+            return this;
+        }
+
+        /**
+         * get account information about current token
+         * <p>
+         * API GET /api/auth/[version]/me/account
+         *
+         * @return A HiroVertexResponse with the result data.
+         * @throws HiroException        When the call returns a http status error.
+         * @throws IOException          When the call got an IO error.
+         * @throws InterruptedException When the call gets interrupted.
+         * @see <a href=https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity>API Documentation</a>
+         */
+        public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
+            return get(HiroVertexResponse.class, getUri("me/account", query, fragment), headers);
+        }
     }
 
-    public HttpResponseContainer meAvatar() throws HiroException, IOException, InterruptedException {
-        return meAvatar(null);
+    public GetMeAccount newGetMeAccount() {
+        return new GetMeAccount();
     }
 
-    public HttpResponseContainer meAvatar(Map<String, String> query) throws HiroException, IOException, InterruptedException {
-        return getBinary(getUri("me/avatar", query), null);
+    /**
+     * get avatar of current token's account
+     * <p>
+     * API GET /api/auth/[version]/me/avatar
+     *
+     * @see <a href=https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_avatar>API Documentation</a>
+     */
+    public class GetMeAvatar extends APIRequestConf<GetMeAvatar, HttpResponseContainer> {
+
+        @Override
+        protected GetMeAvatar self() {
+            return this;
+        }
+
+        /**
+         * get avatar of current token's account
+         * <p>
+         * API GET /api/auth/[version]/me/avatar
+         *
+         * @return A {@link HttpResponseContainer} containing the InputStream of the image, the mediaType and the size
+         * (if available).
+         * @throws HiroException        When the call returns a http status error.
+         * @throws IOException          When the call got an IO error.
+         * @throws InterruptedException When the call gets interrupted.
+         * @see <a href=https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_avatar>API Documentation</a>
+         */
+        public HttpResponseContainer execute() throws HiroException, IOException, InterruptedException {
+            return getBinary(getUri("me/avatar", query, fragment), headers);
+        }
     }
+
+    public GetMeAvatar newGetMeAvatar() {
+        return new GetMeAvatar();
+    }
+
 }

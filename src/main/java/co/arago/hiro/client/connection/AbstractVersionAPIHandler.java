@@ -11,7 +11,9 @@ import java.net.URI;
  */
 public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler {
 
-    public interface Conf extends AbstractClientAPIHandler.Conf {
+    public static abstract class Conf<T extends Conf<T>> extends AbstractClientAPIHandler.Conf<T> {
+        @Override
+        public abstract AbstractVersionAPIHandler build();
     }
 
 

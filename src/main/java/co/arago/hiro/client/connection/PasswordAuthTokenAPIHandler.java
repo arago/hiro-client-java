@@ -14,12 +14,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLParameters;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -29,105 +26,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
     final Logger log = LoggerFactory.getLogger(PasswordAuthTokenAPIHandler.class);
 
-    public interface Conf extends AbstractTokenAPIHandler.Conf {
-        String getUsername();
-
-        /**
-         * @param username HIRO username for user account
-         * @return this
-         */
-        Conf setUsername(String username);
-
-        String getPassword();
-
-        /**
-         * @param password HIRO password for user account
-         * @return this
-         */
-        Conf setPassword(String password);
-
-        String getClientId();
-
-        /**
-         * @param clientId HIRO client_id of app
-         * @return this
-         */
-        Conf setClientId(String clientId);
-
-        String getClientSecret();
-
-        /**
-         * @param clientSecret HIRO client_secret of app
-         * @return this
-         */
-        Conf setClientSecret(String clientSecret);
-
-        /**
-         * Shorthand to set all credentials at once.
-         *
-         * @param username     HIRO username for user account
-         * @param password     HIRO password for user account
-         * @param clientId     HIRO client_id of app
-         * @param clientSecret HIRO client_secret of app
-         * @return this
-         */
-        Conf setCredentials(String username, String password, String clientId, String clientSecret);
-
-        Long getRefreshOffset();
-
-        /**
-         * Timespan that gets subtracted from the official expiration instant of a token so the token can be refreshed
-         * before it runs out. Default is 5000 (5s).
-         *
-         * @param refreshOffset Offset in ms
-         * @return this
-         */
-        Conf setRefreshOffset(Long refreshOffset);
-
-        Long getRefreshPause();
-
-        /**
-         * Timespan where calls to refresh the token will be ignored and only the current token will be returned. Avoids
-         * refresh floods that can happen with multiple threads using the same TokenAPIHandler. Default is 30000 (30s).
-         *
-         * @param refreshPause Buffer span in ms
-         * @return this
-         */
-        Conf setRefreshPause(Long refreshPause);
-
-        boolean getForceLogging();
-
-        /**
-         * Force logging of insecure request / response data. USE ONLY FOR DEBUGGING PURPOSES!!!
-         *
-         * @param forceLogging the flag to set.
-         * @return this
-         */
-        Conf setForceLogging(boolean forceLogging);
-
-        /**
-         * @param endpoint Set a custom endpoint directly, omitting automatic endpoint detection via apiName.
-         * @return this
-         */
-        Builder setEndpoint(String endpoint);
-
-        String getEndpoint();
-    }
-
-    public static final class Builder implements Conf {
-
-        private String apiUrl;
-        private AbstractClientAPIHandler.ProxySpec proxy;
-        private boolean followRedirects = true;
-        private Long connectTimeout;
-        private Long httpRequestTimeout;
-        private Boolean acceptAllCerts;
-        private SSLContext sslContext;
-        private SSLParameters sslParameters;
-        private String userAgent;
-        private Integer maxConnectionPool;
-        private HttpClient client;
-        private String endpoint;
+    public static abstract class Conf<T extends Conf<T>> extends AbstractTokenAPIHandler.Conf<T> {
         private String username;
         private String password;
         private String clientId;
@@ -135,216 +34,8 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         private Long refreshOffset = 5000L;
         private Long refreshPause = 30000L;
         private boolean forceLogging = false;
-        private int maxRetries = 2;
+        private String endpoint;
 
-        @Override
-        public String getApiUrl() {
-            return apiUrl;
-        }
-
-        /**
-         * @param apiUrl The root url for the API
-         * @return this
-         */
-        @Override
-        public Builder setApiUrl(String apiUrl) {
-            this.apiUrl = apiUrl;
-            return this;
-        }
-
-        @Override
-        public ProxySpec getProxy() {
-            return proxy;
-        }
-
-        /**
-         * @param proxy Simple proxy with one address and port
-         * @return this
-         */
-        @Override
-        public Builder setProxy(ProxySpec proxy) {
-            this.proxy = proxy;
-            return this;
-        }
-
-        @Override
-        public boolean isFollowRedirects() {
-            return followRedirects;
-        }
-
-        /**
-         * @param followRedirects Enable Redirect.NORMAL. Default is true.
-         * @return this
-         */
-        @Override
-        public Builder setFollowRedirects(boolean followRedirects) {
-            this.followRedirects = followRedirects;
-            return this;
-        }
-
-        @Override
-        public Long getConnectTimeout() {
-            return connectTimeout;
-        }
-
-        /**
-         * @param connectTimeout Connect timeout in milliseconds.
-         * @return this
-         */
-        @Override
-        public Builder setConnectTimeout(Long connectTimeout) {
-            this.connectTimeout = connectTimeout;
-            return this;
-        }
-
-        @Override
-        public Long getHttpRequestTimeout() {
-            return httpRequestTimeout;
-        }
-
-        /**
-         * @param httpRequestTimeout Request timeout in ms.
-         * @return this
-         */
-        @Override
-        public Builder setHttpRequestTimeout(Long httpRequestTimeout) {
-            this.httpRequestTimeout = httpRequestTimeout;
-            return this;
-        }
-
-        @Override
-        public Boolean getAcceptAllCerts() {
-            return acceptAllCerts;
-        }
-
-        /**
-         * Skip SSL certificate verification. Leave this unset to use the default in HttpClient. Setting this to true
-         * installs a permissive SSLContext, setting it to false removes the SSLContext to use the default.
-         *
-         * @param acceptAllCerts the toggle
-         * @return this
-         */
-        @Override
-        public Builder setAcceptAllCerts(Boolean acceptAllCerts) {
-            this.acceptAllCerts = acceptAllCerts;
-            return this;
-        }
-
-        @Override
-        public SSLContext getSslContext() {
-            return sslContext;
-        }
-
-        /**
-         * @param sslContext The specific SSLContext to use.
-         * @return this
-         * @see #setAcceptAllCerts(Boolean)
-         */
-        @Override
-        public Builder setSslContext(SSLContext sslContext) {
-            this.sslContext = sslContext;
-            return this;
-        }
-
-        @Override
-        public SSLParameters getSslParameters() {
-            return sslParameters;
-        }
-
-        /**
-         * @param sslParameters The specific SSLParameters to use.
-         * @return this
-         */
-        @Override
-        public Builder setSslParameters(SSLParameters sslParameters) {
-            this.sslParameters = sslParameters;
-            return this;
-        }
-
-        @Override
-        public String getUserAgent() {
-            return userAgent;
-        }
-
-        /**
-         * For header "User-Agent". Default is determined by the package.
-         *
-         * @param userAgent The line for the User-Agent header.
-         * @return this
-         */
-        @Override
-        public Builder setUserAgent(String userAgent) {
-            this.userAgent = userAgent;
-            return this;
-        }
-
-        @Override
-        public HttpClient getClient() {
-            return client;
-        }
-
-        /**
-         * Instance of an externally configured http client. An internal HttpClient will be built with parameters
-         * given by this Builder if this is not set.
-         *
-         * @param client Instance of an HttpClient.
-         * @return this
-         */
-        @Override
-        public Builder setClient(HttpClient client) {
-            this.client = client;
-            return this;
-        }
-
-        @Override
-        public Integer getMaxConnectionPool() {
-            return maxConnectionPool;
-        }
-
-        /**
-         * Set the maximum of open connections for this HttpClient (This sets the fixedThreadPool for the
-         * Executor of the HttpClient).
-         *
-         * @param maxConnectionPool Maximum size of the pool. Default is 8.
-         * @return this
-         */
-        @Override
-        public Builder setMaxConnectionPool(Integer maxConnectionPool) {
-            this.maxConnectionPool = maxConnectionPool;
-            return this;
-        }
-
-        @Override
-        public int getMaxRetries() {
-            return maxRetries;
-        }
-
-        /**
-         * @param maxRetries Max amount of retries when http errors are received.
-         * @return this
-         */
-        @Override
-        public Builder setMaxRetries(int maxRetries) {
-            this.maxRetries = maxRetries;
-            return this;
-        }
-
-        @Override
-        public String getEndpoint() {
-            return endpoint;
-        }
-
-        /**
-         * @param endpoint Set a custom endpoint directly, omitting automatic endpoint detection via apiName.
-         * @return this
-         */
-        @Override
-        public Builder setEndpoint(String endpoint) {
-            this.endpoint = endpoint;
-            return this;
-        }
-
-        @Override
         public String getUsername() {
             return username;
         }
@@ -353,13 +44,11 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * @param username HIRO username for user account
          * @return this
          */
-        @Override
-        public Builder setUsername(String username) {
+        public T setUsername(String username) {
             this.username = username;
-            return this;
+            return self();
         }
 
-        @Override
         public String getPassword() {
             return password;
         }
@@ -368,13 +57,11 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * @param password HIRO password for user account
          * @return this
          */
-        @Override
-        public Builder setPassword(String password) {
+        public T setPassword(String password) {
             this.password = password;
-            return this;
+            return self();
         }
 
-        @Override
         public String getClientId() {
             return clientId;
         }
@@ -383,13 +70,11 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * @param clientId HIRO client_id of app
          * @return this
          */
-        @Override
-        public Builder setClientId(String clientId) {
+        public T setClientId(String clientId) {
             this.clientId = clientId;
-            return this;
+            return self();
         }
 
-        @Override
         public String getClientSecret() {
             return clientSecret;
         }
@@ -398,10 +83,9 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * @param clientSecret HIRO client_secret of app
          * @return this
          */
-        @Override
-        public Builder setClientSecret(String clientSecret) {
+        public T setClientSecret(String clientSecret) {
             this.clientSecret = clientSecret;
-            return this;
+            return self();
         }
 
         /**
@@ -413,16 +97,14 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * @param clientSecret HIRO client_secret of app
          * @return this
          */
-        @Override
-        public Builder setCredentials(String username, String password, String clientId, String clientSecret) {
+        public T setCredentials(String username, String password, String clientId, String clientSecret) {
             setUsername(username);
             setPassword(password);
             setClientId(clientId);
             setClientSecret(clientSecret);
-            return this;
+            return self();
         }
 
-        @Override
         public Long getRefreshOffset() {
             return refreshOffset;
         }
@@ -434,13 +116,11 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * @param refreshOffset Offset in ms
          * @return this
          */
-        @Override
-        public Builder setRefreshOffset(Long refreshOffset) {
+        public T setRefreshOffset(Long refreshOffset) {
             this.refreshOffset = refreshOffset;
-            return this;
+            return self();
         }
 
-        @Override
         public Long getRefreshPause() {
             return refreshPause;
         }
@@ -452,13 +132,11 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * @param refreshPause Buffer span in ms
          * @return this
          */
-        @Override
-        public Builder setRefreshPause(Long refreshPause) {
+        public T setRefreshPause(Long refreshPause) {
             this.refreshPause = refreshPause;
-            return this;
+            return self();
         }
 
-        @Override
         public boolean getForceLogging() {
             return forceLogging;
         }
@@ -469,18 +147,38 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * @param forceLogging the flag to set.
          * @return this
          */
-        @Override
-        public Builder setForceLogging(boolean forceLogging) {
+        public T setForceLogging(boolean forceLogging) {
             this.forceLogging = forceLogging;
+            return self();
+        }
+
+        public String getEndpoint() {
+            return endpoint;
+        }
+
+        /**
+         * @param endpoint The endpoint set externally. Overrides the fetching of the endpoint via /api/version.
+         * @return this
+         */
+        public T setEndpoint(String endpoint) {
+            this.endpoint = endpoint;
+            return self();
+        }
+    }
+
+    public static final class Builder extends Conf<Builder> {
+
+        @Override
+        protected Builder self() {
             return this;
         }
 
         public PasswordAuthTokenAPIHandler build() {
-            RequiredFieldChecker.notBlank(apiUrl, "apiUrl");
-            RequiredFieldChecker.notBlank(username, "username");
-            RequiredFieldChecker.notBlank(password, "password");
-            RequiredFieldChecker.notBlank(clientId, "clientId");
-            RequiredFieldChecker.notBlank(clientSecret, "clientSecret");
+            RequiredFieldChecker.notBlank(getApiUrl(), "apiUrl");
+            RequiredFieldChecker.notBlank(getUsername(), "username");
+            RequiredFieldChecker.notBlank(getPassword(), "password");
+            RequiredFieldChecker.notBlank(getClientId(), "clientId");
+            RequiredFieldChecker.notBlank(getClientSecret(), "clientSecret");
             return new PasswordAuthTokenAPIHandler(this);
         }
     }
@@ -511,7 +209,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     protected URI apiUri;
 
 
-    protected PasswordAuthTokenAPIHandler(Conf builder) {
+    protected PasswordAuthTokenAPIHandler(Conf<?> builder) {
         super(builder);
         this.username = builder.getUsername();
         this.password = builder.getPassword();

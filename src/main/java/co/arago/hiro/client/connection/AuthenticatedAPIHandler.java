@@ -21,46 +21,119 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
     final Logger log = LoggerFactory.getLogger(AuthenticatedAPIHandler.class);
 
-    public interface Conf {
-        String getApiName();
+    /**
+     * The basic configuration for all requests. Handle queries, headers and fragments.
+     *
+     * @param <T> The Builder type
+     * @param <R> The type of the result expected from {@link #execute()}
+     */
+    public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> {
+
+        protected Map<String, String> query;
+        protected Map<String, String> headers;
+        protected String fragment;
+
+        public T setQuery(Map<String, String> query) {
+            this.query = query;
+            return self();
+        }
+
+        public T setHeaders(Map<String, String> headers) {
+            this.headers = headers;
+            return self();
+        }
+
+        public T setFragment(String fragment) {
+            this.fragment = fragment;
+            return self();
+        }
+
+        public abstract R execute() throws HiroException, IOException, InterruptedException;
+
+        protected abstract T self();
+    }
+
+
+    /**
+     * Configuration interface for all the parameters of an AuthenticatedAPIHandler.
+     * Builder need to implement this.
+     */
+    public static abstract class Conf<T extends Conf<T>> {
+        private String apiName;
+        private String endpoint;
+        private Long httpRequestTimeout;
+        private AbstractTokenAPIHandler tokenAPIHandler;
+        private int maxRetries;
+
+        public String getApiName() {
+            return apiName;
+        }
 
         /**
          * @param apiName Set the name of the api. This name will be used to determine the API endpoint.
          * @return this
          */
-        Conf setApiName(String apiName);
+        public T setApiName(String apiName) {
+            this.apiName = apiName;
+            return self();
+        }
 
-        String getEndpoint();
+        public String getEndpoint() {
+            return endpoint;
+        }
 
         /**
          * @param endpoint Set a custom endpoint directly, omitting automatic endpoint detection via apiName.
          * @return this
          */
-        Conf setEndpoint(String endpoint);
+        public T setEndpoint(String endpoint) {
+            this.endpoint = endpoint;
+            return self();
+        }
 
-        Long getHttpRequestTimeout();
+        public Long getHttpRequestTimeout() {
+            return this.httpRequestTimeout;
+        }
 
         /**
          * @param httpRequestTimeout Request timeout in ms.
          * @return this
          */
-        Conf setHttpRequestTimeout(Long httpRequestTimeout);
+        public T setHttpRequestTimeout(Long httpRequestTimeout) {
+            this.httpRequestTimeout = httpRequestTimeout;
+            return self();
+        }
 
-        int getMaxRetries();
+
+        public int getMaxRetries() {
+            return maxRetries;
+        }
 
         /**
          * @param maxRetries Max amount of retries when http errors are received.
          * @return this
          */
-        Conf setMaxRetries(int maxRetries);
+        public T setMaxRetries(int maxRetries) {
+            this.maxRetries = maxRetries;
+            return self();
+        }
 
-        AbstractTokenAPIHandler getTokenApiHandler();
+        public AbstractTokenAPIHandler getTokenApiHandler() {
+            return this.tokenAPIHandler;
+        }
 
         /**
          * @param tokenAPIHandler The tokenAPIHandler for this API.
          * @return this
          */
-        Conf setTokenApiHandler(AbstractTokenAPIHandler tokenAPIHandler);
+        public T setTokenApiHandler(AbstractTokenAPIHandler tokenAPIHandler) {
+            this.tokenAPIHandler = tokenAPIHandler;
+            return self();
+        }
+
+        protected abstract T self();
+
+        public abstract AuthenticatedAPIHandler build();
     }
 
     protected final String apiName;
@@ -73,7 +146,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      *
      * @param builder The builder to use.
      */
-    protected AuthenticatedAPIHandler(Conf builder) {
+    protected AuthenticatedAPIHandler(Conf<?> builder) {
         super(makeHandlerConf(builder, builder.getTokenApiHandler()));
         this.apiName = builder.getApiName();
         this.endpoint = builder.getEndpoint();
@@ -90,7 +163,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param tokenAPIHandler The tokenApiHandler for this Handler.
      * @return An AbstractAPIHandler.GetterConf for the parent class.
      */
-    protected static AbstractAPIHandler.GetterConf makeHandlerConf(Conf builder, AbstractTokenAPIHandler tokenAPIHandler) {
+    protected static AbstractAPIHandler.GetterConf makeHandlerConf(Conf<?> builder, AbstractTokenAPIHandler tokenAPIHandler) {
         return new AbstractAPIHandler.GetterConf() {
             @Override
             public String getApiUrl() {

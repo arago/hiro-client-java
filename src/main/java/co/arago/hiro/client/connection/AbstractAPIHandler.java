@@ -44,24 +44,35 @@ public abstract class AbstractAPIHandler {
         String getUserAgent();
     }
 
-    public interface Conf extends GetterConf {
+    /**
+     * The basic configuration for all APIHAndler
+     *
+     * @param <T> The type of the Builder
+     */
+    public static abstract class Conf<T extends Conf<T>> implements GetterConf {
+        private String apiUrl;
+        private String userAgent;
+        private Long httpRequestTimeout;
+        private int maxRetries;
+
+        @Override
+        public String getApiUrl() {
+            return apiUrl;
+        }
+
         /**
          * @param apiUrl The root url for the API
          * @return this
          */
-        Conf setApiUrl(String apiUrl);
+        public T setApiUrl(String apiUrl) {
+            this.apiUrl = apiUrl;
+            return self();
+        }
 
-        /**
-         * @param httpRequestTimeout Request timeout in ms.
-         * @return this
-         */
-        Conf setHttpRequestTimeout(Long httpRequestTimeout);
-
-        /**
-         * @param maxRetries Max amount of retries when http errors are received.
-         * @return this
-         */
-        Conf setMaxRetries(int maxRetries);
+        @Override
+        public String getUserAgent() {
+            return userAgent;
+        }
 
         /**
          * For header "User-Agent". Default is determined by the package.
@@ -69,7 +80,42 @@ public abstract class AbstractAPIHandler {
          * @param userAgent The line for the User-Agent header.
          * @return this
          */
-        Conf setUserAgent(String userAgent);
+        public T setUserAgent(String userAgent) {
+            this.userAgent = userAgent;
+            return self();
+        }
+
+        @Override
+        public Long getHttpRequestTimeout() {
+            return httpRequestTimeout;
+        }
+
+        /**
+         * @param httpRequestTimeout Request timeout in ms.
+         * @return this
+         */
+        public T setHttpRequestTimeout(Long httpRequestTimeout) {
+            this.httpRequestTimeout = httpRequestTimeout;
+            return self();
+        }
+
+        @Override
+        public int getMaxRetries() {
+            return maxRetries;
+        }
+
+        /**
+         * @param maxRetries Max amount of retries when http errors are received.
+         * @return this
+         */
+        public T setMaxRetries(int maxRetries) {
+            this.maxRetries = maxRetries;
+            return self();
+        }
+
+        protected abstract T self();
+
+        public abstract AbstractAPIHandler build();
     }
 
     public static final String title;
@@ -317,7 +363,6 @@ public abstract class AbstractAPIHandler {
      * @param httpRequest The httpRequest to send
      * @return A future for the HttpResponse&lt;InputStream&gt;.
      * @see #getAsyncResponse(CompletableFuture)
-     * @see #getFromAsyncResponse(CompletableFuture, Class)
      */
     public CompletableFuture<HttpResponse<InputStream>> sendAsync(HttpRequest httpRequest) {
         return getOrBuildClient().sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream());

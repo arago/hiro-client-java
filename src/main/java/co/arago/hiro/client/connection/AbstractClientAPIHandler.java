@@ -25,41 +25,58 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
 
     final Logger log = LoggerFactory.getLogger(AbstractClientAPIHandler.class);
 
-    public interface Conf extends AbstractAPIHandler.Conf {
+    public static abstract class Conf<T extends Conf<T>> extends AbstractAPIHandler.Conf<T> {
+        protected AbstractClientAPIHandler.ProxySpec proxy;
+        protected boolean followRedirects = true;
+        protected Boolean acceptAllCerts;
+        protected Long connectTimeout;
+        protected SSLParameters sslParameters;
+        protected HttpClient client;
+        protected SSLContext sslContext;
+        protected Integer maxConnectionPool;
 
-        ProxySpec getProxy();
+        ProxySpec getProxy() {
+            return proxy;
+        }
 
         /**
          * @param proxy Simple proxy with one address and port
          * @return this
          */
-        Conf setProxy(ProxySpec proxy);
+        public T setProxy(ProxySpec proxy) {
+            this.proxy = proxy;
+            return self();
+        }
 
-        boolean isFollowRedirects();
+        public boolean isFollowRedirects() {
+            return followRedirects;
+        }
 
         /**
          * @param followRedirects Enable Redirect.NORMAL. Default is true.
          * @return this
          */
-        Conf setFollowRedirects(boolean followRedirects);
+        public T setFollowRedirects(boolean followRedirects) {
+            this.followRedirects = followRedirects;
+            return self();
+        }
 
-        Long getConnectTimeout();
+        public Long getConnectTimeout() {
+            return connectTimeout;
+        }
 
         /**
          * @param connectTimeout Connect timeout in milliseconds.
          * @return this
          */
-        Conf setConnectTimeout(Long connectTimeout);
+        public T setConnectTimeout(Long connectTimeout) {
+            this.connectTimeout = connectTimeout;
+            return self();
+        }
 
-        Long getHttpRequestTimeout();
-
-        /**
-         * @param httpRequestTimeout Request timeout in ms.
-         * @return this
-         */
-        Conf setHttpRequestTimeout(Long httpRequestTimeout);
-
-        Boolean getAcceptAllCerts();
+        public Boolean getAcceptAllCerts() {
+            return acceptAllCerts;
+        }
 
         /**
          * Skip SSL certificate verification. Leave this unset to use the default in HttpClient. Setting this to true
@@ -68,26 +85,41 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
          * @param acceptAllCerts the toggle
          * @return this
          */
-        Conf setAcceptAllCerts(Boolean acceptAllCerts);
+        public T setAcceptAllCerts(Boolean acceptAllCerts) {
+            this.acceptAllCerts = acceptAllCerts;
+            return self();
+        }
 
-        SSLContext getSslContext();
+        public SSLContext getSslContext() {
+            return sslContext;
+        }
 
         /**
          * @param sslContext The specific SSLContext to use.
          * @return this
          * @see #setAcceptAllCerts(Boolean)
          */
-        Conf setSslContext(SSLContext sslContext);
+        public T setSslContext(SSLContext sslContext) {
+            this.sslContext = sslContext;
+            return self();
+        }
 
-        SSLParameters getSslParameters();
+        public SSLParameters getSslParameters() {
+            return sslParameters;
+        }
 
         /**
          * @param sslParameters The specific SSLParameters to use.
          * @return this
          */
-        Conf setSslParameters(SSLParameters sslParameters);
+        public T setSslParameters(SSLParameters sslParameters) {
+            this.sslParameters = sslParameters;
+            return self();
+        }
 
-        HttpClient getClient();
+        public HttpClient getClient() {
+            return client;
+        }
 
         /**
          * Instance of an externally configured http client. An internal HttpClient will be built with parameters
@@ -96,9 +128,14 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
          * @param client Instance of an HttpClient.
          * @return this
          */
-        Conf setClient(HttpClient client);
+        public T setClient(HttpClient client) {
+            this.client = client;
+            return self();
+        }
 
-        Integer getMaxConnectionPool();
+        public Integer getMaxConnectionPool() {
+            return maxConnectionPool;
+        }
 
         /**
          * Set the maximum of open connections for this HttpClient (This sets the fixedThreadPool for the
@@ -107,7 +144,13 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
          * @param maxConnectionPool Maximum size of the pool. Default is 8.
          * @return this
          */
-        Conf setMaxConnectionPool(Integer maxConnectionPool);
+        public T setMaxConnectionPool(Integer maxConnectionPool) {
+            this.maxConnectionPool = maxConnectionPool;
+            return self();
+        }
+
+        @Override
+        public abstract AbstractClientAPIHandler build();
     }
 
     /**
@@ -153,6 +196,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
     protected final HttpClient client;
     protected SSLContext sslContext;
     protected final Integer maxConnectionPool;
+
     protected final HttpLogger httpLogger = new HttpLogger();
 
     // ###############################################################################################
@@ -164,7 +208,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
      *
      * @param builder The builder to use.
      */
-    protected AbstractClientAPIHandler(Conf builder) {
+    protected AbstractClientAPIHandler(Conf<?> builder) {
         super(builder);
         this.proxy = builder.getProxy();
         this.followRedirects = builder.isFollowRedirects();

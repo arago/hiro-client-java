@@ -8,7 +8,9 @@ import java.util.Map;
 
 public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler {
 
-    public interface Conf extends AbstractVersionAPIHandler.Conf {
+    public static abstract class Conf<T extends Conf<T>> extends AbstractVersionAPIHandler.Conf<T> {
+        @Override
+        public abstract AbstractTokenAPIHandler build();
     }
 
     /**
