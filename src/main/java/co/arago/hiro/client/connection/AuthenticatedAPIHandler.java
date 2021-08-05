@@ -1,8 +1,13 @@
 package co.arago.hiro.client.connection;
 
+import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.util.HttpLogger;
+import co.arago.hiro.client.util.JsonTools;
+import co.arago.hiro.client.util.RequiredFieldChecker;
+import co.arago.hiro.client.util.httpclient.StreamContainer;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +17,8 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
+import java.nio.charset.Charset;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -29,8 +36,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      */
     public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> {
 
-        protected Map<String, String> query;
-        protected Map<String, String> headers;
+        protected Map<String, String> query = new HashMap<>();
+        protected Map<String, String> headers = new HashMap<>();
         protected String fragment;
 
         public T setQuery(Map<String, String> query) {
@@ -51,6 +58,106 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         public abstract R execute() throws HiroException, IOException, InterruptedException;
 
         protected abstract T self();
+    }
+
+    public static abstract class SendJsonAPIRequestConf<T extends SendJsonAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> {
+        protected String body;
+
+        /**
+         * Set the body as plain String.
+         *
+         * @param body The body to set.
+         * @return this
+         */
+        public T setBody(String body) {
+            this.body = body;
+            return self();
+        }
+
+        /**
+         * Convert the Map into a JSON body String.
+         * @param body The map to convert.
+         * @return this.
+         */
+        public T setJsonFromMap(Map<String,?> body) throws JsonProcessingException {
+            this.body = JsonTools.DEFAULT.toString(body);
+            return self();
+        }
+    }
+
+    /**
+     * The basic configuration for all requests that upload binary data. Handle queries, headers and fragments as well
+     * as creation of the {@link StreamContainer}.
+     *
+     * @param <T> The Builder type
+     * @param <R> The type of the result expected from {@link #execute()}
+     */
+    public static abstract class SendBinaryAPIRequestConf<T extends SendBinaryAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> {
+        protected StreamContainer streamContainer;
+
+        /**
+         * Use an existing {@link StreamContainer}
+         *
+         * @param streamContainer The existing {@link StreamContainer}. Must not be null.
+         */
+        public SendBinaryAPIRequestConf(StreamContainer streamContainer) {
+            RequiredFieldChecker.notNull(streamContainer, "streamContainer");
+            this.streamContainer = streamContainer;
+        }
+
+        /**
+         * Use an inputStream for data and nothing else.
+         *
+         * @param inputStream The inputStream for the request body. Must not be null.
+         */
+        public SendBinaryAPIRequestConf(InputStream inputStream) {
+            RequiredFieldChecker.notNull(inputStream, "inputStream");
+            this.streamContainer = new StreamContainer(inputStream, null, null, null);
+        }
+
+        public T setCharset(Charset charset) {
+            this.streamContainer.setCharset(charset);
+            return self();
+        }
+
+        /**
+         * @param mediaType The mediaType / MIME-Type.
+         * @return this
+         */
+        public T setMediaType(String mediaType) {
+            this.streamContainer.setMediaType(mediaType);
+            return self();
+        }
+
+        /**
+         * Decodes mediaType and charset from the contentType.
+         *
+         * @param contentType The HTTP header field "Content-Type".
+         * @return this
+         * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type">Documentation of Content-Type</a>
+         */
+        public T setContentType(String contentType) {
+            this.streamContainer.setContentType(contentType);
+            return self();
+        }
+
+        /**
+         * Override here to grab Content-Type header for {@link #streamContainer}.
+         *
+         * @param headers The headers to set.
+         * @return this
+         */
+        @Override
+        public T setHeaders(Map<String, String> headers) {
+            for (Map.Entry<String, String> entry : headers.entrySet()) {
+                if (StringUtils.equalsIgnoreCase(entry.getKey(), "Content-Type")) {
+                    setContentType(entry.getValue());
+                }
+            }
+
+            return super.setHeaders(headers);
+        }
+
     }
 
 
@@ -138,7 +245,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
     protected final String apiName;
     protected final String endpoint;
-    protected final AbstractTokenAPIHandler hiroClient;
+    protected final AbstractTokenAPIHandler tokenAPIHandler;
     protected URI apiUri;
 
     /**
@@ -150,7 +257,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         super(makeHandlerConf(builder, builder.getTokenApiHandler()));
         this.apiName = builder.getApiName();
         this.endpoint = builder.getEndpoint();
-        this.hiroClient = builder.getTokenApiHandler();
+        this.tokenAPIHandler = builder.getTokenApiHandler();
     }
 
     /**
@@ -230,7 +337,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      */
     public URI getUri(String path, Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
         if (apiUri == null)
-            apiUri = (endpoint != null ? buildURI(endpoint) : hiroClient.getApiUriOf(apiName));
+            apiUri = (endpoint != null ? buildURI(endpoint) : tokenAPIHandler.getApiUriOf(apiName));
 
         URI pathUri = apiUri.resolve(StringUtils.startsWith(path, "/") ? path.substring(1) : path);
 
@@ -246,7 +353,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     public void addToHeaders(Map<String, String> headers) {
         try {
             headers.put("User-Agent", userAgent);
-            headers.put("Authorization", "Bearer " + hiroClient.getToken());
+            headers.put("Authorization", "Bearer " + tokenAPIHandler.getToken());
         } catch (IOException | InterruptedException | HiroException e) {
             log.error("Cannot get token: '{}'", e.getMessage());
         }
@@ -269,7 +376,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         } catch (TokenUnauthorizedException e) {
             if (retryCount > 0) {
                 log.info("Refreshing token because of '{}'.", e.getMessage());
-                hiroClient.refreshToken();
+                tokenAPIHandler.refreshToken();
                 return true;
             } else {
                 throw e;
@@ -278,22 +385,22 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     }
 
     /**
-     * Redirect the HttpLogger to the one provided in {@link #hiroClient}.
+     * Redirect the HttpLogger to the one provided in {@link #tokenAPIHandler}.
      *
      * @return The HttpLogger to use with this class.
      */
     @Override
-    public HttpLogger getHttpLogger() {
-        return hiroClient.getHttpLogger();
+    protected HttpLogger getHttpLogger() {
+        return tokenAPIHandler.getHttpLogger();
     }
 
     /**
-     * Redirect the HttpClient to the one provided in {@link #hiroClient}.
+     * Redirect the HttpClient to the one provided in {@link #tokenAPIHandler}.
      *
      * @return The HttpClient to use with this class.
      */
     @Override
-    public HttpClient getOrBuildClient() {
-        return hiroClient.getOrBuildClient();
+    protected HttpClient getOrBuildClient() {
+        return tokenAPIHandler.getOrBuildClient();
     }
 }

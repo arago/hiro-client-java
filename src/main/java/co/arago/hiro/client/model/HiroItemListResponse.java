@@ -23,6 +23,14 @@ public class HiroItemListResponse<T extends HiroResponse> extends HiroResponse {
     private static final long serialVersionUID = -8485209005414408396L;
 
     @JsonProperty("items")
-    public List<T> items;
+    protected List<T> items;
+
+    public void setItems(List<T> items) {
+        this.items = items;
+    }
+
+    public List<T> getItems() {
+        return items;
+    }
 
 }

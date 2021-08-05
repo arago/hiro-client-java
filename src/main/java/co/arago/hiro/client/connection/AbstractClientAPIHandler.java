@@ -16,12 +16,14 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Class for API httpRequests that contains a HttpClient and a HttpLogger.
  */
-public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
+public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implements AutoCloseable {
 
     final Logger log = LoggerFactory.getLogger(AbstractClientAPIHandler.class);
 
@@ -31,7 +33,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
         protected Boolean acceptAllCerts;
         protected Long connectTimeout;
         protected SSLParameters sslParameters;
-        protected HttpClient client;
+        protected HttpClient httpClient;
         protected SSLContext sslContext;
         protected Integer maxConnectionPool;
 
@@ -117,19 +119,19 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
             return self();
         }
 
-        public HttpClient getClient() {
-            return client;
+        public HttpClient getHttpClient() {
+            return httpClient;
         }
 
         /**
          * Instance of an externally configured http client. An internal HttpClient will be built with parameters
          * given by this Builder if this is not set.
          *
-         * @param client Instance of an HttpClient.
+         * @param httpClient Instance of an HttpClient.
          * @return this
          */
-        public T setClient(HttpClient client) {
-            this.client = client;
+        public T setHttpClient(HttpClient httpClient) {
+            this.httpClient = httpClient;
             return self();
         }
 
@@ -193,11 +195,13 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
     protected final boolean followRedirects;
     protected final Long connectTimeout;
     protected final SSLParameters sslParameters;
-    protected final HttpClient client;
+    protected HttpClient httpClient;
     protected SSLContext sslContext;
     protected final Integer maxConnectionPool;
 
     protected final HttpLogger httpLogger = new HttpLogger();
+
+    private ExecutorService clientExecutorService;
 
     // ###############################################################################################
     // ## Constructors ##
@@ -215,7 +219,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
         this.connectTimeout = builder.getConnectTimeout();
         Boolean acceptAllCerts = builder.getAcceptAllCerts();
         this.sslParameters = builder.getSslParameters();
-        this.client = builder.getClient();
+        this.httpClient = builder.getHttpClient();
         this.maxConnectionPool = builder.getMaxConnectionPool() != null ? builder.getMaxConnectionPool() : 8;
 
         if (acceptAllCerts == null) {
@@ -245,8 +249,8 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
      */
     @Override
     public HttpClient getOrBuildClient() {
-        if (client != null)
-            return client;
+        if (httpClient != null)
+            return httpClient;
 
         HttpClient.Builder builder = HttpClient.newBuilder();
 
@@ -265,9 +269,32 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler {
         if (sslParameters != null)
             builder.sslParameters(sslParameters);
 
-        builder.executor(Executors.newFixedThreadPool(maxConnectionPool));
+        clientExecutorService = Executors.newFixedThreadPool(maxConnectionPool);
+        builder.executor(clientExecutorService);
 
         return builder.build();
+    }
+
+    /**
+     * Shut the {@link #httpClient} down by shutting down its {@link #clientExecutorService}. If the
+     * {@link #httpClient} has been provided externally, this call will be ignored.
+     */
+    @Override
+    public void close() {
+        if (clientExecutorService == null)
+            return;
+
+        clientExecutorService.shutdown();
+        try {
+            if (!clientExecutorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                clientExecutorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            clientExecutorService.shutdownNow();
+        }
+
+        httpClient = null;
+        System.gc();
     }
 
     /**

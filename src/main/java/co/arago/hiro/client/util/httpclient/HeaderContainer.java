@@ -11,29 +11,27 @@ import java.util.stream.Collectors;
 
 /**
  * Decodes / Encodes the headers Content-Type and Content-Length.
+ *
+ * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type">Documentation of Content-Type</a>
  */
 public class HeaderContainer {
     /**
-     * The Content-Type as read from the response header. This might be null when this header is missing.
-     */
-    public String contentType;
-    /**
      * The Content-Length as read from the response header. This might be null when this header is missing.
      */
-    public Long contentLength;
+    protected Long contentLength;
 
     /**
      * Decoded from the Content-Type. Might be null.
      */
-    public String mediaType;
+    protected String mediaType;
     /**
      * Decoded from the Content-Type if it exists. Might be null.
      */
-    public Charset charset;
+    protected Charset charset;
     /**
      * Decoded from the Content-Type if it exists. Might be null.
      */
-    public String boundary;
+    protected String boundary;
 
     /**
      * Constructor. Creates this object with all its data from the incoming httpHeaders.
@@ -41,14 +39,21 @@ public class HeaderContainer {
      * @param httpHeaders The httpHeaders to decode.
      */
     public HeaderContainer(HttpHeaders httpHeaders) {
-        this.contentType = httpHeaders.firstValue("content-type").orElse(null);
+        setContentType(httpHeaders.firstValue("content-type").orElse(null));
 
         OptionalLong contentLength = httpHeaders.firstValueAsLong("content-length");
         this.contentLength = (contentLength.isPresent() ? contentLength.getAsLong() : null);
+    }
 
-        // Decode Content-Type
-        if (this.contentType != null) {
-            List<String> contentParts = Arrays.stream(this.contentType.split(";"))
+    /**
+     * Decodes a Content-Type header and sets mediaType, charset and boundary from it.
+     *
+     * @param contentType The content-type directly from a HTTP header.
+     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type">Documentation of Content-Type</a>
+     */
+    public void setContentType(String contentType) {
+        if (contentType != null) {
+            List<String> contentParts = Arrays.stream(contentType.split(";"))
                     .map(String::trim)
                     .collect(Collectors.toList());
 
@@ -69,6 +74,33 @@ public class HeaderContainer {
     }
 
     /**
+     * Constructs the Header Content-Type from the mediaType, charset or boundary.
+     *
+     * @return The HTTP header value for Content-Type.
+     */
+    public String getContentType() {
+        String contentType = null;
+
+        if (mediaType != null) {
+            contentType = mediaType;
+
+            if (charset != null) {
+                contentType += ";charset=" + charset;
+            }
+            if (boundary != null) {
+                contentType += ";boundary=" + charset;
+            }
+        }
+
+        return contentType;
+    }
+
+    public boolean hasContentType() {
+        return StringUtils.isNotBlank(mediaType);
+    }
+
+
+    /**
      * Constructor used when Content-Headers have to be constructed.
      *
      * @param mediaType     The mime type for the data.
@@ -79,14 +111,38 @@ public class HeaderContainer {
         this.mediaType = mediaType;
         this.charset = charset;
         this.contentLength = contentLength;
+    }
 
-        if (mediaType != null) {
-            this.contentType = mediaType;
+    public void setContentLength(Long contentLength) {
+        this.contentLength = contentLength;
+    }
 
-            if (charset != null) {
-                this.contentType += ";charset=" + charset;
-            }
-        }
+    public void setCharset(Charset charset) {
+        this.charset = charset;
+    }
+
+    public void setMediaType(String mediaType) {
+        this.mediaType = mediaType;
+    }
+
+    public void setBoundary(String boundary) {
+        this.boundary = boundary;
+    }
+
+    public Long getContentLength() {
+        return contentLength;
+    }
+
+    public String getMediaType() {
+        return mediaType;
+    }
+
+    public Charset getCharset() {
+        return charset;
+    }
+
+    public String getBoundary() {
+        return boundary;
     }
 
     /**

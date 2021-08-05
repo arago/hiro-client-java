@@ -1,5 +1,6 @@
-package co.arago.hiro.client.connection;
+package co.arago.hiro.client.connection.token;
 
+import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 
 import java.io.IOException;

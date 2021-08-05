@@ -1,7 +1,10 @@
 package co.arago.hiro.client.connection;
 
+import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.hiro.client.util.JsonTools;
 import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -9,28 +12,31 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class TokenAPIHandlerTest {
 
-    public static String API_URL = "https://ec2-3-250-135-44.eu-west-1.compute.amazonaws.com:8443";
-    public static String USER = "haas1000-connector-core";
-    public static String PASS = "j9dad7gond4ls2taol37ulk56%1aZ";
-    public static String CLIENTID = "cju16o7cf0000mz77pbwbhl3q_ckqjkfc0q08r90883i7x521sy";
-    public static String CLIENTSECRET = "978fa4385da282ed8190b12e9ac70ed6e65ea750f6b5282c0205a9d049913ae9f2841998c2ef13bb14db2d6cee0fd1ca9834563865b8f45c555e6ad3dd1be36a";
-    public static Boolean ACCEPT_ALL_CERTS = true;
     public static PasswordAuthTokenAPIHandler handler;
     final Logger log = LoggerFactory.getLogger(TokenAPIHandlerTest.class);
 
     @BeforeAll
-    static void init() {
+    static void init() throws IOException {
+        Config config = JsonTools.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+
         handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setApiUrl(API_URL)
-                .setCredentials(USER, PASS, CLIENTID, CLIENTSECRET)
-                .setAcceptAllCerts(ACCEPT_ALL_CERTS)
+                .setApiUrl(config.api_url)
+                .setCredentials(config.username, config.password, config.client_id, config.client_secret)
+                .setAcceptAllCerts(config.accept_all_certs)
                 .setForceLogging(true)
                 .build();
+    }
+
+    @AfterAll
+    static void shutdown() {
+        if (handler != null)
+            handler.close();
     }
 
     @Test

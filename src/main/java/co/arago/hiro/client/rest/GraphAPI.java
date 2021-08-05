@@ -1,7 +1,7 @@
 package co.arago.hiro.client.rest;
 
-import co.arago.hiro.client.connection.AbstractTokenAPIHandler;
 import co.arago.hiro.client.connection.AuthenticatedAPIHandler;
+import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.util.RequiredFieldChecker;
 import org.apache.commons.lang3.StringUtils;
 

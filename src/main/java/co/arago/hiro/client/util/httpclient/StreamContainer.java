@@ -11,7 +11,7 @@ public class StreamContainer extends HeaderContainer {
     /**
      * The inputStream for the response body
      */
-    public InputStream inputStream;
+    private InputStream inputStream;
 
     /**
      * Constructor used when streams have to be sent.
@@ -29,4 +29,7 @@ public class StreamContainer extends HeaderContainer {
         this.inputStream = inputStream;
     }
 
+    public InputStream getInputStream() {
+        return inputStream;
+    }
 }

@@ -1,4 +1,4 @@
-package co.arago.hiro.client.connection;
+package co.arago.hiro.client.connection.token;
 
 import co.arago.hiro.client.exceptions.FixedTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
@@ -6,23 +6,21 @@ import co.arago.hiro.client.util.RequiredFieldChecker;
 
 import java.time.Instant;
 
-public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
+public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
 
     public static abstract class Conf<T extends Conf<T>> extends AbstractTokenAPIHandler.Conf<T> {
-        private String token;
+        private String tokenEnv;
 
-        public String getToken() {
-            return token;
+        public String getTokenEnv() {
+            return tokenEnv;
         }
 
         /**
-         * Set a static token
-         *
-         * @param token The token string
+         * @param tokenEnv Name of the environment variable. Default is "HIRO_TOKEN".
          * @return this
          */
-        public T setToken(String token) {
-            this.token = token;
+        public T setTokenEnv(String tokenEnv) {
+            this.tokenEnv = tokenEnv;
             return self();
         }
     }
@@ -34,23 +32,23 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
             return this;
         }
 
-        public FixedTokenAPIHandler build() {
+        public EnvironmentTokenAPIHandler build() {
             RequiredFieldChecker.notBlank(getApiUrl(), "apiUrl");
-            RequiredFieldChecker.notBlank(getToken(), "token");
-            return new FixedTokenAPIHandler(this);
+            return new EnvironmentTokenAPIHandler(this);
         }
+
     }
 
-    protected final String token;
+    protected final String tokenEnv;
 
     /**
-     * Constructor
+     * Constructor.
      *
      * @param builder The builder to use.
      */
-    protected FixedTokenAPIHandler(Conf<Builder> builder) {
+    protected EnvironmentTokenAPIHandler(Conf<?> builder) {
         super(builder);
-        this.token = builder.getToken();
+        this.tokenEnv = builder.getTokenEnv();
     }
 
     public static Builder newBuilder() {
@@ -58,13 +56,13 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
     }
 
     /**
-     * Return the current token.
+     * Return the current token from the System environment.
      *
      * @return The current token.
      */
     @Override
     public String getToken() {
-        return token;
+        return System.getenv(tokenEnv);
     }
 
     /**
@@ -72,7 +70,7 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
      */
     @Override
     public void refreshToken() throws HiroException {
-        throw new FixedTokenException("Cannot change a fixed token.");
+        throw new FixedTokenException("Cannot change an environment token.");
     }
 
     /**

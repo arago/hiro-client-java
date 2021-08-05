@@ -282,17 +282,17 @@ public abstract class AbstractAPIHandler {
                                             StreamContainer body,
                                             Map<String, String> headers) {
 
-        if (body != null && body.contentType != null) {
-            headers.put("Content-Type", body.contentType);
+        if (body != null && body.hasContentType()) {
+            headers.put("Content-Type", body.getContentType());
         }
 
         HttpRequest httpRequest = getRequestBuilder(uri, headers)
                 .method(method, (body != null ?
-                        HttpRequest.BodyPublishers.ofInputStream(() -> body.inputStream) :
+                        HttpRequest.BodyPublishers.ofInputStream(body::getInputStream) :
                         HttpRequest.BodyPublishers.noBody()))
                 .build();
 
-        getHttpLogger().logRequest(httpRequest, (body != null ? body.inputStream : null));
+        getHttpLogger().logRequest(httpRequest, (body != null ? body.getInputStream() : null));
 
         return httpRequest;
     }
@@ -411,8 +411,8 @@ public abstract class AbstractAPIHandler {
         if (headers != null)
             initialHeaders.putAll(headers);
 
-        if (bodyContainer != null && bodyContainer.contentType != null)
-            initialHeaders.put("Content-Type", bodyContainer.contentType);
+        if (bodyContainer != null && bodyContainer.hasContentType())
+            initialHeaders.put("Content-Type", bodyContainer.getContentType());
 
         return initialHeaders;
     }
@@ -738,14 +738,14 @@ public abstract class AbstractAPIHandler {
      *
      * @return The HttpLogger to use with this class.
      */
-    abstract public HttpLogger getHttpLogger();
+    abstract protected HttpLogger getHttpLogger();
 
     /**
      * Abstract class that needs to be overwritten by a supplier of a HttpClient.
      *
      * @return The HttpClient to use with this class.
      */
-    abstract public HttpClient getOrBuildClient();
+    abstract protected HttpClient getOrBuildClient();
 
     /**
      * Override this to add authentication tokens.

@@ -1,38 +1,37 @@
 package co.arago.hiro.client.connection;
 
+import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.util.JsonTools;
 import co.arago.hiro.client.util.httpclient.HttpResponseContainer;
 import org.apache.commons.io.IOUtils;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
+import java.nio.file.Paths;
 
 class AuthAPIHandlerTest {
 
-    public static String API_URL = "https://ec2-3-250-135-44.eu-west-1.compute.amazonaws.com:8443";
-    public static String USER = "haas1000-connector-core";
-    public static String PASS = "j9dad7gond4ls2taol37ulk56%1aZ";
-    public static String CLIENTID = "cju16o7cf0000mz77pbwbhl3q_ckqjkfc0q08r90883i7x521sy";
-    public static String CLIENTSECRET = "978fa4385da282ed8190b12e9ac70ed6e65ea750f6b5282c0205a9d049913ae9f2841998c2ef13bb14db2d6cee0fd1ca9834563865b8f45c555e6ad3dd1be36a";
-    public static Boolean ACCEPT_ALL_CERTS = true;
     public static PasswordAuthTokenAPIHandler handler;
     public static AuthAPI authAPI;
     final Logger log = LoggerFactory.getLogger(AuthAPIHandlerTest.class);
 
     @BeforeAll
-    static void init() {
+    static void init() throws IOException {
+        Config config = JsonTools.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+
         handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setApiUrl(API_URL)
-                .setCredentials(USER, PASS, CLIENTID, CLIENTSECRET)
-                .setAcceptAllCerts(ACCEPT_ALL_CERTS)
+                .setApiUrl(config.api_url)
+                .setCredentials(config.username, config.password, config.client_id, config.client_secret)
+                .setAcceptAllCerts(config.accept_all_certs)
                 .setForceLogging(true)
                 .build();
 
@@ -40,23 +39,74 @@ class AuthAPIHandlerTest {
                 .build();
     }
 
+    @AfterAll
+    static void shutdown() {
+        if (handler != null)
+            handler.close();
+    }
+
     @Test
     void checkMeAccount() throws HiroException, IOException, InterruptedException {
         System.out.println(
                 JsonTools.DEFAULT.toPrettyString(
-                        authAPI.newGetMeAccount().setProfile(true).execute()
+                        authAPI.getMeAccount()
+                                .setProfile(true)
+                                .execute()
                 )
         );
     }
 
     @Test
     void checkMeAvatar() throws HiroException, IOException, InterruptedException {
-        HttpResponseContainer responseContainer = authAPI.newGetMeAvatar().execute();
-        System.out.println(responseContainer.mediaType);
-        System.out.println(responseContainer.contentLength);
+        HttpResponseContainer responseContainer = authAPI
+                .getMeAvatar()
+                .execute();
+        System.out.println(responseContainer.getMediaType());
+        System.out.println(responseContainer.getContentLength());
+
+        byte[] imageBytes;
+
         try (InputStream inputStream = responseContainer.getInputStream()) {
-            System.out.println(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+            imageBytes = IOUtils.toByteArray(inputStream);
+            System.out.println(new String(imageBytes, StandardCharsets.UTF_8));
         }
+
+        String imageSize = authAPI.putMeAvatar(new ByteArrayInputStream(imageBytes))
+                .setContentType(responseContainer.getContentType())
+                .execute();
+
+        System.out.println(imageSize);
+    }
+
+    @Test
+    void checkMeProfile() throws HiroException, IOException, InterruptedException {
+        System.out.println(
+                JsonTools.DEFAULT.toPrettyString(
+                        authAPI.getMeProfile()
+                                .execute()
+                )
+        );
+    }
+
+    @Test
+    void checkMeRoles() throws HiroException, IOException, InterruptedException {
+        System.out.println(
+                JsonTools.DEFAULT.toPrettyString(
+                        authAPI.getMeRoles()
+                                .execute().getMap().get("items")
+                )
+        );
+    }
+
+    @Test
+    void checkMeTeams() throws HiroException, IOException, InterruptedException {
+        System.out.println(
+                JsonTools.DEFAULT.toPrettyString(
+                        authAPI.getMeTeams()
+                                .setIncludeVirtual(true)
+                                .execute().getItems()
+                )
+        );
     }
 }
 
