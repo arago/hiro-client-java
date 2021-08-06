@@ -3,6 +3,7 @@ package co.arago.hiro.client.connection.token;
 import co.arago.hiro.client.exceptions.FixedTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.util.RequiredFieldChecker;
+import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;
 
@@ -33,7 +34,7 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         public EnvironmentTokenAPIHandler build() {
-            RequiredFieldChecker.notBlank(getApiUrl(), "apiUrl");
+            RequiredFieldChecker.notNull(getApiUrl(), "apiUrl");
             return new EnvironmentTokenAPIHandler(this);
         }
 
@@ -79,6 +80,26 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
     @Override
     public void revokeToken() throws HiroException {
         throw new FixedTokenException("Cannot revoke a fixed token.");
+    }
+
+    /**
+     * Check for existence of a token in the TokenAPIHandler.
+     *
+     * @return true if a token has been set or retrieved, false if the token is empty.
+     */
+    @Override
+    public boolean hasToken() {
+        return StringUtils.isNotBlank(getToken());
+    }
+
+    /**
+     * Check for existence of a refresh token in the TokenAPIHandler.
+     *
+     * @return false
+     */
+    @Override
+    public boolean hasRefreshToken() {
+        return false;
     }
 
     /**

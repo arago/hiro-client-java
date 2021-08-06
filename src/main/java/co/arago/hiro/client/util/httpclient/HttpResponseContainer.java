@@ -16,6 +16,7 @@ import java.net.URI;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
@@ -77,20 +78,20 @@ public class HttpResponseContainer extends HeaderContainer {
             return new TeeInputStream(httpResponse.body(), new OutputStream() {
                 private final int MAXLENGTH = 1024;
 
-                private final StringBuffer buffer = new StringBuffer(MAXLENGTH);
+                private final ByteBuffer buffer = ByteBuffer.allocate(MAXLENGTH);
 
                 private long count = 0;
 
                 @Override
                 public void write(int b) throws IOException {
                     if (count < MAXLENGTH)
-                        buffer.append((char) b);
+                        buffer.put((byte) b);
                     count++;
                 }
 
                 @Override
                 public void close() throws IOException {
-                    String message = buffer.toString();
+                    String message = StandardCharsets.UTF_8.decode(buffer).toString();
                     if (count >= MAXLENGTH)
                         message += "... [rest omitted. final size: " + count + " char]";
 

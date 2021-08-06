@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
@@ -60,7 +61,38 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         protected abstract T self();
     }
 
+    /**
+     * The basic configuration for all requests that are sending JSON data. Handle queries, headers and fragments.
+     *
+     * @param <T> The Builder type
+     * @param <R> The type of the result expected from {@link #execute()}
+     */
     public static abstract class SendJsonAPIRequestConf<T extends SendJsonAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> {
+        protected String body;
+
+        public SendJsonAPIRequestConf() {
+            headers.put("Content-Type", "application/json;encoding=UTF-8");
+        }
+
+        /**
+         * Convert the Map into a JSON body String.
+         *
+         * @param map The map to convert.
+         * @return this.
+         */
+        public T setJsonFromMap(Map<String, ?> map) throws JsonProcessingException {
+            this.body = JsonTools.DEFAULT.toString(map);
+            return self();
+        }
+    }
+
+    /**
+     * The basic configuration for all requests that are sending pure string data. Handle queries, headers and fragments.
+     *
+     * @param <T> The Builder type
+     * @param <R> The type of the result expected from {@link #execute()}
+     */
+    public static abstract class SendStringAPIRequestConf<T extends SendStringAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> {
         protected String body;
 
         /**
@@ -74,15 +106,6 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
             return self();
         }
 
-        /**
-         * Convert the Map into a JSON body String.
-         * @param body The map to convert.
-         * @return this.
-         */
-        public T setJsonFromMap(Map<String,?> body) throws JsonProcessingException {
-            this.body = JsonTools.DEFAULT.toString(body);
-            return self();
-        }
     }
 
     /**
@@ -149,10 +172,13 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          */
         @Override
         public T setHeaders(Map<String, String> headers) {
-            for (Map.Entry<String, String> entry : headers.entrySet()) {
-                if (StringUtils.equalsIgnoreCase(entry.getKey(), "Content-Type")) {
-                    setContentType(entry.getValue());
-                }
+
+            if (headers != null) {
+                headers.entrySet()
+                        .stream()
+                        .filter(entry -> StringUtils.equalsIgnoreCase("Content-Type", entry.getKey()))
+                        .findFirst()
+                        .ifPresent(contentType -> setContentType(contentType.getValue()));
             }
 
             return super.setHeaders(headers);
@@ -273,7 +299,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     protected static AbstractAPIHandler.GetterConf makeHandlerConf(Conf<?> builder, AbstractTokenAPIHandler tokenAPIHandler) {
         return new AbstractAPIHandler.GetterConf() {
             @Override
-            public String getApiUrl() {
+            public URL getApiUrl() {
                 return tokenAPIHandler.getApiUrl();
             }
 
@@ -339,7 +365,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         if (apiUri == null)
             apiUri = (endpoint != null ? buildURI(endpoint) : tokenAPIHandler.getApiUriOf(apiName));
 
-        URI pathUri = apiUri.resolve(StringUtils.startsWith(path, "/") ? path.substring(1) : path);
+        URI pathUri = apiUri.resolve(StringUtils.removeStart(path, "/"));
 
         return addQueryAndFragment(pathUri, query, fragment);
     }

@@ -6,13 +6,16 @@ import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.HiroResponse;
 import co.arago.hiro.client.model.HiroVertexListResponse;
 import co.arago.hiro.client.model.HiroVertexResponse;
+import co.arago.hiro.client.util.JsonTools;
 import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.hiro.client.util.httpclient.HttpResponseContainer;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 
 public class AuthAPI extends AuthenticatedAPIHandler {
 
@@ -220,6 +223,18 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         protected PutMePassword() {
         }
 
+        public PutMePassword setPasswords(String oldPassword, String newPassword) {
+            try {
+                body = JsonTools.DEFAULT.toString(
+                        Map.of("oldPassword", oldPassword,
+                                "newPassword", newPassword)
+                );
+            } catch (JsonProcessingException e) {
+                // ignore
+            }
+            return this;
+        }
+
         @Override
         protected PutMePassword self() {
             return this;
@@ -236,6 +251,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
+            RequiredFieldChecker.notBlank(body, "body");
             return put(HiroVertexResponse.class, getUri("me/password", query, fragment), body, headers);
         }
     }
@@ -318,6 +334,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
+            RequiredFieldChecker.notBlank(body, "body");
             return post(HiroVertexResponse.class, getUri("me/profile", query, fragment), body, headers);
         }
     }

@@ -42,12 +42,12 @@ class TokenAPIHandlerTest {
     @Test
     void getApiUriOf() throws IOException, InterruptedException, HiroException {
         URI uri = handler.getApiUriOf("graph");
-        assert uri != null;
         log.info("URI {}", uri);
+        assertNotNull(uri);
 
         uri = handler.getApiUriOf("auth");
-        assert uri != null;
         log.info("URI {}", uri);
+        assertNotNull(uri);
 
         assertThrows(
                 HiroException.class,
@@ -64,23 +64,46 @@ class TokenAPIHandlerTest {
 
     @Test
     void refreshToken() throws IOException, InterruptedException, HiroException {
+
         String token1 = handler.getToken();
-        assertFalse(StringUtils.isBlank(token1));
         log.info("Token 1 ...{}", token1.substring(token1.length() - 12));
+        assertFalse(StringUtils.isBlank(token1));
+
+        String token2;
+
+        if (handler.hasRefreshToken()) {
+            handler.setRefreshPause(30000L);
+            handler.refreshToken();
+            handler.setRefreshPause(0L);
+
+            token2 = handler.getToken();
+            log.info("Token 2 ...{}", token2.substring(token2.length() - 12));
+            assertFalse(StringUtils.isBlank(token2));
+            assertEquals(token1, token2);
+
+        } else {
+            log.warn("No refreshToken available");
+            token2 = token1;
+        }
 
         handler.refreshToken();
-
-        String token2 = handler.getToken();
-        assertFalse(StringUtils.isBlank(token2));
-        assertEquals(token1, token2);
-        log.info("Token 2 ...{}", token2.substring(token2.length() - 12));
-
-        handler.setRefreshPause(0L);
-        handler.refreshToken();
-
         String token3 = handler.getToken();
+        log.info("Token 3 ...{}", token3.substring(token3.length() - 12));
         assertFalse(StringUtils.isBlank(token3));
         assertNotEquals(token2, token3);
-        log.info("Token 3 ...{}", token3.substring(token3.length() - 12));
+    }
+
+    @Test
+    void revokeToken() throws HiroException, IOException, InterruptedException {
+        String token1 = handler.getToken();
+        assertFalse(StringUtils.isBlank(token1));
+
+        if (!handler.hasRefreshToken()) {
+            log.warn("No refreshToken available");
+            return;
+        }
+
+        handler.revokeToken();
+        assertFalse(handler.hasToken());
     }
 }

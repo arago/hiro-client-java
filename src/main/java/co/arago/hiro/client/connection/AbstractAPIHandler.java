@@ -14,9 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URLEncoder;
+import java.net.*;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -35,7 +33,7 @@ public abstract class AbstractAPIHandler {
     final Logger log = LoggerFactory.getLogger(AbstractAPIHandler.class);
 
     public interface GetterConf {
-        String getApiUrl();
+        URL getApiUrl();
 
         Long getHttpRequestTimeout();
 
@@ -50,13 +48,13 @@ public abstract class AbstractAPIHandler {
      * @param <T> The type of the Builder
      */
     public static abstract class Conf<T extends Conf<T>> implements GetterConf {
-        private String apiUrl;
+        private URL apiUrl;
         private String userAgent;
         private Long httpRequestTimeout;
         private int maxRetries;
 
         @Override
-        public String getApiUrl() {
+        public URL getApiUrl() {
             return apiUrl;
         }
 
@@ -64,7 +62,16 @@ public abstract class AbstractAPIHandler {
          * @param apiUrl The root url for the API
          * @return this
          */
-        public T setApiUrl(String apiUrl) {
+        public T setApiUrl(String apiUrl) throws MalformedURLException {
+            this.apiUrl = new URL(StringUtils.removeEnd(apiUrl, "/") + "/");
+            return self();
+        }
+
+        /**
+         * @param apiUrl The root url for the API
+         * @return this
+         */
+        public T setApiUrl(URL apiUrl) {
             this.apiUrl = apiUrl;
             return self();
         }
@@ -128,19 +135,19 @@ public abstract class AbstractAPIHandler {
     }
 
 
-    protected final String apiUrl;
+    protected final URL apiUrl;
     protected final String userAgent;
     protected final Long httpRequestTimeout;
     protected int maxRetries;
 
     protected AbstractAPIHandler(GetterConf builder) {
-        this.apiUrl = (StringUtils.endsWith(builder.getApiUrl(), "/") ? builder.getApiUrl() : builder.getApiUrl() + "/");
+        this.apiUrl = builder.getApiUrl();
         this.maxRetries = builder.getMaxRetries();
         this.httpRequestTimeout = builder.getHttpRequestTimeout();
         this.userAgent = (builder.getUserAgent() != null ? builder.getUserAgent() : (version != null ? title + " " + version : title));
     }
 
-    public String getApiUrl() {
+    public URL getApiUrl() {
         return apiUrl;
     }
 
@@ -163,9 +170,11 @@ public abstract class AbstractAPIHandler {
      * @return The constructed URI
      */
     public URI buildURI(String endpoint) {
-        return URI.create(apiUrl).resolve(
-                StringUtils.startsWith(endpoint, "/") ? endpoint.substring(1) : endpoint
-        );
+        try {
+            return apiUrl.toURI().resolve(StringUtils.removeStart(endpoint, "/"));
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Cannot create URI using endpoint '" + endpoint + "'", e);
+        }
     }
 
     /**

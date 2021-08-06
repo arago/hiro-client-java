@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
+import java.util.Base64;
 
 class AuthAPIHandlerTest {
 
@@ -47,8 +48,8 @@ class AuthAPIHandlerTest {
 
     @Test
     void checkMeAccount() throws HiroException, IOException, InterruptedException {
-        System.out.println(
-                JsonTools.DEFAULT.toPrettyString(
+        log.info(
+                JsonTools.DEFAULT.toString(
                         authAPI.getMeAccount()
                                 .setProfile(true)
                                 .execute()
@@ -61,27 +62,28 @@ class AuthAPIHandlerTest {
         HttpResponseContainer responseContainer = authAPI
                 .getMeAvatar()
                 .execute();
-        System.out.println(responseContainer.getMediaType());
-        System.out.println(responseContainer.getContentLength());
+        log.info(responseContainer.getMediaType());
+        log.info(String.valueOf(responseContainer.getContentLength()));
 
         byte[] imageBytes;
 
         try (InputStream inputStream = responseContainer.getInputStream()) {
             imageBytes = IOUtils.toByteArray(inputStream);
-            System.out.println(new String(imageBytes, StandardCharsets.UTF_8));
+            String base64 = Base64.getEncoder().encodeToString(imageBytes);
+            log.info(base64.length() > 1000 ? base64.substring(0, 1000) + "..." : base64);
         }
 
         String imageSize = authAPI.putMeAvatar(new ByteArrayInputStream(imageBytes))
                 .setContentType(responseContainer.getContentType())
                 .execute();
 
-        System.out.println(imageSize);
+        log.info(imageSize);
     }
 
     @Test
     void checkMeProfile() throws HiroException, IOException, InterruptedException {
-        System.out.println(
-                JsonTools.DEFAULT.toPrettyString(
+        log.info(
+                JsonTools.DEFAULT.toString(
                         authAPI.getMeProfile()
                                 .execute()
                 )
@@ -90,8 +92,8 @@ class AuthAPIHandlerTest {
 
     @Test
     void checkMeRoles() throws HiroException, IOException, InterruptedException {
-        System.out.println(
-                JsonTools.DEFAULT.toPrettyString(
+        log.info(
+                JsonTools.DEFAULT.toString(
                         authAPI.getMeRoles()
                                 .execute().getMap().get("items")
                 )
@@ -100,8 +102,8 @@ class AuthAPIHandlerTest {
 
     @Test
     void checkMeTeams() throws HiroException, IOException, InterruptedException {
-        System.out.println(
-                JsonTools.DEFAULT.toPrettyString(
+        log.info(
+                JsonTools.DEFAULT.toString(
                         authAPI.getMeTeams()
                                 .setIncludeVirtual(true)
                                 .execute().getItems()

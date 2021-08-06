@@ -52,6 +52,21 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
     public abstract void revokeToken() throws IOException, InterruptedException, HiroException;
 
     /**
+     * Check for existence of a token in the TokenAPIHandler.
+     *
+     * @return true if a token has been set or retrieved, false if the token is empty.
+     */
+    public abstract boolean hasToken();
+
+    /**
+     * Check for existence of a refresh token in the TokenAPIHandler.
+     *
+     * @return true if a refresh token retrieved, false if no such token exists or these tokens are not applicable for
+     * this TokenAPIHandler.
+     */
+    public abstract boolean hasRefreshToken();
+
+    /**
      * Calculate the Instant after which the token should be refreshed.
      *
      * @return The Instant after which the token shall be refreshed. null if token cannot be refreshed.
