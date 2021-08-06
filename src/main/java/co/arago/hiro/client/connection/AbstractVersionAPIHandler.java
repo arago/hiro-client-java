@@ -38,26 +38,39 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
      * @throws IOException          When the connection fails.
      * @throws InterruptedException When interrupted.
      */
-    public VersionResponse requestVersionMap() throws IOException, InterruptedException, HiroException {
+    protected VersionResponse requestVersionMap() throws IOException, InterruptedException, HiroException {
         return get(VersionResponse.class,
                 buildURI("/api/version", null, null),
                 null);
     }
 
     /**
+     * Returns the current {@link #versionMap}. If no {@link #versionMap} is available, it will be requested, cached
+     * and then returned.
+     *
+     * @return The (cached) versionMap.
+     * @throws HiroException        When the request fails.
+     * @throws IOException          When the connection fails.
+     * @throws InterruptedException When interrupted.
+     */
+    public VersionResponse getVersionMap() throws HiroException, IOException, InterruptedException {
+        if (versionMap == null)
+            versionMap = requestVersionMap();
+
+        return versionMap;
+    }
+
+    /**
      * Determine the API URI endpoint for a named API.
      *
-     * @param apiName  Name of the API
+     * @param apiName Name of the API
      * @return The URI for that API
      * @throws HiroException        When the request fails.
      * @throws IOException          When the connection fails.
      * @throws InterruptedException When interrupted.
      */
     public URI getApiUriOf(String apiName) throws IOException, InterruptedException, HiroException {
-        if (versionMap == null)
-            versionMap = requestVersionMap();
-
-        return buildURI(versionMap.getVersionEntryOf(apiName).endpoint, null, null);
+        return buildURI(getVersionMap().getVersionEntryOf(apiName).endpoint, null, null);
     }
 
 }
