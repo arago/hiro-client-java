@@ -3,6 +3,10 @@ package co.arago.hiro.client.connection;
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.WebSocketException;
+import co.arago.hiro.client.model.HiroErrorResponse;
+import co.arago.hiro.client.util.JsonTools;
+import co.arago.hiro.client.websocket.Listener;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +20,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicReference;
 
-public class AbstractWebSocketHandler {
+public abstract class AbstractWebSocketHandler implements AutoCloseable {
 
     final Logger log = LoggerFactory.getLogger(AbstractWebSocketHandler.class);
 
@@ -37,6 +40,7 @@ public class AbstractWebSocketHandler {
         protected AbstractTokenAPIHandler tokenAPIHandler;
         protected WebSocketListener webSocketListener;
         protected int maxRetries = 2;
+        protected int maxListenerPool = 1;
 
         public String getApiName() {
             return apiName;
@@ -147,30 +151,96 @@ public class AbstractWebSocketHandler {
 
         protected abstract T self();
 
-        public abstract AuthenticatedAPIHandler build();
+        public abstract AbstractWebSocketHandler build();
     }
 
-    public static abstract class WebSocketListener implements WebSocket.Listener {
+    protected class WebSocketListener implements WebSocket.Listener {
 
-        public enum Status {
-            NONE,
-            STARTING,
-            RUNNING_PRELIMINARY,
-            RUNNING,
-            RESTARTING,
-            DONE,
-            FAILED
+        private final StringBuffer stringBuffer = new StringBuffer();
+
+        private final Listener listener;
+        private final String name;
+
+        public WebSocketListener(String name, Listener listener) {
+            this.name = name;
+            this.listener = listener;
         }
-
-        public AtomicReference<Status> status = new AtomicReference<>(Status.NONE);
 
         @Override
         public void onOpen(WebSocket webSocket) {
-            status.set(Status.RUNNING_PRELIMINARY);
+            log.debug("{}: WebSocket open.", name);
+
+            try {
+                listener.onOpen();
+
+                synchronized (AbstractWebSocketHandler.this) {
+                    if (getStatus() != Status.STARTING && getStatus() != Status.RESTARTING)
+                        throw new IllegalStateException("WebSocket not in a starting state.");
+
+                    setStatus(Status.RUNNING_PRELIMINARY);
+                }
+
+            } catch (WebSocketException e) {
+                setStatus(Status.CLOSING);
+                onError(webSocket, e);
+            }
         }
 
         @Override
         public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
+            stringBuffer.append(data);
+
+            if (last) {
+                String message = stringBuffer.toString();
+                stringBuffer.setLength(0);
+
+                try {
+                    synchronized (AbstractWebSocketHandler.this) {
+                        HiroErrorResponse hiroErrorResponse = JsonTools.DEFAULT.toObject(message, HiroErrorResponse.class);
+                        if (hiroErrorResponse.isError()) {
+                            if (hiroErrorResponse.getHiroErrorCode() == 401) {
+                                if (getStatus() == Status.RUNNING) {
+                                    tokenAPIHandler.refreshToken();
+                                    setStatus(Status.RESTARTING);
+
+                                    log.info("{}: Refreshing token because of error: {}", name, message);
+
+                                    restartWebSocket();
+                                } else if (getStatus() == Status.RUNNING_PRELIMINARY) {
+                                    throw new WebSocketException("Received error message while token was never valid: " + message);
+                                } else {
+                                    throw new WebSocketException("Received error message: " + message);
+                                }
+                            } else {
+                                throw new WebSocketException("Received error message: " + message);
+                            }
+                        }
+
+                        reconnectDelay = 0;
+                    }
+                } catch (JsonProcessingException e) {
+                    // Ignore processing exceptions
+                } catch (HiroException | IOException e) {
+                    setStatus(Status.CLOSING);
+                    onError(webSocket, e);
+                } catch (InterruptedException e) {
+                    // Just return immediately
+                    return null;
+                }
+
+                try {
+                    listener.onMessage(message);
+
+                    if (getStatus() == Status.RUNNING_PRELIMINARY) {
+                        setStatus(Status.RUNNING);
+                    }
+                } catch (WebSocketException e) {
+                    setStatus(Status.CLOSING);
+                    onError(webSocket, e);
+                }
+            }
+            webSocket.request(1);
+
             return WebSocket.Listener.super.onText(webSocket, data, last);
         }
 
@@ -181,13 +251,67 @@ public class AbstractWebSocketHandler {
 
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
+            log.debug("{}: Got close message {}: {}", name, statusCode, reason);
+
+            try {
+                listener.onClose();
+                handleRestart(webSocket);
+
+            } catch (WebSocketException e) {
+                log.error("{}: WebSocket caught error while closing.", name, e);
+                setStatus(Status.CLOSING);
+            }
+
             return WebSocket.Listener.super.onClose(webSocket, statusCode, reason);
         }
 
         @Override
         public void onError(WebSocket webSocket, Throwable error) {
+            log.error("{}: WebSocket caught error.", name, error);
+
+            listener.onError(error);
+
+            handleRestart(webSocket);
+
             WebSocket.Listener.super.onError(webSocket, error);
         }
+
+        private void handleRestart(WebSocket webSocket) {
+            synchronized (AbstractWebSocketHandler.this) {
+                if (getStatus() != Status.CLOSING) {
+                    try {
+                        setStatus(Status.RESTARTING);
+                        restartWebSocket();
+                    } catch (HiroException | IOException | InterruptedException e) {
+                        log.error("{}: Cannot restart WebSocket because of error.", name, e);
+                        closeWebSocket(1011, "Abnormal close because of error " + e.getMessage());
+                        setStatus(Status.CLOSED);
+                    }
+                }
+
+            }
+        }
+
+    }
+
+    public enum Status {
+        NONE,
+        STARTING,
+        RUNNING_PRELIMINARY,
+        RUNNING,
+        RESTARTING,
+        CLOSING,
+        CLOSED
+    }
+
+    private Status status;
+
+    public synchronized Status getStatus() {
+        return status;
+    }
+
+    public synchronized void setStatus(Status status) {
+        this.status = status;
     }
 
     protected final String apiName;
@@ -200,8 +324,10 @@ public class AbstractWebSocketHandler {
     protected final String fragment;
 
     protected URI apiUri;
-    protected WebSocket webSocket;
-    protected WebSocketListener webSocketListener;
+
+    private WebSocket webSocket;
+    private WebSocketListener webSocketListener;
+    private int reconnectDelay = 0;
 
     protected AbstractWebSocketHandler(Conf<?> builder) {
         this.apiName = builder.getApiName();
@@ -237,19 +363,22 @@ public class AbstractWebSocketHandler {
     }
 
     /**
-     * Get the current webSocket or create it if it is not there yet.
+     * Create new WebSocket. Closes any old websocket.
      *
      * @param webSocketListener The listener to apply to the webSocket. Must not be null.
-     * @return The {@link #webSocket}.
      * @throws HiroException        When creation of the webSocket fails.
      * @throws IOException          On IO problems.
      * @throws InterruptedException When the call gets interrupted.
      */
-    public WebSocket getOrCreateWebSocket(WebSocketListener webSocketListener) throws HiroException, IOException, InterruptedException {
-        if (webSocket != null)
-            return webSocket;
+    protected synchronized void createWebSocket(WebSocketListener webSocketListener) throws HiroException, IOException, InterruptedException {
+        if (webSocketListener == null)
+            throw new HiroException("WebSocketListener must not be null");
 
         try {
+            if (webSocket != null) {
+                closeWebSocket(1012, tokenAPIHandler.getUserAgent() + " restarts");
+            }
+
             webSocket = tokenAPIHandler.getOrBuildClient()
                     .newWebSocketBuilder()
                     .header("Sec-WebSocket-Protocol", protocol + ", token-" + tokenAPIHandler.getToken())
@@ -260,9 +389,26 @@ public class AbstractWebSocketHandler {
         } catch (ExecutionException e) {
             throw new HiroException("Cannot create webSocket.", e);
         }
-
-        return webSocket;
     }
+
+    protected synchronized void closeWebSocket(int status, String reason) {
+        if (webSocket != null) {
+            webSocket.sendClose(status, reason);
+            webSocket.abort();
+            webSocket = null;
+            System.gc();
+        }
+    }
+
+    protected synchronized void restartWebSocket() throws HiroException, IOException, InterruptedException {
+        if (webSocketListener == null)
+            return;
+
+        reconnectDelay = backoff(reconnectDelay);
+
+        createWebSocket(webSocketListener);
+    }
+
 
     protected int backoff(int reconnectDelay) throws InterruptedException {
         if (reconnectDelay > 0)
@@ -271,42 +417,63 @@ public class AbstractWebSocketHandler {
         return (reconnectDelay < 10 ? reconnectDelay + 1 : (reconnectDelay < 60 ? reconnectDelay + 10 : 60 + new Random().nextInt(540)));
     }
 
-    public void send(String message) throws WebSocketException, InterruptedException {
-        if (webSocket == null)
-            throw new WebSocketException("No webSocket available.");
-
+    public void send(String message) throws HiroException, InterruptedException, IOException {
         int retries = 0;
         int retry_delay = 0;
 
         while (true) {
             retry_delay = backoff(retry_delay);
 
-            switch (webSocketListener.status.get()) {
-                case NONE:
-                    throw new WebSocketException("Websocket not started");
-                case DONE:
-                case FAILED:
-                    throw new WebSocketException("Websocket has exited");
-                case RUNNING_PRELIMINARY:
-                case RUNNING:
-                    break;
-                default:
-                    throw new WebSocketException("Websocket not ready");
+            WebSocket webSocketRef;
+            synchronized (this) {
+                switch (getStatus()) {
+                    case NONE:
+                        throw new WebSocketException("Websocket not started");
+                    case CLOSED:
+                        throw new WebSocketException("Websocket has exited");
+                    case RUNNING_PRELIMINARY:
+                    case RUNNING:
+                        break;
+                    default:
+                        throw new WebSocketException("Websocket not ready");
+                }
+
+                webSocketRef = webSocket;
             }
+            if (webSocketRef == null)
+                throw new WebSocketException("No webSocket available.");
 
             try {
-                webSocket.sendText(message, true);
+                webSocketRef.sendText(message, true);
                 return;
             } catch (Exception e) {
                 if (retries >= maxRetries) {
                     log.warn("Restarting webSocket.", e);
-                    // restart();
+                    restartWebSocket();
                 } else {
                     log.warn("Retry to send message.", e);
                     retries++;
                 }
             }
         }
+    }
+
+    public synchronized void start(WebSocketListener webSocketListener) throws HiroException, IOException, InterruptedException {
+        if (webSocket != null && !webSocket.isInputClosed() && !webSocket.isOutputClosed())
+            return;
+
+        if (webSocketListener == null)
+            throw new HiroException("WebSocketListener must not be null");
+
+        setStatus(Status.STARTING);
+        createWebSocket(webSocketListener);
+    }
+
+    @Override
+    public synchronized void close() {
+        setStatus(Status.CLOSING);
+        closeWebSocket(WebSocket.NORMAL_CLOSURE, tokenAPIHandler.getUserAgent() + " closing");
+        setStatus(Status.CLOSED);
     }
 
 }

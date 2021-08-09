@@ -35,7 +35,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         protected SSLParameters sslParameters;
         protected HttpClient httpClient;
         protected SSLContext sslContext;
-        protected Integer maxConnectionPool;
+        protected int maxConnectionPool = 8;
 
         ProxySpec getProxy() {
             return proxy;
@@ -135,7 +135,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
             return self();
         }
 
-        public Integer getMaxConnectionPool() {
+        public int getMaxConnectionPool() {
             return maxConnectionPool;
         }
 
@@ -146,7 +146,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          * @param maxConnectionPool Maximum size of the pool. Default is 8.
          * @return this
          */
-        public T setMaxConnectionPool(Integer maxConnectionPool) {
+        public T setMaxConnectionPool(int maxConnectionPool) {
             this.maxConnectionPool = maxConnectionPool;
             return self();
         }
@@ -197,7 +197,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     protected final SSLParameters sslParameters;
     protected HttpClient httpClient;
     protected SSLContext sslContext;
-    protected final Integer maxConnectionPool;
+    protected final int maxConnectionPool;
 
     protected final HttpLogger httpLogger = new HttpLogger();
 
@@ -220,7 +220,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         Boolean acceptAllCerts = builder.getAcceptAllCerts();
         this.sslParameters = builder.getSslParameters();
         this.httpClient = builder.getHttpClient();
-        this.maxConnectionPool = builder.getMaxConnectionPool() != null ? builder.getMaxConnectionPool() : 8;
+        this.maxConnectionPool = builder.getMaxConnectionPool();
 
         if (acceptAllCerts == null) {
             this.sslContext = builder.getSslContext();
@@ -243,9 +243,9 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     // ###############################################################################################
 
     /**
-     * Build a new Java 11 HttpClient.
+     * Return {@link #httpClient}. Build a new client if necessary.
      *
-     * @return The HttpClient
+     * @return The cached HttpClient
      */
     @Override
     public HttpClient getOrBuildClient() {
@@ -292,7 +292,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         } catch (InterruptedException e) {
             clientExecutorService.shutdownNow();
         }
-
+        clientExecutorService = null;
         httpClient = null;
         System.gc();
     }
