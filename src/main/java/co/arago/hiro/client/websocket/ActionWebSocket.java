@@ -3,11 +3,16 @@ package co.arago.hiro.client.websocket;
 import co.arago.hiro.client.connection.AbstractWebSocketHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.util.RequiredFieldChecker;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
+/**
+ * The handler for Action WebSocket.
+ * @see <a href="https://core.arago.co/help/specs/?url=definitions/action-ws.yaml">API Documentation</a>
+ */
 public class ActionWebSocket extends AbstractWebSocketHandler {
     final Logger log = LoggerFactory.getLogger(ActionWebSocket.class);
 
@@ -24,7 +29,10 @@ public class ActionWebSocket extends AbstractWebSocketHandler {
 
         @Override
         public ActionWebSocket build() {
-            RequiredFieldChecker.notNull(webSocketListener, "webSocketListener");
+            RequiredFieldChecker.notNull(getTokenApiHandler(), "tokenApiHandler");
+            RequiredFieldChecker.notNull(getWebSocketListener(), "webSocketListener");
+            if (StringUtils.isBlank(getApiName()) && (StringUtils.isAnyBlank(getEndpoint(), getProtocol())))
+                RequiredFieldChecker.anyError("Either 'apiName' or 'endpoint' and 'protocol' have to be set.");
             return new ActionWebSocket(this);
         }
     }

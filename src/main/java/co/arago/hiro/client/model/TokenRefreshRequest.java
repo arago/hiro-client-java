@@ -1,8 +1,6 @@
 package co.arago.hiro.client.model;
 
-import co.arago.hiro.client.util.JsonTools;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * JSON for a token refresh request.
@@ -17,7 +15,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  * </pre>
  * </code>
  */
-public class TokenRefreshRequest {
+public class TokenRefreshRequest implements AbstractJsonMessage {
 
     // Match the JSON structure for the request.
 
@@ -39,11 +37,4 @@ public class TokenRefreshRequest {
         this.refreshToken = refreshToken;
     }
 
-    public String toJsonString() {
-        try {
-            return JsonTools.DEFAULT.toString(this);
-        } catch (JsonProcessingException e) {
-            return ""; // Should never happen
-        }
-    }
 }

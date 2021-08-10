@@ -1,8 +1,7 @@
-package co.arago.hiro.client.model.websocket;
+package co.arago.hiro.client.model.websocket.events;
 
-import co.arago.hiro.client.util.JsonTools;
+import co.arago.hiro.client.model.AbstractJsonMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.io.Serializable;
 
@@ -16,7 +15,7 @@ import java.io.Serializable;
  *     }
  * </code></pre>
  */
-public class WebSocketTokenRefreshMessage implements Serializable {
+public class WebSocketTokenRefreshMessage implements AbstractJsonMessage {
 
     public static class Token implements Serializable {
         @JsonProperty("_TOKEN")
@@ -33,13 +32,5 @@ public class WebSocketTokenRefreshMessage implements Serializable {
 
     public WebSocketTokenRefreshMessage(String token) {
         this.args = new Token(token);
-    }
-
-    public String toJsonString() {
-        try {
-            return JsonTools.DEFAULT.toString(this);
-        } catch (JsonProcessingException e) {
-            return ""; // should never happen
-        }
     }
 }

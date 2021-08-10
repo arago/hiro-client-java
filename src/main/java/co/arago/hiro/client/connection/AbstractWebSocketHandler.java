@@ -18,9 +18,13 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
+/**
+ * Handles websockets. Tries to renew any aborted connection until the websocket gets closed from this side.
+ */
 public abstract class AbstractWebSocketHandler implements AutoCloseable {
 
     final Logger log = LoggerFactory.getLogger(AbstractWebSocketHandler.class);
@@ -30,17 +34,17 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
      * Builder need to implement this.
      */
     public static abstract class Conf<T extends Conf<T>> {
-        protected String apiName;
-        protected String endpoint;
-        protected String protocol;
-        protected Map<String, String> query = new HashMap<>();
-        protected Map<String, String> headers = new HashMap<>();
-        protected String fragment;
-        protected Long httpRequestTimeout;
-        protected AbstractTokenAPIHandler tokenAPIHandler;
-        protected WebSocketListener webSocketListener;
-        protected int maxRetries = 2;
-        protected int maxListenerPool = 1;
+        private String apiName;
+        private String endpoint;
+        private String protocol;
+        private Map<String, String> query = new HashMap<>();
+        private Map<String, String> headers = new HashMap<>();
+        private String fragment;
+        private Long httpRequestTimeout;
+        private AbstractTokenAPIHandler tokenAPIHandler;
+        private WebSocketListener webSocketListener;
+        private int maxRetries = 2;
+        private boolean reconnectOnFailedSend = false;
 
         public String getApiName() {
             return apiName;
@@ -149,11 +153,46 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
             return self();
         }
 
+        public boolean isReconnectOnFailedSend() {
+            return reconnectOnFailedSend;
+        }
+
+        /**
+         * Reset the websocket when {@link AbstractWebSocketHandler#send(String)} fails. The default is false - throw
+         * an Exception when all retries are exhausted.
+         *
+         * @param reconnectOnFailedSend The flag to set.
+         * @return this
+         */
+        public T setReconnectOnFailedSend(boolean reconnectOnFailedSend) {
+            this.reconnectOnFailedSend = reconnectOnFailedSend;
+            return self();
+        }
+
+        public WebSocketListener getWebSocketListener() {
+            return webSocketListener;
+        }
+
+        /**
+         * Set the {@link Listener} for the websocket data.
+         *
+         * @param webSocketListener The listener to use.
+         * @return this
+         */
+        public T setWebSocketListener(WebSocketListener webSocketListener) {
+            this.webSocketListener = webSocketListener;
+            return self();
+        }
+
         protected abstract T self();
 
         public abstract AbstractWebSocketHandler build();
     }
 
+    /**
+     * Listener (thread) for incoming websocket messages. Derivates of {@link AbstractWebSocketHandler} have
+     * to supply an Object implementing the interface {@link Listener} for specific handling.
+     */
     protected class WebSocketListener implements WebSocket.Listener {
 
         private final StringBuffer stringBuffer = new StringBuffer();
@@ -161,11 +200,25 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
         private final Listener listener;
         private final String name;
 
+        /**
+         * Constructor
+         *
+         * @param name     Name of the handler (mainly for logging)
+         * @param listener The listener which received messages.
+         */
         public WebSocketListener(String name, Listener listener) {
             this.name = name;
             this.listener = listener;
         }
 
+        /**
+         * Sets the status from {@link Status#STARTING} or {@link Status#RESTARTING} to
+         * {@link Status#RUNNING_PRELIMINARY}. Any other state will result in an Exception.
+         *
+         * @param webSocket The webSocket using this Listener.
+         * @throws IllegalStateException When the status is neither {@link Status#STARTING} nor
+         *                               {@link Status#RESTARTING}.
+         */
         @Override
         public void onOpen(WebSocket webSocket) {
             log.debug("{}: WebSocket open.", name);
@@ -186,6 +239,17 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
             }
         }
 
+        /**
+         * Collects a text message from the websocket until 'last' is true. Then checks for an error message. If the
+         * error is 401 and the status is {@link Status#RUNNING}, tries to refresh the token.
+         * When the first non-error message comes it, sets the status from {@link Status#RUNNING_PRELIMINARY} to
+         * {@link Status#RUNNING}.
+         *
+         * @param webSocket The webSocket using this Listener.
+         * @param data      Message block
+         * @param last      True if this is the last message block of a message
+         * @return null.
+         */
         @Override
         public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
             stringBuffer.append(data);
@@ -220,6 +284,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
                     }
                 } catch (JsonProcessingException e) {
                     // Ignore processing exceptions
+                    reconnectDelay = 0;
                 } catch (HiroException | IOException e) {
                     setStatus(Status.CLOSING);
                     onError(webSocket, e);
@@ -239,23 +304,50 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
                     onError(webSocket, e);
                 }
             }
-            webSocket.request(1);
 
             return WebSocket.Listener.super.onText(webSocket, data, last);
         }
 
+        /**
+         * Keep-alive messages
+         *
+         * @param webSocket The webSocket using this Listener.
+         * @param message   The message received. It will be reflected back via Pong.
+         * @return The CompletionStage of {@link WebSocket#sendPong(ByteBuffer)}.
+         */
         @Override
         public CompletionStage<?> onPing(WebSocket webSocket, ByteBuffer message) {
             return webSocket.sendPong(message);
         }
 
+        /**
+         * Receives close messages. This will try to restart the WebSocket unless
+         * the status is {@link Status#CLOSING}.
+         *
+         * @param webSocket  The webSocket using this Listener.
+         * @param statusCode Status code sent from the remote side.
+         * @param reason     Reason text sent from the remote side.
+         * @return null
+         */
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
             log.debug("{}: Got close message {}: {}", name, statusCode, reason);
 
             try {
                 listener.onClose();
-                handleRestart(webSocket);
+
+                synchronized (AbstractWebSocketHandler.this) {
+                    if (getStatus() != Status.CLOSING) {
+                        try {
+                            setStatus(Status.RESTARTING);
+                            restartWebSocket();
+                        } catch (HiroException | IOException | InterruptedException e) {
+                            log.error("{}: Cannot restart WebSocket because of error.", name, e);
+                            closeWebSocket(1011, "Abnormal close because of error " + e.getMessage(), false);
+                            setStatus(Status.FAILED);
+                        }
+                    }
+                }
 
             } catch (WebSocketException e) {
                 log.error("{}: WebSocket caught error while closing.", name, e);
@@ -265,31 +357,36 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
             return WebSocket.Listener.super.onClose(webSocket, statusCode, reason);
         }
 
+        /**
+         * Handles errors (Throwable) regarding websocket operation. This will try to restart the WebSocket unless
+         * the status is {@link Status#CLOSING}. This will tear down the WebSocket when the status is
+         * {@link Status#FAILED}.
+         *
+         * @param webSocket The webSocket using this Listener.
+         * @param error     The Throwable to handle.
+         */
         @Override
         public void onError(WebSocket webSocket, Throwable error) {
             log.error("{}: WebSocket caught error.", name, error);
 
             listener.onError(error);
 
-            handleRestart(webSocket);
-
-            WebSocket.Listener.super.onError(webSocket, error);
-        }
-
-        private void handleRestart(WebSocket webSocket) {
             synchronized (AbstractWebSocketHandler.this) {
-                if (getStatus() != Status.CLOSING) {
+                if (getStatus() == Status.FAILED) {
+                    closeWebSocket(1011, "Abnormal close because of status 'FAILED'.", true);
+                } else if (getStatus() != Status.CLOSING) {
                     try {
                         setStatus(Status.RESTARTING);
                         restartWebSocket();
                     } catch (HiroException | IOException | InterruptedException e) {
                         log.error("{}: Cannot restart WebSocket because of error.", name, e);
-                        closeWebSocket(1011, "Abnormal close because of error " + e.getMessage());
-                        setStatus(Status.CLOSED);
+                        closeWebSocket(1011, "Abnormal close because of error " + e.getMessage(), true);
+                        setStatus(Status.FAILED);
                     }
                 }
-
             }
+
+            WebSocket.Listener.super.onError(webSocket, error);
         }
 
     }
@@ -301,6 +398,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
         RUNNING,
         RESTARTING,
         CLOSING,
+        FAILED,
         CLOSED
     }
 
@@ -322,6 +420,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
     protected final Map<String, String> query = new HashMap<>();
     protected final Map<String, String> headers = new HashMap<>();
     protected final String fragment;
+    protected final boolean reconnectOnFailedSend;
 
     protected URI apiUri;
 
@@ -329,16 +428,23 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
     private WebSocketListener webSocketListener;
     private int reconnectDelay = 0;
 
+    /**
+     * Protected Constructor
+     *
+     * @param builder The builder for this Handler.
+     */
     protected AbstractWebSocketHandler(Conf<?> builder) {
         this.apiName = builder.getApiName();
         this.endpoint = builder.getEndpoint();
         this.protocol = builder.getProtocol();
         this.maxRetries = builder.getMaxRetries();
+        this.webSocketListener = builder.getWebSocketListener();
         this.tokenAPIHandler = builder.getTokenApiHandler();
 
         this.query.putAll(builder.query);
         this.headers.putAll(builder.headers);
         this.fragment = builder.fragment;
+        this.reconnectOnFailedSend = builder.isReconnectOnFailedSend();
     }
 
     /**
@@ -369,14 +475,15 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
      * @throws HiroException        When creation of the webSocket fails.
      * @throws IOException          On IO problems.
      * @throws InterruptedException When the call gets interrupted.
+     * @throws NullPointerException When the webSocketListener is null.
      */
     protected synchronized void createWebSocket(WebSocketListener webSocketListener) throws HiroException, IOException, InterruptedException {
         if (webSocketListener == null)
-            throw new HiroException("WebSocketListener must not be null");
+            throw new NullPointerException("WebSocketListener must not be null");
 
         try {
             if (webSocket != null) {
-                closeWebSocket(1012, tokenAPIHandler.getUserAgent() + " restarts");
+                closeWebSocket(1012, tokenAPIHandler.getUserAgent() + " restarts", true);
             }
 
             webSocket = tokenAPIHandler.getOrBuildClient()
@@ -391,25 +498,49 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
         }
     }
 
-    protected synchronized void closeWebSocket(int status, String reason) {
+
+    /**
+     * Close the websocket and set {@link #webSocket} to null.
+     *
+     * @param status The status for the close message
+     * @param reason The reason string for the close message.
+     * @param abort  Forcibly abort the websocket.
+     */
+    protected synchronized void closeWebSocket(int status, String reason, boolean abort) {
         if (webSocket != null) {
-            webSocket.sendClose(status, reason);
-            webSocket.abort();
+            CompletableFuture<WebSocket> stage = webSocket.sendClose(status, reason);
+            if (abort)
+                stage.thenAccept(WebSocket::abort);
+            stage.join();
+
             webSocket = null;
             System.gc();
         }
     }
 
+    /**
+     * Restarts the websocket by closing the old and creating a new one. Uses the same {@link #webSocketListener}. Delays
+     * the restart according to {@link #backoff(int reconnectDelay)}.
+     *
+     * @throws HiroException        When creation of the webSocket fails.
+     * @throws IOException          On IO problems.
+     * @throws InterruptedException When the call gets interrupted.
+     */
     protected synchronized void restartWebSocket() throws HiroException, IOException, InterruptedException {
-        if (webSocketListener == null)
-            return;
-
         reconnectDelay = backoff(reconnectDelay);
 
         createWebSocket(webSocketListener);
     }
 
-
+    /**
+     * Backoff operations that fail. The delay increases with every try up to 10 minutes.
+     *
+     * @param reconnectDelay The old delay value (seconds).
+     * @return The new delay value (seconds).
+     * @throws InterruptedException When {@link Thread#sleep(long)} gets interrupted.
+     * @see #send(String)
+     * @see #restartWebSocket()
+     */
     protected int backoff(int reconnectDelay) throws InterruptedException {
         if (reconnectDelay > 0)
             Thread.sleep(reconnectDelay * 1000L);
@@ -417,6 +548,15 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
         return (reconnectDelay < 10 ? reconnectDelay + 1 : (reconnectDelay < 60 ? reconnectDelay + 10 : 60 + new Random().nextInt(540)));
     }
 
+    /**
+     * Send a message across the websocket. Tries {@link #maxRetries} times to send a message before resetting the
+     * websocket.
+     *
+     * @param message The message to send.
+     * @throws HiroException        When sending finally fails.
+     * @throws IOException          On IO problems.
+     * @throws InterruptedException When the call gets interrupted.
+     */
     public void send(String message) throws HiroException, InterruptedException, IOException {
         int retries = 0;
         int retry_delay = 0;
@@ -444,12 +584,18 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
                 throw new WebSocketException("No webSocket available.");
 
             try {
-                webSocketRef.sendText(message, true);
+                webSocketRef.sendText(message, true).get();
                 return;
+            } catch (InterruptedException e) {
+                throw e;
             } catch (Exception e) {
                 if (retries >= maxRetries) {
-                    log.warn("Restarting webSocket.", e);
-                    restartWebSocket();
+                    if (reconnectOnFailedSend) {
+                        log.warn("Restarting webSocket.", e);
+                        restartWebSocket();
+                    } else {
+                        throw new HiroException("Cannot send message because of error.", e);
+                    }
                 } else {
                     log.warn("Retry to send message.", e);
                     retries++;
@@ -472,7 +618,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
     @Override
     public synchronized void close() {
         setStatus(Status.CLOSING);
-        closeWebSocket(WebSocket.NORMAL_CLOSURE, tokenAPIHandler.getUserAgent() + " closing");
+        closeWebSocket(WebSocket.NORMAL_CLOSURE, tokenAPIHandler.getUserAgent() + " closing", true);
         setStatus(Status.CLOSED);
     }
 
