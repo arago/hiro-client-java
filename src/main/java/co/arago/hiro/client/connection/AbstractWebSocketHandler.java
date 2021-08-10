@@ -286,7 +286,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
                     // Ignore processing exceptions
                     reconnectDelay = 0;
                 } catch (HiroException | IOException e) {
-                    setStatus(Status.CLOSING);
+                    setStatus(Status.FAILED);
                     onError(webSocket, e);
                 } catch (InterruptedException e) {
                     // Just return immediately
@@ -300,7 +300,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
                         setStatus(Status.RUNNING);
                     }
                 } catch (WebSocketException e) {
-                    setStatus(Status.CLOSING);
+                    setStatus(Status.FAILED);
                     onError(webSocket, e);
                 }
             }
@@ -337,7 +337,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
                 listener.onClose();
 
                 synchronized (AbstractWebSocketHandler.this) {
-                    if (getStatus() != Status.CLOSING) {
+                    if (getStatus() != Status.CLOSING && getStatus() != Status.CLOSED) {
                         try {
                             setStatus(Status.RESTARTING);
                             restartWebSocket();
@@ -374,7 +374,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
             synchronized (AbstractWebSocketHandler.this) {
                 if (getStatus() == Status.FAILED) {
                     closeWebSocket(1011, "Abnormal close because of status 'FAILED'.", true);
-                } else if (getStatus() != Status.CLOSING) {
+                } else if (getStatus() != Status.CLOSING && getStatus() != Status.CLOSED) {
                     try {
                         setStatus(Status.RESTARTING);
                         restartWebSocket();
