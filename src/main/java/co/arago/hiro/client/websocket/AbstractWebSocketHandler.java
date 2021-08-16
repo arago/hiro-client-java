@@ -1,11 +1,10 @@
-package co.arago.hiro.client.connection;
+package co.arago.hiro.client.websocket;
 
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.WebSocketException;
 import co.arago.hiro.client.model.HiroErrorResponse;
 import co.arago.hiro.client.util.JsonTools;
-import co.arago.hiro.client.websocket.Listener;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -260,9 +259,9 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
 
                 try {
                     synchronized (AbstractWebSocketHandler.this) {
-                        HiroErrorResponse hiroErrorResponse = JsonTools.DEFAULT.toObject(message, HiroErrorResponse.class);
-                        if (hiroErrorResponse.isError()) {
-                            if (hiroErrorResponse.getHiroErrorCode() == 401) {
+                        HiroErrorResponse errorResponse = HiroErrorResponse.fromMessage(message);
+                        if (errorResponse != null) {
+                            if (errorResponse.getHiroErrorCode() == 401) {
                                 if (getStatus() == Status.RUNNING) {
                                     tokenAPIHandler.refreshToken();
                                     setStatus(Status.RESTARTING);

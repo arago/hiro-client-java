@@ -6,7 +6,7 @@ import co.arago.hiro.client.model.HiroErrorResponse;
 import co.arago.hiro.client.model.HiroResponse;
 import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.JsonTools;
-import co.arago.hiro.client.util.httpclient.HttpResponseContainer;
+import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -260,13 +260,14 @@ public abstract class AbstractAPIHandler {
         String reason = "HttpResponse code " + statusCode;
 
         if (hiroResponse != null) {
-            HiroErrorResponse hiroErrorResponse = hiroResponse.getError();
-            String message = (hiroErrorResponse != null ? hiroErrorResponse.getHiroErrorMessage() : null);
-            if (StringUtils.isNotBlank(message)) {
-                Integer errorCode = hiroErrorResponse.getHiroErrorCode();
-                return (errorCode != null ? message + " (code: " + errorCode + ")" : message);
+            HiroErrorResponse hiroErrorResponse = HiroErrorResponse.fromResponse(hiroResponse);
+            if (hiroErrorResponse != null) {
+                String message = hiroErrorResponse.getHiroErrorMessage();
+                if (StringUtils.isNotBlank(message)) {
+                    Integer errorCode = hiroErrorResponse.getHiroErrorCode();
+                    return (errorCode != null ? message + " (code: " + errorCode + ")" : message);
+                }
             }
-
         }
 
         return reason;
@@ -385,16 +386,16 @@ public abstract class AbstractAPIHandler {
      * Also logs the response.
      *
      * @param asyncRequestFuture The future from {@link #sendAsync(HttpRequest)}
-     * @return A future for the {@link HttpResponseContainer}.
+     * @return A future for the {@link HttpResponseParser}.
      */
-    public CompletableFuture<HttpResponseContainer> getAsyncResponse(
+    public CompletableFuture<HttpResponseParser> getAsyncResponse(
             CompletableFuture<HttpResponse<InputStream>> asyncRequestFuture
     ) {
         return asyncRequestFuture
                 .thenApply(response -> {
                     try {
                         checkResponse(response, 0);
-                        return new HttpResponseContainer(response, getHttpLogger());
+                        return new HttpResponseParser(response, getHttpLogger());
                     } catch (HiroException | IOException | InterruptedException e) {
                         throw new CompletionException(e);
                     }
@@ -459,7 +460,7 @@ public abstract class AbstractAPIHandler {
 
         HttpResponse<InputStream> httpResponse = send(httpRequest);
 
-        return new HttpResponseContainer(httpResponse, getHttpLogger()).createResponseObject(clazz);
+        return new HttpResponseParser(httpResponse, getHttpLogger()).createResponseObject(clazz);
     }
 
     /**
@@ -495,7 +496,7 @@ public abstract class AbstractAPIHandler {
 
         HttpResponse<InputStream> httpResponse = send(httpRequest);
 
-        return new HttpResponseContainer(httpResponse, getHttpLogger()).createResponseObject(clazz);
+        return new HttpResponseParser(httpResponse, getHttpLogger()).createResponseObject(clazz);
     }
 
     /**
@@ -505,12 +506,12 @@ public abstract class AbstractAPIHandler {
      * @param method        The method to use.
      * @param bodyContainer The body as {@link StreamContainer}. Can be null for methods that do not supply a body.
      * @param headers       Initial headers for the httpRequest. Can be null for no additional headers.
-     * @return A {@link HttpResponseContainer} with the result body as InputStream and associated header information.
+     * @return A {@link HttpResponseParser} with the result body as InputStream and associated header information.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HttpResponseContainer executeBinary(
+    public HttpResponseParser executeBinary(
             URI uri,
             String method,
             StreamContainer bodyContainer,
@@ -522,7 +523,7 @@ public abstract class AbstractAPIHandler {
 
         HttpResponse<InputStream> httpResponse = send(httpRequest);
 
-        return new HttpResponseContainer(httpResponse, getHttpLogger());
+        return new HttpResponseParser(httpResponse, getHttpLogger());
     }
 
     /**
@@ -673,12 +674,12 @@ public abstract class AbstractAPIHandler {
      *
      * @param uri     The uri to use.
      * @param headers Initial headers for the httpRequest. Can be null for no additional headers.
-     * @return A {@link HttpResponseContainer} with the result body as InputStream and associated header information.
+     * @return A {@link HttpResponseParser} with the result body as InputStream and associated header information.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
      * @throws InterruptedException When the connection gets interrupted.
      */
-    public HttpResponseContainer getBinary(URI uri, Map<String, String> headers)
+    public HttpResponseParser getBinary(URI uri, Map<String, String> headers)
             throws HiroException, IOException, InterruptedException {
 
         return executeBinary(uri, "GET", null, headers);
@@ -776,15 +777,13 @@ public abstract class AbstractAPIHandler {
         int statusCode = httpResponse.statusCode();
 
         if (statusCode < 200 || statusCode > 399) {
-            String body;
+            HttpResponseParser responseParser = new HttpResponseParser(httpResponse, getHttpLogger());
+            String body = responseParser.consumeResponseAsString();
+
             try {
-                HttpResponseContainer responseContainer = new HttpResponseContainer(httpResponse, getHttpLogger());
-
-                body = responseContainer.consumeResponseAsString();
-
                 String message;
 
-                if (responseContainer.contentIsJson()) {
+                if (responseParser.contentIsJson()) {
                     HiroResponse response = JsonTools.DEFAULT.toObject(body, HiroResponse.class);
                     message = getErrorMessage(statusCode, response);
                 } else {
@@ -793,7 +792,7 @@ public abstract class AbstractAPIHandler {
 
                 throw new HiroHttpException(message, statusCode, body);
             } catch (IOException e) {
-                throw new HiroHttpException(getErrorMessage(statusCode, null), statusCode, null, e);
+                throw new HiroHttpException(getErrorMessage(statusCode, null), statusCode, body, e);
             }
         }
 

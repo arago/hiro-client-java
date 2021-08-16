@@ -24,7 +24,7 @@ import java.util.Optional;
  * Contains the httpResult and decodes the headers Content-Type and Content-Length for further
  * information about that stream.
  */
-public class HttpResponseContainer extends HeaderContainer {
+public class HttpResponseParser extends HeaderContainer {
 
     /**
      * The response with its InputStream.
@@ -38,7 +38,7 @@ public class HttpResponseContainer extends HeaderContainer {
      * @param httpResponse The httpResponse to decode.
      * @param httpLogger   The logger to log the response.
      */
-    public HttpResponseContainer(HttpResponse<InputStream> httpResponse, HttpLogger httpLogger) {
+    public HttpResponseParser(HttpResponse<InputStream> httpResponse, HttpLogger httpLogger) {
         super(httpResponse.headers());
         this.httpResponse = httpResponse;
         this.httpLogger = httpLogger;

@@ -4,6 +4,7 @@ import co.arago.hiro.client.util.JsonTools;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -36,11 +37,26 @@ import java.util.Map;
 public class HiroErrorResponse extends HiroResponse {
 
     private static final long serialVersionUID = -5474697322866873485L;
+
+    public static class HiroErrorEntry implements Serializable {
+        private static final long serialVersionUID = 960096627468148981L;
+        public String message;
+        public Integer code;
+
+        public HiroErrorEntry() {
+        }
+
+        public HiroErrorEntry(
+                String message,
+                Integer code
+        ) {
+            this.message = message;
+            this.code = code;
+        }
+    }
+
     @JsonProperty("error")
     public HiroErrorEntry error;
-
-    public HiroErrorResponse() {
-    }
 
     /**
      * Creates the intended {@link HiroErrorEntry} from either one of the two JSON data formats.
@@ -66,20 +82,26 @@ public class HiroErrorResponse extends HiroResponse {
         return (error != null ? error.code : null);
     }
 
-    public static class HiroErrorEntry implements Serializable {
-        private static final long serialVersionUID = 960096627468148981L;
-        public String message;
-        public Integer code;
+    /**
+     * Create a {@link HiroErrorResponse} if the hiroResponse is an error message.
+     *
+     * @param hiroResponse The response to check.
+     * @return A new {@link HiroErrorResponse} or null if no error is present in hiroResponse.
+     */
+    public static HiroErrorResponse fromResponse(HiroResponse hiroResponse) {
+        if (!hiroResponse.getMap().containsKey("error"))
+            return null;
 
-        public HiroErrorEntry() {
-        }
+        return JsonTools.DEFAULT.toObject(hiroResponse, HiroErrorResponse.class);
+    }
 
-        public HiroErrorEntry(
-                String message,
-                Integer code
-        ) {
-            this.message = message;
-            this.code = code;
-        }
+    /**
+     * Create a {@link HiroErrorResponse} if the String is an error message.
+     *
+     * @param hiroMessage The message to check.
+     * @return A new {@link HiroErrorResponse} or null if no error is present in hiroResponse.
+     */
+    public static HiroErrorResponse fromMessage(String hiroMessage) throws JsonProcessingException {
+        return fromResponse(JsonTools.DEFAULT.toObject(hiroMessage, HiroResponse.class));
     }
 }

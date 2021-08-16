@@ -4,7 +4,7 @@ import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.util.JsonTools;
-import co.arago.hiro.client.util.httpclient.HttpResponseContainer;
+import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -58,22 +58,22 @@ class AuthAPIHandlerTest {
 
     @Test
     void checkMeAvatar() throws HiroException, IOException, InterruptedException {
-        HttpResponseContainer responseContainer = authAPI
+        HttpResponseParser responseParser = authAPI
                 .getMeAvatar()
                 .execute();
-        log.info(responseContainer.getMediaType());
-        log.info(String.valueOf(responseContainer.getContentLength()));
+        log.info(responseParser.getMediaType());
+        log.info(String.valueOf(responseParser.getContentLength()));
 
         byte[] imageBytes;
 
-        try (InputStream inputStream = responseContainer.getInputStream()) {
+        try (InputStream inputStream = responseParser.getInputStream()) {
             imageBytes = IOUtils.toByteArray(inputStream);
             String base64 = Base64.getEncoder().encodeToString(imageBytes);
             log.info(base64.length() > 1000 ? base64.substring(0, 1000) + "..." : base64);
         }
 
         String imageSize = authAPI.putMeAvatar(new ByteArrayInputStream(imageBytes))
-                .setContentType(responseContainer.getContentType())
+                .setContentType(responseParser.getContentType())
                 .execute();
 
         log.info(imageSize);

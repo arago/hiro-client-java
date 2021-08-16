@@ -1,6 +1,5 @@
 package co.arago.hiro.client.websocket;
 
-import co.arago.hiro.client.connection.AbstractWebSocketHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.util.RequiredFieldChecker;
 import org.apache.commons.lang3.StringUtils;

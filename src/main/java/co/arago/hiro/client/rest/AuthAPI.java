@@ -1,6 +1,5 @@
 package co.arago.hiro.client.rest;
 
-import co.arago.hiro.client.connection.AuthenticatedAPIHandler;
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.HiroResponse;
@@ -8,7 +7,7 @@ import co.arago.hiro.client.model.HiroVertexListResponse;
 import co.arago.hiro.client.model.HiroVertexResponse;
 import co.arago.hiro.client.util.JsonTools;
 import co.arago.hiro.client.util.RequiredFieldChecker;
-import co.arago.hiro.client.util.httpclient.HttpResponseContainer;
+import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
@@ -119,7 +118,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_avatar">API Documentation</a>
      */
-    public class GetMeAvatar extends APIRequestConf<GetMeAvatar, HttpResponseContainer> {
+    public class GetMeAvatar extends APIRequestConf<GetMeAvatar, HttpResponseParser> {
 
         protected GetMeAvatar() {
         }
@@ -134,13 +133,13 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          * <p>
          * API GET /api/auth/[version]/me/avatar
          *
-         * @return A {@link HttpResponseContainer} containing the InputStream of the image, the mediaType and the size
+         * @return A {@link HttpResponseParser} containing the InputStream of the image, the mediaType and the size
          * (if available).
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
-        public HttpResponseContainer execute() throws HiroException, IOException, InterruptedException {
+        public HttpResponseParser execute() throws HiroException, IOException, InterruptedException {
             return getBinary(getUri("me/avatar", query, fragment), headers);
         }
     }

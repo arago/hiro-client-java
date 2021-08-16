@@ -37,27 +37,27 @@ public class HiroResponse implements Serializable {
         return responseMap;
     }
 
-    /**
-     * Checks for a received error.
-     *
-     * @return true or false
-     */
-    @JsonIgnore
-    public boolean isError() {
-        return responseMap.containsKey("error");
-    }
-
-    /**
-     * Gets the received error in the response.
-     *
-     * @return The HiroErrorResponse or null if no error is present.
-     */
-    @JsonIgnore
-    public HiroErrorResponse getError() {
-        if (isError()) {
-            return JsonTools.DEFAULT.toObject(this, HiroErrorResponse.class);
-        }
-
-        return null;
-    }
+//    /**
+//     * Checks for a received error.
+//     *
+//     * @return true or false
+//     */
+//    @JsonIgnore
+//    public boolean isError() {
+//        return responseMap.containsKey("error");
+//    }
+//
+//    /**
+//     * Gets the received error in the response.
+//     *
+//     * @return The HiroErrorResponse or null if no error is present.
+//     */
+//    @JsonIgnore
+//    public HiroErrorResponse getError() {
+//        if (isError()) {
+//            return JsonTools.DEFAULT.toObject(this, HiroErrorResponse.class);
+//        }
+//
+//        return null;
+//    }
 }

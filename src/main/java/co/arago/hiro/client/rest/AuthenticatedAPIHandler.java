@@ -1,5 +1,6 @@
-package co.arago.hiro.client.connection;
+package co.arago.hiro.client.rest;
 
+import co.arago.hiro.client.connection.AbstractAPIHandler;
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
