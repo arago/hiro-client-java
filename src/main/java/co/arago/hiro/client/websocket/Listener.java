@@ -1,6 +1,7 @@
 package co.arago.hiro.client.websocket;
 
 import co.arago.hiro.client.exceptions.WebSocketException;
+import co.arago.hiro.client.model.HiroMessage;
 
 /**
  * Interface for external WebSocket listeners
@@ -15,7 +16,7 @@ public interface Listener {
     /**
      * Called with an incoming message.
      */
-    void onMessage(String message) throws WebSocketException;
+    void onMessage(HiroMessage message) throws WebSocketException;
 
     /**
      * Called right before the websocket is about to close.

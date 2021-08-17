@@ -41,7 +41,9 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
     protected VersionResponse requestVersionMap() throws IOException, InterruptedException, HiroException {
         return get(VersionResponse.class,
                 buildURI("/api/version", null, null),
-                null);
+                null,
+                httpRequestTimeout,
+                maxRetries);
     }
 
     /**

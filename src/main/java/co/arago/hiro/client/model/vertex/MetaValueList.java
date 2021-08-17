@@ -1,4 +1,4 @@
-package co.arago.hiro.client.model;
+package co.arago.hiro.client.model.vertex;
 
 import co.arago.hiro.client.util.JsonTools;
 

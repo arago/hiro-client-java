@@ -3,7 +3,8 @@ package co.arago.hiro.client.websocket;
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.WebSocketException;
-import co.arago.hiro.client.model.HiroErrorResponse;
+import co.arago.hiro.client.model.HiroError;
+import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.util.JsonTools;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
@@ -259,9 +260,11 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
 
                 try {
                     synchronized (AbstractWebSocketHandler.this) {
-                        HiroErrorResponse errorResponse = HiroErrorResponse.fromMessage(message);
-                        if (errorResponse != null) {
-                            if (errorResponse.getHiroErrorCode() == 401) {
+                        HiroMessage hiroMessage = JsonTools.DEFAULT.toObject(message, HiroMessage.class);
+
+                        HiroError hiroError = hiroMessage.getError();
+                        if (hiroError != null) {
+                            if (hiroError.getCode() == 401) {
                                 if (getStatus() == Status.RUNNING) {
                                     tokenAPIHandler.refreshToken();
                                     setStatus(Status.RESTARTING);
@@ -280,27 +283,22 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
                         }
 
                         reconnectDelay = 0;
+
+                        listener.onMessage(hiroMessage);
+
+                        if (getStatus() == Status.RUNNING_PRELIMINARY) {
+                            setStatus(Status.RUNNING);
+                        }
                     }
                 } catch (JsonProcessingException e) {
-                    // Ignore processing exceptions
                     reconnectDelay = 0;
+                    log.warn("Ignoring unknown websocket message: {}", message, e);
                 } catch (HiroException | IOException e) {
                     setStatus(Status.FAILED);
                     onError(webSocket, e);
                 } catch (InterruptedException e) {
                     // Just return immediately
                     return null;
-                }
-
-                try {
-                    listener.onMessage(message);
-
-                    if (getStatus() == Status.RUNNING_PRELIMINARY) {
-                        setStatus(Status.RUNNING);
-                    }
-                } catch (WebSocketException e) {
-                    setStatus(Status.FAILED);
-                    onError(webSocket, e);
                 }
             }
 

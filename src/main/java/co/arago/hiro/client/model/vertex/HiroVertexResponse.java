@@ -1,5 +1,6 @@
-package co.arago.hiro.client.model;
+package co.arago.hiro.client.model.vertex;
 
+import co.arago.hiro.client.model.HiroMessage;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.List;
@@ -24,11 +25,11 @@ import java.util.List;
  * </code>
  *
  * <p>
- * Because the types of attributes can be manifold, they remain stored in the HiroResponse
+ * Because the types of attributes can be manifold, they remain stored in the HiroMessage
  * and will be cast to the correct types when reading them with {@link #getAttributeAsString(String)} or
  * {@link #getAttributeAsMetaValue(String)}.
  */
-public class HiroVertexResponse extends HiroResponse {
+public class HiroVertexResponse extends HiroMessage {
 
     private static final long serialVersionUID = -7719281559398624722L;
 

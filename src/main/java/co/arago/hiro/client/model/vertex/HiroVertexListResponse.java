@@ -1,4 +1,6 @@
-package co.arago.hiro.client.model;
+package co.arago.hiro.client.model.vertex;
+
+import co.arago.hiro.client.model.HiroItemListResponse;
 
 /**
  * Special case of the {@link HiroItemListResponse} where the data is a {@link HiroVertexResponse}.

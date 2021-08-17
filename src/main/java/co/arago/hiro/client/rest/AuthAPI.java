@@ -2,9 +2,9 @@ package co.arago.hiro.client.rest;
 
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.model.HiroResponse;
-import co.arago.hiro.client.model.HiroVertexListResponse;
-import co.arago.hiro.client.model.HiroVertexResponse;
+import co.arago.hiro.client.model.HiroMessage;
+import co.arago.hiro.client.model.vertex.HiroVertexListResponse;
+import co.arago.hiro.client.model.vertex.HiroVertexResponse;
 import co.arago.hiro.client.util.JsonTools;
 import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
@@ -98,7 +98,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
-            return get(HiroVertexResponse.class, getUri("me/account", query, fragment), headers);
+            return get(
+                    HiroVertexResponse.class,
+                    getUri("me/account", query, fragment),
+                    headers,
+                    httpRequestTimeout,
+                    maxRetries);
         }
     }
 
@@ -140,7 +145,11 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HttpResponseParser execute() throws HiroException, IOException, InterruptedException {
-            return getBinary(getUri("me/avatar", query, fragment), headers);
+            return getBinary(
+                    getUri("me/avatar", query, fragment),
+                    headers,
+                    httpRequestTimeout,
+                    maxRetries);
         }
     }
 
@@ -188,7 +197,13 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          */
         public String execute() throws HiroException, IOException, InterruptedException {
             RequiredFieldChecker.notBlank(streamContainer.getContentType(), "contentType");
-            return executeBinary(getUri("me/avatar", query, fragment), "PUT", streamContainer, headers).consumeResponseAsString();
+            return executeBinary(
+                    getUri("me/avatar", query, fragment),
+                    "PUT",
+                    streamContainer,
+                    headers,
+                    httpRequestTimeout,
+                    maxRetries).consumeResponseAsString();
         }
     }
 
@@ -251,7 +266,13 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          */
         public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
             RequiredFieldChecker.notBlank(body, "body");
-            return put(HiroVertexResponse.class, getUri("me/password", query, fragment), body, headers);
+            return put(
+                    HiroVertexResponse.class,
+                    getUri("me/password", query, fragment),
+                    body,
+                    headers,
+                    httpRequestTimeout,
+                    maxRetries);
         }
     }
 
@@ -292,7 +313,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
-            return get(HiroVertexResponse.class, getUri("me/profile", query, fragment), headers);
+            return get(
+                    HiroVertexResponse.class,
+                    getUri("me/profile", query, fragment),
+                    headers,
+                    httpRequestTimeout,
+                    maxRetries);
         }
     }
 
@@ -334,7 +360,13 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          */
         public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
             RequiredFieldChecker.notBlank(body, "body");
-            return post(HiroVertexResponse.class, getUri("me/profile", query, fragment), body, headers);
+            return post(
+                    HiroVertexResponse.class,
+                    getUri("me/profile", query, fragment),
+                    body,
+                    headers,
+                    httpRequestTimeout,
+                    maxRetries);
         }
     }
 
@@ -354,7 +386,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_roles">API Documentation</a>
      */
-    public class GetMeRoles extends APIRequestConf<GetMeRoles, HiroResponse> {
+    public class GetMeRoles extends APIRequestConf<GetMeRoles, HiroMessage> {
 
         protected GetMeRoles() {
         }
@@ -369,13 +401,18 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          * <p>
          * API GET /api/auth/[version]/me/roles
          *
-         * @return A {@link HiroResponse} with the result data.
+         * @return A {@link HiroMessage} with the result data.
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
-        public HiroResponse execute() throws HiroException, IOException, InterruptedException {
-            return get(HiroResponse.class, getUri("me/roles", query, fragment), headers);
+        public HiroMessage execute() throws HiroException, IOException, InterruptedException {
+            return get(
+                    HiroMessage.class,
+                    getUri("me/roles", query, fragment),
+                    headers,
+                    httpRequestTimeout,
+                    maxRetries);
         }
     }
 
@@ -426,7 +463,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HiroVertexListResponse execute() throws HiroException, IOException, InterruptedException {
-            return get(HiroVertexListResponse.class, getUri("me/teams", query, fragment), headers);
+            return get(
+                    HiroVertexListResponse.class,
+                    getUri("me/teams", query, fragment),
+                    headers,
+                    httpRequestTimeout,
+                    maxRetries);
         }
     }
 

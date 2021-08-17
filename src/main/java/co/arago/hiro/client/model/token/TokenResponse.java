@@ -1,5 +1,6 @@
-package co.arago.hiro.client.model;
+package co.arago.hiro.client.model.token;
 
+import co.arago.hiro.client.model.HiroMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -19,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * </pre>
  * </code>
  */
-public class TokenResponse extends HiroResponse {
+public class TokenResponse extends HiroMessage {
 
     private static final long serialVersionUID = -4007996463168969516L;
 

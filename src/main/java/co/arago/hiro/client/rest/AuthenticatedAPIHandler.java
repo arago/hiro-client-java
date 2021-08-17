@@ -3,6 +3,7 @@ package co.arago.hiro.client.rest;
 import co.arago.hiro.client.connection.AbstractAPIHandler;
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.JsonTools;
@@ -42,6 +43,9 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         protected Map<String, String> headers = new HashMap<>();
         protected String fragment;
 
+        protected Long httpRequestTimeout;
+        protected Integer maxRetries;
+
         public T setQuery(Map<String, String> query) {
             this.query = query;
             return self();
@@ -54,6 +58,16 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
         public T setFragment(String fragment) {
             this.fragment = fragment;
+            return self();
+        }
+
+        public T setHttpRequestTimeout(Long httpRequestTimeout) {
+            this.httpRequestTimeout = httpRequestTimeout;
+            return self();
+        }
+
+        public T setMaxRetries(Integer maxRetries) {
+            this.maxRetries = maxRetries;
             return self();
         }
 
@@ -377,17 +391,15 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param headers Map of headers with initial values.
      */
     @Override
-    public void addToHeaders(Map<String, String> headers) {
-        try {
-            headers.put("User-Agent", userAgent);
-            headers.put("Authorization", "Bearer " + tokenAPIHandler.getToken());
-        } catch (IOException | InterruptedException | HiroException e) {
-            log.error("Cannot get token: '{}'", e.getMessage());
-        }
+    public void addToHeaders(Map<String, String> headers) throws InterruptedException, IOException, HiroException {
+        headers.put("User-Agent", userAgent);
+        headers.put("Authorization", "Bearer " + tokenAPIHandler.getToken());
     }
 
     /**
-     * Checks for {@link TokenUnauthorizedException} and tries to refresh the token unless retryCount is 0.
+     * Checks for {@link TokenUnauthorizedException} and {@link HiroHttpException}
+     * until {@link #maxRetries} is exhausted.
+     * Also tries to refresh the token on {@link TokenUnauthorizedException}.
      *
      * @param httpResponse The httpResponse from the HttpRequest
      * @param retryCount   current counter for retries
@@ -401,9 +413,17 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         try {
             return super.checkResponse(httpResponse, retryCount);
         } catch (TokenUnauthorizedException e) {
-            if (retryCount > 0) {
-                log.info("Refreshing token because of '{}'.", e.getMessage());
+            // Add one additional retry for obtaining a new token.
+            if (retryCount >= 0) {
+                log.info("Trying to refresh token because of {}.", e.toString());
                 tokenAPIHandler.refreshToken();
+                return true;
+            } else {
+                throw e;
+            }
+        } catch (HiroHttpException e) {
+            if (retryCount > 0) {
+                log.info("Retrying with {} retries left because of {}", retryCount, e.toString());
                 return true;
             } else {
                 throw e;

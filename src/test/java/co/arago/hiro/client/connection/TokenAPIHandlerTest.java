@@ -29,7 +29,7 @@ class TokenAPIHandlerTest {
                 .setApiUrl(config.api_url)
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                 .setAcceptAllCerts(config.accept_all_certs)
-                .setForceLogging(true)
+//                .setForceLogging(true)
                 .build();
     }
 
@@ -37,22 +37,6 @@ class TokenAPIHandlerTest {
     static void shutdown() {
         if (handler != null)
             handler.close();
-    }
-
-    @Test
-    void getApiUriOf() throws IOException, InterruptedException, HiroException {
-        URI uri = handler.getApiUriOf("graph");
-        log.info("URI {}", uri);
-        assertNotNull(uri);
-
-        uri = handler.getApiUriOf("auth");
-        log.info("URI {}", uri);
-        assertNotNull(uri);
-
-        assertThrows(
-                HiroException.class,
-                () -> handler.getApiUriOf("no_such_api")
-        );
     }
 
     @Test

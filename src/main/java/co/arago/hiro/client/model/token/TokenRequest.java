@@ -1,5 +1,6 @@
-package co.arago.hiro.client.model;
+package co.arago.hiro.client.model.token;
 
+import co.arago.hiro.client.model.AbstractJsonMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**

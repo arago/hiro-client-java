@@ -1,7 +1,7 @@
 package co.arago.hiro.client.util.httpclient;
 
 import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.model.HiroResponse;
+import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.JsonTools;
 import org.apache.commons.io.IOUtils;
@@ -130,7 +130,7 @@ public class HttpResponseParser extends HeaderContainer {
      * @throws HiroException When the incoming data is not of type "application/json".
      * @throws IOException   When the creation of the object fails.
      */
-    public <T extends HiroResponse> T createResponseObject(Class<T> clazz) throws IOException, HiroException {
+    public <T extends HiroMessage> T createResponseObject(Class<T> clazz) throws IOException, HiroException {
         String body = consumeResponseAsString();
         if (StringUtils.isBlank(body))
             return null;

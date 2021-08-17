@@ -11,14 +11,14 @@ import java.util.List;
  * <pre>
  * {
  *     "items": [
- *        [HiroResponse],
+ *        [HiroMessage],
  *        ...
  *     ]
  * }
  * </pre>
  * </code>
  */
-public class HiroItemListResponse<T extends HiroResponse> extends HiroResponse {
+public class HiroItemListResponse<T extends HiroMessage> extends HiroMessage {
 
     private static final long serialVersionUID = -8485209005414408396L;
 

@@ -32,7 +32,7 @@ class AuthAPIHandlerTest {
                 .setApiUrl(config.api_url)
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                 .setAcceptAllCerts(config.accept_all_certs)
-                .setForceLogging(true)
+//                .setForceLogging(true)
                 .build();
 
         authAPI = AuthAPI.newBuilder(handler)

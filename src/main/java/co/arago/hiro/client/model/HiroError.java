@@ -4,7 +4,7 @@ import co.arago.hiro.client.util.JsonTools;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 import java.util.Map;
@@ -34,7 +34,7 @@ import java.util.Map;
  * </pre>
  * </code>
  */
-public class HiroErrorResponse extends HiroResponse {
+public class HiroError extends HiroMessage {
 
     private static final long serialVersionUID = -5474697322866873485L;
 
@@ -62,7 +62,7 @@ public class HiroErrorResponse extends HiroResponse {
      * Creates the intended {@link HiroErrorEntry} from either one of the two JSON data formats.
      *
      * @param errorObj The value for the key "error" in the source JSON. Must be either a Map or a String.
-     * @see HiroErrorResponse
+     * @see HiroError
      */
     @JsonSetter("error")
     public void setError(Object errorObj) {
@@ -73,35 +73,13 @@ public class HiroErrorResponse extends HiroResponse {
     }
 
     @JsonIgnore
-    public String getHiroErrorMessage() {
+    public String getMessage() {
         return (error != null ? error.message : null);
     }
 
     @JsonIgnore
-    public Integer getHiroErrorCode() {
+    public Integer getCode() {
         return (error != null ? error.code : null);
     }
 
-    /**
-     * Create a {@link HiroErrorResponse} if the hiroResponse is an error message.
-     *
-     * @param hiroResponse The response to check.
-     * @return A new {@link HiroErrorResponse} or null if no error is present in hiroResponse.
-     */
-    public static HiroErrorResponse fromResponse(HiroResponse hiroResponse) {
-        if (!hiroResponse.getMap().containsKey("error"))
-            return null;
-
-        return JsonTools.DEFAULT.toObject(hiroResponse, HiroErrorResponse.class);
-    }
-
-    /**
-     * Create a {@link HiroErrorResponse} if the String is an error message.
-     *
-     * @param hiroMessage The message to check.
-     * @return A new {@link HiroErrorResponse} or null if no error is present in hiroResponse.
-     */
-    public static HiroErrorResponse fromMessage(String hiroMessage) throws JsonProcessingException {
-        return fromResponse(JsonTools.DEFAULT.toObject(hiroMessage, HiroResponse.class));
-    }
 }

@@ -2,14 +2,12 @@ package co.arago.hiro.client.connection.token;
 
 import co.arago.hiro.client.exceptions.AuthenticationTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
-import co.arago.hiro.client.model.HiroErrorResponse;
-import co.arago.hiro.client.model.TokenRefreshRequest;
-import co.arago.hiro.client.model.TokenRequest;
-import co.arago.hiro.client.model.TokenResponse;
-import co.arago.hiro.client.util.JsonTools;
+import co.arago.hiro.client.model.token.TokenRefreshRequest;
+import co.arago.hiro.client.model.token.TokenRequest;
+import co.arago.hiro.client.model.token.TokenResponse;
 import co.arago.hiro.client.util.RequiredFieldChecker;
-import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -179,6 +177,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
             RequiredFieldChecker.notBlank(getPassword(), "password");
             RequiredFieldChecker.notBlank(getClientId(), "clientId");
             RequiredFieldChecker.notBlank(getClientSecret(), "clientSecret");
+
             return new PasswordAuthTokenAPIHandler(this);
         }
     }
@@ -359,36 +358,24 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     }
 
     /**
-     * Check for the kind of error. 401  throws TokenUnauthorizedException, all other
+     * Check for the kind of error. 401 throws TokenUnauthorizedException, all other
      * throw AuthenticationTokenException.
      *
      * @param httpResponse The httpResponse from the HttpRequest
      * @param retryCount   current counter for retries
-     * @return true when the token has been refreshed, false otherwise.
-     * @throws TokenUnauthorizedException   On error 401 when no retries are left
-     * @throws AuthenticationTokenException On all other status errors
+     * @return true for retry, false otherwise.
+     * @throws TokenUnauthorizedException   On error 401 immediately.
+     * @throws AuthenticationTokenException On all other status errors when no retries are left.
      * @throws IOException                  When reading the inputStream fails.
      */
     @Override
-    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException {
-        int statusCode = httpResponse.statusCode();
-
-        if (statusCode < 200 || statusCode > 399) {
-            HttpResponseParser responseParser = new HttpResponseParser(httpResponse, getHttpLogger());
-
-            String body = responseParser.consumeResponseAsString();
-
-            if (responseParser.contentIsJson()) {
-                HiroErrorResponse errorResponse = JsonTools.DEFAULT.toObject(body, HiroErrorResponse.class);
-
-                if (errorResponse.getHiroErrorCode() == 401) {
-                    throw new TokenUnauthorizedException(errorResponse.getHiroErrorMessage(), errorResponse.getHiroErrorCode(), body);
-                } else {
-                    throw new AuthenticationTokenException(errorResponse.getHiroErrorMessage(), errorResponse.getHiroErrorCode(), body);
-                }
-            } else {
-                throw new AuthenticationTokenException("Unknown response", 500, body);
-            }
+    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException, InterruptedException {
+        try {
+            super.checkResponse(httpResponse, retryCount);
+        } catch (TokenUnauthorizedException e) {
+            throw e;
+        } catch (HiroHttpException e) {
+            throw new AuthenticationTokenException(e.getMessage(), e.getCode(), e.getBody(), e);
         }
 
         return false;
@@ -422,7 +409,9 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                         TokenResponse.class,
                         getUri("app"),
                         tokenRequest.toJsonString(),
-                        Map.of("Content-Type", "application/json")
+                        Map.of("Content-Type", "application/json"),
+                        httpRequestTimeout,
+                        maxRetries
                 )
         );
     }
@@ -449,7 +438,9 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                         TokenResponse.class,
                         getUri("refresh"),
                         tokenRequest.toJsonString(),
-                        Map.of("Content-Type", "application/json")
+                        Map.of("Content-Type", "application/json"),
+                        httpRequestTimeout,
+                        maxRetries
                 )
         );
     }
@@ -473,7 +464,9 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                         Map.of(
                                 "Content-Type", "application/json",
                                 "Authorization", "Bearer " + getToken()
-                        )
+                        ),
+                        httpRequestTimeout,
+                        maxRetries
                 )
         );
     }

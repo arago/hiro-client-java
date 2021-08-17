@@ -29,7 +29,7 @@ import java.util.Map;
  * </code>
  * </pre>
  */
-public class VersionResponse extends HiroResponse {
+public class VersionResponse extends HiroMessage {
 
     private static final long serialVersionUID = 1728631384531328476L;
 
