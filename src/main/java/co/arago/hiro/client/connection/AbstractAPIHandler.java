@@ -256,28 +256,6 @@ public abstract class AbstractAPIHandler {
         return builder;
     }
 
-    /**
-     * Decodes the error body from ta httpResponse.
-     *
-     * @param statusCode The statusCode from the httpResponse.
-     * @param hiroError  The body from the httpResponse as HiroMessage. Can be null when
-     *                   no httpResponse body was returned.
-     * @return A string representing the error extracted from the body or from the
-     * status code.
-     */
-    public String getErrorMessage(int statusCode, HiroError hiroError) {
-        String reason = "HttpResponse status code " + statusCode;
-
-        if (hiroError != null) {
-            String message = hiroError.getMessage();
-            if (StringUtils.isNotBlank(message)) {
-                return statusCode + ": " + message;
-            }
-        }
-
-        return reason;
-    }
-
     // ###############################################################################################
     // ## Tool methods for sending and receiving ##
     // ###############################################################################################
@@ -887,8 +865,11 @@ public abstract class AbstractAPIHandler {
      * @param httpResponse The httpResponse from the HttpRequest
      * @param retryCount   current counter for retries
      * @return true for a retry, false otherwise.
-     * @throws HiroException              if the check fails.
      * @throws TokenUnauthorizedException When the statusCode is 401.
+     * @throws HiroHttpException          When the statusCode is &lt; 200 or &gt; 399.
+     * @throws HiroException              On internal errors regarding hiro data processing.
+     * @throws IOException                On IO errors.
+     * @throws InterruptedException       When a call (possibly of an overwritten method) gets interrupted.
      */
     public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException, InterruptedException {
         int statusCode = httpResponse.statusCode();
@@ -896,25 +877,24 @@ public abstract class AbstractAPIHandler {
         if (statusCode < 200 || statusCode > 399) {
             HttpResponseParser responseParser = new HttpResponseParser(httpResponse, getHttpLogger());
             String body = responseParser.consumeResponseAsString();
-            int hiroErrorCode;
+            String message = statusCode + ": [no additional message]";
+            int errorCode = statusCode;
 
             try {
-                String message;
 
                 if (responseParser.contentIsJson()) {
                     HiroError hiroError = JsonTools.DEFAULT.toObject(body, HiroError.class);
-                    message = getErrorMessage(statusCode, hiroError);
-                    hiroErrorCode = hiroError.getCode();
-                } else {
-                    message = getErrorMessage(statusCode, null);
-                    hiroErrorCode = statusCode;
+                    String hiroMessage = hiroError.getMessage();
+                    if (StringUtils.isNotBlank(hiroMessage))
+                        message = statusCode + ": " + hiroMessage;
+                    errorCode = hiroError.getCode();
                 }
 
-                throw (hiroErrorCode == 401 ?
-                        new TokenUnauthorizedException(message, hiroErrorCode, null) :
-                        new HiroHttpException(message, hiroErrorCode, null));
+                throw (errorCode == 401 ?
+                        new TokenUnauthorizedException(message, errorCode, null) :
+                        new HiroHttpException(message, errorCode, null));
             } catch (IOException e) {
-                throw new HiroHttpException(getErrorMessage(statusCode, null), statusCode, body, e);
+                throw new HiroHttpException(message, errorCode, body, e);
             }
 
 

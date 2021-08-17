@@ -13,14 +13,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.ConnectException;
+import java.net.MalformedURLException;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class InvalidCredentialsAPITest {
-    public static PasswordAuthTokenAPIHandler.Builder handlerBuilder;
-    public static Config config;
+    public PasswordAuthTokenAPIHandler.Builder handlerBuilder;
+    public Config config;
 
     final Logger log = LoggerFactory.getLogger(TokenAPIHandlerTest.class);
 
@@ -36,7 +38,7 @@ public class InvalidCredentialsAPITest {
     }
 
     @Test
-    void wrongCredentials() throws InterruptedException, IOException, HiroException {
+    void wrongCredentials() {
 
         try (AbstractTokenAPIHandler handler = handlerBuilder.setPassword("Wrong").build()) {
 
@@ -54,7 +56,7 @@ public class InvalidCredentialsAPITest {
     }
 
     @Test
-    void wrongClient() throws InterruptedException, IOException, HiroException {
+    void wrongClient() {
 
         try (AbstractTokenAPIHandler handler = handlerBuilder.setClientSecret("Wrong").build()) {
 
@@ -69,5 +71,21 @@ public class InvalidCredentialsAPITest {
 
             assertEquals(tokenUnauthorizedException.getCode(), 401);
         }
+    }
+
+    @Test
+    void wrongUrl() throws MalformedURLException {
+        try (AbstractTokenAPIHandler handler = handlerBuilder.setApiUrl("http://nothing.here").build()) {
+
+            AuthAPI apiHandler = AuthAPI.newBuilder(handler).build();
+
+            ConnectException exception = assertThrows(
+                    ConnectException.class,
+                    () -> apiHandler.getMeAccount().execute()
+            );
+
+            log.info(exception.toString());
+        }
+
     }
 }

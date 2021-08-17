@@ -143,7 +143,10 @@ public class HttpLogger {
         StringBuilder stringBuilder = new StringBuilder();
 
         stringBuilder
-                .append("####### HttpResponse HEADERS #######")
+                .append("####### HttpResponse STATUS CODE AND HEADERS #######")
+                .append(System.lineSeparator())
+                .append(httpResponse.statusCode())
+                .append(System.lineSeparator())
                 .append(System.lineSeparator());
 
         for (Map.Entry<String, List<String>> headerEntry : httpResponse.headers().map().entrySet()) {
