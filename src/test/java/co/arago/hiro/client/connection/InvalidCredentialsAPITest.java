@@ -2,16 +2,15 @@ package co.arago.hiro.client.connection;
 
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
-import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.util.JsonTools;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.MalformedURLException;
@@ -22,23 +21,28 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class InvalidCredentialsAPITest {
     public PasswordAuthTokenAPIHandler.Builder handlerBuilder;
-    public Config config;
 
-    final Logger log = LoggerFactory.getLogger(TokenAPIHandlerTest.class);
+    final static Logger log = LoggerFactory.getLogger(InvalidCredentialsAPITest.class);
 
     @BeforeEach
     void init() throws IOException {
-        Config config = JsonTools.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+        try {
+            Config config = JsonTools.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
 
-        handlerBuilder = PasswordAuthTokenAPIHandler.newBuilder()
-                .setApiUrl(config.api_url)
-                .setCredentials(config.username, config.password, config.client_id, config.client_secret)
-                .setAcceptAllCerts(config.accept_all_certs)
-                .setForceLogging(true);
+            handlerBuilder = PasswordAuthTokenAPIHandler.newBuilder()
+                    .setApiUrl(config.api_url)
+                    .setCredentials(config.username, config.password, config.client_id, config.client_secret)
+                    .setAcceptAllCerts(config.accept_all_certs)
+                    .setForceLogging(true);
+        } catch (FileNotFoundException e) {
+            log.warn("Skipping tests: {}.", e.getMessage());
+        }
     }
 
     @Test
     void wrongCredentials() {
+        if (handlerBuilder == null)
+            return;
 
         try (AbstractTokenAPIHandler handler = handlerBuilder.setPassword("Wrong").build()) {
 
@@ -57,6 +61,8 @@ public class InvalidCredentialsAPITest {
 
     @Test
     void wrongClient() {
+        if (handlerBuilder == null)
+            return;
 
         try (AbstractTokenAPIHandler handler = handlerBuilder.setClientSecret("Wrong").build()) {
 
@@ -75,6 +81,9 @@ public class InvalidCredentialsAPITest {
 
     @Test
     void wrongUrl() throws MalformedURLException {
+        if (handlerBuilder == null)
+            return;
+
         try (AbstractTokenAPIHandler handler = handlerBuilder.setApiUrl("http://nothing.here").build()) {
 
             AuthAPI apiHandler = AuthAPI.newBuilder(handler).build();

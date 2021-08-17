@@ -29,7 +29,7 @@ import java.util.Map;
  */
 public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
-    final Logger log = LoggerFactory.getLogger(AuthenticatedAPIHandler.class);
+    final static Logger log = LoggerFactory.getLogger(AuthenticatedAPIHandler.class);
 
     /**
      * The basic configuration for all requests. Handle queries, headers and fragments.

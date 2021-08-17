@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  * @see <a href="https://core.arago.co/help/specs/?url=definitions/events-ws.yaml#/">API Documentation</a>
  */
 public class EventWebSocket extends AbstractWebSocketHandler {
-    final Logger log = LoggerFactory.getLogger(EventWebSocket.class);
+    final static Logger log = LoggerFactory.getLogger(EventWebSocket.class);
 
     public static abstract class Conf<T extends Conf<T>> extends AbstractWebSocketHandler.Conf<T> {
 

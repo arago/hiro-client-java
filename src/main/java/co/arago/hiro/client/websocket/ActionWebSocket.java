@@ -13,7 +13,7 @@ import java.io.IOException;
  * @see <a href="https://core.arago.co/help/specs/?url=definitions/action-ws.yaml">API Documentation</a>
  */
 public class ActionWebSocket extends AbstractWebSocketHandler {
-    final Logger log = LoggerFactory.getLogger(ActionWebSocket.class);
+    final static Logger log = LoggerFactory.getLogger(ActionWebSocket.class);
 
     public static abstract class Conf<T extends Conf<T>> extends AbstractWebSocketHandler.Conf<T> {
 

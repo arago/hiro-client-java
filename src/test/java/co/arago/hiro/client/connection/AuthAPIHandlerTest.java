@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
@@ -22,21 +23,25 @@ class AuthAPIHandlerTest {
 
     public static PasswordAuthTokenAPIHandler handler;
     public static AuthAPI authAPI;
-    final Logger log = LoggerFactory.getLogger(AuthAPIHandlerTest.class);
+    final static Logger log = LoggerFactory.getLogger(AuthAPIHandlerTest.class);
 
     @BeforeAll
     static void init() throws IOException {
-        Config config = JsonTools.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+        try {
+            Config config = JsonTools.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
 
-        handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setApiUrl(config.api_url)
-                .setCredentials(config.username, config.password, config.client_id, config.client_secret)
-                .setAcceptAllCerts(config.accept_all_certs)
+            handler = PasswordAuthTokenAPIHandler.newBuilder()
+                    .setApiUrl(config.api_url)
+                    .setCredentials(config.username, config.password, config.client_id, config.client_secret)
+                    .setAcceptAllCerts(config.accept_all_certs)
 //                .setForceLogging(true)
-                .build();
+                    .build();
 
-        authAPI = AuthAPI.newBuilder(handler)
-                .build();
+            authAPI = AuthAPI.newBuilder(handler)
+                    .build();
+        } catch (FileNotFoundException e) {
+            log.warn("Skipping tests: {}.", e.getMessage());
+        }
     }
 
     @AfterAll
@@ -47,6 +52,9 @@ class AuthAPIHandlerTest {
 
     @Test
     void checkMeAccount() throws HiroException, IOException, InterruptedException {
+        if (authAPI == null)
+            return;
+
         log.info(
                 JsonTools.DEFAULT.toString(
                         authAPI.getMeAccount()
@@ -58,6 +66,9 @@ class AuthAPIHandlerTest {
 
     @Test
     void checkMeAvatar() throws HiroException, IOException, InterruptedException {
+        if (authAPI == null)
+            return;
+
         HttpResponseParser responseParser = authAPI
                 .getMeAvatar()
                 .execute();
@@ -81,6 +92,9 @@ class AuthAPIHandlerTest {
 
     @Test
     void checkMeProfile() throws HiroException, IOException, InterruptedException {
+        if (authAPI == null)
+            return;
+
         log.info(
                 JsonTools.DEFAULT.toString(
                         authAPI.getMeProfile()
@@ -91,6 +105,9 @@ class AuthAPIHandlerTest {
 
     @Test
     void checkMeRoles() throws HiroException, IOException, InterruptedException {
+        if (authAPI == null)
+            return;
+
         log.info(
                 JsonTools.DEFAULT.toString(
                         authAPI.getMeRoles()
@@ -101,6 +118,9 @@ class AuthAPIHandlerTest {
 
     @Test
     void checkMeTeams() throws HiroException, IOException, InterruptedException {
+        if (authAPI == null)
+            return;
+
         log.info(
                 JsonTools.DEFAULT.toString(
                         authAPI.getMeTeams()

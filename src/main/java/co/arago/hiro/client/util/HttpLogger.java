@@ -17,7 +17,7 @@ import java.util.Set;
  * This handles logging of HttpRequests and HttpResults.
  */
 public class HttpLogger {
-    final Logger log = LoggerFactory.getLogger(HttpLogger.class);
+    final static Logger log = LoggerFactory.getLogger(HttpLogger.class);
 
     protected Boolean logBody = true;
 

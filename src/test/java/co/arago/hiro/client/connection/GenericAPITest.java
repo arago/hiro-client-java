@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpTimeoutException;
@@ -25,20 +26,24 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class GenericAPITest {
     public static PasswordAuthTokenAPIHandler handler;
     public static AuthenticatedAPIHandler apiHandler;
-    final Logger log = LoggerFactory.getLogger(GenericAPITest.class);
+    final static Logger log = LoggerFactory.getLogger(GenericAPITest.class);
 
     @BeforeAll
     static void init() throws IOException {
-        Config config = JsonTools.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+        try {
+            Config config = JsonTools.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
 
-        handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setApiUrl(config.api_url)
-                .setCredentials(config.username, config.password, config.client_id, config.client_secret)
-                .setAcceptAllCerts(config.accept_all_certs)
+            handler = PasswordAuthTokenAPIHandler.newBuilder()
+                    .setApiUrl(config.api_url)
+                    .setCredentials(config.username, config.password, config.client_id, config.client_secret)
+                    .setAcceptAllCerts(config.accept_all_certs)
 //                .setForceLogging(true)
-                .build();
+                    .build();
 
-        apiHandler = GraphAPI.newBuilder(handler).build();
+            apiHandler = GraphAPI.newBuilder(handler).build();
+        } catch (FileNotFoundException e) {
+            log.warn("Skipping tests: {}.", e.getMessage());
+        }
     }
 
     @AfterAll
@@ -50,12 +55,18 @@ public class GenericAPITest {
 
     @Test
     void getVersion() throws IOException, InterruptedException, HiroException {
+        if (handler == null)
+            return;
+
         VersionResponse versionResponse = handler.getVersionMap();
         log.info(versionResponse.toJsonString());
     }
 
     @Test
     void getApiUriOf() throws IOException, InterruptedException, HiroException {
+        if (handler == null)
+            return;
+
         URI uri = handler.getApiUriOf("graph");
         log.info("URI {}", uri);
         assertNotNull(uri);
@@ -72,6 +83,9 @@ public class GenericAPITest {
 
     @Test
     void test400() throws InterruptedException, IOException, HiroException {
+        if (handler == null)
+            return;
+
         URI uri = handler.getApiUriOf("graph");
 
         HiroHttpException hiroHttpException = assertThrows(
@@ -86,6 +100,9 @@ public class GenericAPITest {
 
     @Test
     void test404() throws InterruptedException, IOException, HiroException {
+        if (handler == null)
+            return;
+
         URI uri = handler.getApiUriOf("graph");
 
         HiroHttpException hiroHttpException = assertThrows(
@@ -100,6 +117,9 @@ public class GenericAPITest {
 
     @Test
     void testTimeout() throws InterruptedException, IOException, HiroException {
+        if (handler == null)
+            return;
+
         URI uri = handler.getApiUriOf("graph");
 
         HttpTimeoutException httpTimeoutException = assertThrows(
@@ -112,6 +132,9 @@ public class GenericAPITest {
 
     @Test
     void testRetries() throws InterruptedException, IOException, HiroException {
+        if (handler == null)
+            return;
+
         URI uri = handler.getApiUriOf("graph");
 
         HiroHttpException hiroHttpException = assertThrows(

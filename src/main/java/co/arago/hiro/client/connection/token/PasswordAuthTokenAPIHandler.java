@@ -22,7 +22,7 @@ import java.util.Map;
 
 public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
-    final Logger log = LoggerFactory.getLogger(PasswordAuthTokenAPIHandler.class);
+    final static Logger log = LoggerFactory.getLogger(PasswordAuthTokenAPIHandler.class);
 
     public static abstract class Conf<T extends Conf<T>> extends AbstractTokenAPIHandler.Conf<T> {
         private String username;

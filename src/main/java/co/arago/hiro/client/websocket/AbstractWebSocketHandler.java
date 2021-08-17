@@ -27,7 +27,7 @@ import java.util.concurrent.ExecutionException;
  */
 public abstract class AbstractWebSocketHandler implements AutoCloseable {
 
-    final Logger log = LoggerFactory.getLogger(AbstractWebSocketHandler.class);
+    final static Logger log = LoggerFactory.getLogger(AbstractWebSocketHandler.class);
 
     /**
      * Configuration interface for all the parameters of an AuthenticatedAPIHandler.

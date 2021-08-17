@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  */
 public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implements AutoCloseable {
 
-    final Logger log = LoggerFactory.getLogger(AbstractClientAPIHandler.class);
+    final static Logger log = LoggerFactory.getLogger(AbstractClientAPIHandler.class);
 
     public static abstract class Conf<T extends Conf<T>> extends AbstractAPIHandler.Conf<T> {
         protected AbstractClientAPIHandler.ProxySpec proxy;

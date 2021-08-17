@@ -31,7 +31,7 @@ import java.util.concurrent.CompletionException;
  */
 public abstract class AbstractAPIHandler {
 
-    final Logger log = LoggerFactory.getLogger(AbstractAPIHandler.class);
+    final static Logger log = LoggerFactory.getLogger(AbstractAPIHandler.class);
 
     public interface GetterConf {
         URL getApiUrl();
