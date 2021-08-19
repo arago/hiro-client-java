@@ -4,5 +4,6 @@
   "password": "",
   "client_id": "",
   "client_secret": "",
-  "accept_all_certs": false
+  "accept_all_certs": false,
+  "force_logging": false
 }

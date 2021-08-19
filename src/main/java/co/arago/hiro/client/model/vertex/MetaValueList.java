@@ -1,9 +1,12 @@
 package co.arago.hiro.client.model.vertex;
 
+import co.arago.hiro.client.model.AbstractJsonMap;
+import co.arago.hiro.client.model.JsonMessage;
 import co.arago.hiro.client.util.JsonTools;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 /**
@@ -21,30 +24,25 @@ import java.util.stream.Collectors;
  * </pre>
  * </code>
  */
-public class MetaValueList extends LinkedList<MetaValueList.MetaValueField> {
+public class MetaValueList extends ArrayList<MetaValueList.MetaValueField> implements JsonMessage {
 
     private static final long serialVersionUID = 8233445177105381442L;
 
-    public static MetaValueList create(Object object) {
-        return JsonTools.DEFAULT.toObject(object, MetaValueList.class);
-    }
-
-    public String createSingleValue() {
-        return this.stream().map(v -> v.value).collect(Collectors.joining(","));
-    }
-
-    public static class MetaValueField implements Serializable {
-        public final String value;
-        public final Long created;
-        public final String key;
+    public static class MetaValueField extends AbstractJsonMap {
+        public String value;
+        public Long created;
+        public String key;
 
         public MetaValueField(String value) {
-            this.value = value;
-            this.created = null;
-            this.key = null;
+            this(value, null, null);
         }
 
-        public MetaValueField(String value, Long created, String key) {
+        @JsonCreator
+        public MetaValueField(
+                @JsonProperty("value") String value,
+                @JsonProperty("created") Long created,
+                @JsonProperty("key") String key
+        ) {
             this.value = value;
             this.created = created;
             this.key = key;
@@ -55,4 +53,13 @@ public class MetaValueList extends LinkedList<MetaValueList.MetaValueField> {
         }
 
     }
+
+    public static MetaValueList create(Object object) {
+        return JsonTools.DEFAULT.toObject(object, MetaValueList.class);
+    }
+
+    public String createSingleValue() {
+        return this.stream().map(v -> v.value).collect(Collectors.joining(","));
+    }
+
 }

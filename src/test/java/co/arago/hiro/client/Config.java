@@ -1,4 +1,4 @@
-package co.arago.hiro.client.connection;
+package co.arago.hiro.client;
 
 public class Config {
     public String api_url;
@@ -7,5 +7,6 @@ public class Config {
     public String client_id;
     public String client_secret;
     public Boolean accept_all_certs;
+    public Boolean force_logging;
 }
 

@@ -1,21 +1,12 @@
 package co.arago.hiro.client.model;
 
-import co.arago.hiro.client.util.JsonTools;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.core.JsonProcessingException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 
 /**
- * This contains a LinkedHashMap&lt;String, Object&gt; {@link #responseMap} for the generic incoming data.
- * Children will specify specific fields for JSON data, while all remaining data will be collected in this map.
- *
+ * This contains a LinkedHashMap&lt;String, Object&gt; {@link #fieldsMap} (from {@link AbstractJsonMap} for the generic
+ * incoming data.
+ * <p>
  * This class is meant to parse HTTP responses and WebSocket messages received from HIRO.
  *
  * <code>
@@ -27,19 +18,38 @@ import java.util.Map;
  * </pre>
  * </code>
  */
-public class HiroMessage implements AbstractJsonMessage {
+public class HiroMessage extends AbstractJsonMap {
 
-    private static final long serialVersionUID = 2382405135196485958L;
-    protected final Map<String, Object> responseMap = new LinkedHashMap<>();
+    protected HiroError hiroError;
 
-    @JsonAnySetter
+    /**
+     * Set the field in {@link #fieldsMap} unless an error message is found via {@link #catchError(String, Object)}.
+     *
+     * @param key   The name of the field.
+     * @param value The value of the field.
+     */
+    @Override
     public void setField(String key, Object value) {
-        responseMap.put(key, value);
+        if (catchError(key, value))
+            return;
+
+        super.setField(key, value);
     }
 
-    @JsonAnyGetter
-    public Map<String, Object> getMap() {
-        return responseMap;
+    /**
+     * If the key is "error", create {@link #hiroError} from the value.
+     *
+     * @param key   The name of the field.
+     * @param value The value of the field.
+     * @return true if an error was found (key is "error"), false otherwise.
+     */
+    protected boolean catchError(String key, Object value) {
+        if (StringUtils.equals(key, "error")) {
+            hiroError = new HiroError(value);
+            return true;
+        } else {
+            return false;
+        }
     }
 
     /**
@@ -49,7 +59,7 @@ public class HiroMessage implements AbstractJsonMessage {
      */
     @JsonIgnore
     public boolean isError() {
-        return responseMap.containsKey("error");
+        return (hiroError != null);
     }
 
     /**
@@ -59,10 +69,6 @@ public class HiroMessage implements AbstractJsonMessage {
      */
     @JsonIgnore
     public HiroError getError() {
-        if (isError()) {
-            return JsonTools.DEFAULT.toObject(responseMap, HiroError.class);
-        }
-
-        return null;
+        return hiroError;
     }
 }

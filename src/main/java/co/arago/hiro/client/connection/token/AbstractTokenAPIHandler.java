@@ -9,10 +9,18 @@ import java.util.Map;
 
 public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler {
 
+    // ###############################################################################################
+    // ## Conf and Builder ##
+    // ###############################################################################################
+
     public static abstract class Conf<T extends Conf<T>> extends AbstractVersionAPIHandler.Conf<T> {
         @Override
         public abstract AbstractTokenAPIHandler build();
     }
+
+    // ###############################################################################################
+    // ## Main part ##
+    // ###############################################################################################
 
     /**
      * Constructor

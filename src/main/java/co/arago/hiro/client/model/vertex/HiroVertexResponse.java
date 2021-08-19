@@ -31,8 +31,6 @@ import java.util.List;
  */
 public class HiroVertexResponse extends HiroMessage {
 
-    private static final long serialVersionUID = -7719281559398624722L;
-
     /**
      * Jackson Setter that transforms incoming lists into MetaValueLists.
      *
@@ -41,6 +39,9 @@ public class HiroVertexResponse extends HiroMessage {
      */
     @Override
     public void setField(String key, Object value) {
+        if (catchError(key, value))
+            return;
+
         super.setField(key, (value instanceof List ? MetaValueList.create(value) : value));
     }
 
@@ -52,7 +53,7 @@ public class HiroVertexResponse extends HiroMessage {
      */
     @JsonIgnore
     public Boolean isMetaValueField(String key) {
-        return (responseMap.get(key) instanceof MetaValueList);
+        return (fieldsMap.get(key) instanceof MetaValueList);
     }
 
     /**
@@ -61,8 +62,9 @@ public class HiroVertexResponse extends HiroMessage {
      * @param key The key of the field.
      * @return THe value of the key as Object.
      */
+    @JsonIgnore
     public Object getAttribute(String key) {
-        return responseMap.get(key);
+        return fieldsMap.get(key);
     }
 
     /**
@@ -74,7 +76,7 @@ public class HiroVertexResponse extends HiroMessage {
      */
     @JsonIgnore
     public String getAttributeAsString(String key) {
-        Object value = responseMap.get(key);
+        Object value = fieldsMap.get(key);
 
         if (value instanceof MetaValueList) {
             return ((MetaValueList) value).createSingleValue();
@@ -95,7 +97,7 @@ public class HiroVertexResponse extends HiroMessage {
      */
     @JsonIgnore
     public MetaValueList getAttributeAsMetaValue(String key) {
-        Object value = responseMap.get(key);
+        Object value = fieldsMap.get(key);
 
         if (value instanceof MetaValueList) {
             return (MetaValueList) value;

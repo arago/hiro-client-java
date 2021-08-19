@@ -6,6 +6,10 @@ import org.apache.commons.lang3.StringUtils;
 
 public class GraphAPI extends AuthenticatedAPIHandler {
 
+    // ###############################################################################################
+    // ## Conf and Builder ##
+    // ###############################################################################################
+
     public static abstract class Conf<T extends Conf<T>> extends AuthenticatedAPIHandler.Conf<T> {
     }
 

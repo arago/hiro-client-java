@@ -15,6 +15,10 @@ import java.io.IOException;
 public class ActionWebSocket extends AbstractWebSocketHandler {
     final static Logger log = LoggerFactory.getLogger(ActionWebSocket.class);
 
+    // ###############################################################################################
+    // ## Conf and Builder ##
+    // ###############################################################################################
+
     public static abstract class Conf<T extends Conf<T>> extends AbstractWebSocketHandler.Conf<T> {
 
     }
@@ -38,6 +42,17 @@ public class ActionWebSocket extends AbstractWebSocketHandler {
 
     protected ActionWebSocket(Conf<?> builder) {
         super(builder);
+    }
+
+    /**
+     * Abstract method to embed the {@link HiroWebSocketListener} in the required {@link InternalListener}.
+     *
+     * @param webSocketListener The listener to embed.
+     * @return The {@link InternalListener} containing the {@link HiroWebSocketListener}.
+     */
+    @Override
+    protected InternalListener constructInternalListener(HiroWebSocketListener webSocketListener) {
+        return null;
     }
 
     @Override

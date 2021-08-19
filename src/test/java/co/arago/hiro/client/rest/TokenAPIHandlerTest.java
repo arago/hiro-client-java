@@ -1,5 +1,6 @@
-package co.arago.hiro.client.connection;
+package co.arago.hiro.client.rest;
 
+import co.arago.hiro.client.Config;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.util.JsonTools;
@@ -30,7 +31,7 @@ class TokenAPIHandlerTest {
                     .setApiUrl(config.api_url)
                     .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                     .setAcceptAllCerts(config.accept_all_certs)
-//                .setForceLogging(true)
+                    .setForceLogging(config.force_logging)
                     .build();
         } catch (FileNotFoundException e) {
             log.warn("Skipping tests: {}.", e.getMessage());

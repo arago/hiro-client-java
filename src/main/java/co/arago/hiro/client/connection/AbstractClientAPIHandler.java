@@ -27,6 +27,10 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
 
     final static Logger log = LoggerFactory.getLogger(AbstractClientAPIHandler.class);
 
+    // ###############################################################################################
+    // ## Conf and Builder ##
+    // ###############################################################################################
+
     public static abstract class Conf<T extends Conf<T>> extends AbstractAPIHandler.Conf<T> {
         protected AbstractClientAPIHandler.ProxySpec proxy;
         protected boolean followRedirects = true;
@@ -43,7 +47,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
 
         /**
          * @param proxy Simple proxy with one address and port
-         * @return this
+         * @return {@link #self()}
          */
         public T setProxy(ProxySpec proxy) {
             this.proxy = proxy;
@@ -56,7 +60,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
 
         /**
          * @param followRedirects Enable Redirect.NORMAL. Default is true.
-         * @return this
+         * @return {@link #self()}
          */
         public T setFollowRedirects(boolean followRedirects) {
             this.followRedirects = followRedirects;
@@ -69,7 +73,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
 
         /**
          * @param connectTimeout Connect timeout in milliseconds.
-         * @return this
+         * @return {@link #self()}
          */
         public T setConnectTimeout(Long connectTimeout) {
             this.connectTimeout = connectTimeout;
@@ -85,7 +89,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          * installs a permissive SSLContext, setting it to false removes the SSLContext to use the default.
          *
          * @param acceptAllCerts the toggle
-         * @return this
+         * @return {@link #self()}
          */
         public T setAcceptAllCerts(Boolean acceptAllCerts) {
             this.acceptAllCerts = acceptAllCerts;
@@ -98,7 +102,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
 
         /**
          * @param sslContext The specific SSLContext to use.
-         * @return this
+         * @return {@link #self()}
          * @see #setAcceptAllCerts(Boolean)
          */
         public T setSslContext(SSLContext sslContext) {
@@ -112,7 +116,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
 
         /**
          * @param sslParameters The specific SSLParameters to use.
-         * @return this
+         * @return {@link #self()}
          */
         public T setSslParameters(SSLParameters sslParameters) {
             this.sslParameters = sslParameters;
@@ -128,7 +132,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          * given by this Builder if this is not set.
          *
          * @param httpClient Instance of an HttpClient.
-         * @return this
+         * @return {@link #self()}
          */
         public T setHttpClient(HttpClient httpClient) {
             this.httpClient = httpClient;
@@ -144,7 +148,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          * Executor of the HttpClient).
          *
          * @param maxConnectionPool Maximum size of the pool. Default is 8.
-         * @return this
+         * @return {@link #self()}
          */
         public T setMaxConnectionPool(int maxConnectionPool) {
             this.maxConnectionPool = maxConnectionPool;
@@ -154,6 +158,10 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         @Override
         public abstract AbstractClientAPIHandler build();
     }
+
+    // ###############################################################################################
+    // ## Inner classes ##
+    // ###############################################################################################
 
     /**
      * A simple data class for a proxy
@@ -191,6 +199,10 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         }
     }};
 
+    // ###############################################################################################
+    // ## Main part ##
+    // ###############################################################################################
+
     protected final AbstractClientAPIHandler.ProxySpec proxy;
     protected final boolean followRedirects;
     protected final Long connectTimeout;
@@ -202,10 +214,6 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     protected final HttpLogger httpLogger = new HttpLogger();
 
     private ExecutorService clientExecutorService;
-
-    // ###############################################################################################
-    // ## Constructors ##
-    // ###############################################################################################
 
     /**
      * Protected Constructor. Attributes shall be filled via builders.

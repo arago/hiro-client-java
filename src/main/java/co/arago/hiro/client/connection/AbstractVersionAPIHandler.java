@@ -11,11 +11,18 @@ import java.net.URI;
  */
 public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler {
 
+    // ###############################################################################################
+    // ## Conf and Builder ##
+    // ###############################################################################################
+
     public static abstract class Conf<T extends Conf<T>> extends AbstractClientAPIHandler.Conf<T> {
         @Override
         public abstract AbstractVersionAPIHandler build();
     }
 
+    // ###############################################################################################
+    // ## Main part ##
+    // ###############################################################################################
 
     private VersionResponse versionMap;
 

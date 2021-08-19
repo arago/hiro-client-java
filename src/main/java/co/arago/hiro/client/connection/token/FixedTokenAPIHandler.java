@@ -9,6 +9,10 @@ import java.time.Instant;
 
 public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
 
+    // ###############################################################################################
+    // ## Conf and Builder ##
+    // ###############################################################################################
+
     public static abstract class Conf<T extends Conf<T>> extends AbstractTokenAPIHandler.Conf<T> {
         private String token;
 
@@ -20,7 +24,7 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
          * Set a static token
          *
          * @param token The token string
-         * @return this
+         * @return {@link #self()}
          */
         public T setToken(String token) {
             this.token = token;
@@ -41,6 +45,10 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
             return new FixedTokenAPIHandler(this);
         }
     }
+
+    // ###############################################################################################
+    // ## Main part ##
+    // ###############################################################################################
 
     protected final String token;
 

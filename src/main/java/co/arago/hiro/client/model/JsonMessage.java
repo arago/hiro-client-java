@@ -8,7 +8,7 @@ import java.io.Serializable;
 /**
  * This interface defines a default method to create a JSON String from this object.
  */
-public interface AbstractJsonMessage extends Serializable {
+public interface JsonMessage extends Serializable {
     /**
      * @return JSON representation of this object. Returns "" on JsonProcessingException (which should never happen).
      */

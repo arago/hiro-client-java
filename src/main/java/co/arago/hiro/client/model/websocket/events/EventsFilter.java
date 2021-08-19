@@ -1,9 +1,9 @@
 package co.arago.hiro.client.model.websocket.events;
 
-import co.arago.hiro.client.model.AbstractJsonMessage;
+import co.arago.hiro.client.model.JsonMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class EventsFilter implements AbstractJsonMessage {
+public class EventsFilter implements JsonMessage {
     @JsonProperty("filter-id")
     public final String id;
     @JsonProperty("filter-type")

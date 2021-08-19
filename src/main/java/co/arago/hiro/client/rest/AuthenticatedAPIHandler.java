@@ -10,6 +10,7 @@ import co.arago.hiro.client.util.JsonTools;
 import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,96 @@ import java.util.Map;
 public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
     final static Logger log = LoggerFactory.getLogger(AuthenticatedAPIHandler.class);
+
+    // ###############################################################################################
+    // ## Conf and Builder ##
+    // ###############################################################################################
+
+    /**
+     * Configuration interface for all the parameters of an AuthenticatedAPIHandler.
+     * Builder need to implement this.
+     */
+    public static abstract class Conf<T extends Conf<T>> {
+        private String apiName;
+        private String endpoint;
+        private Long httpRequestTimeout;
+        private AbstractTokenAPIHandler tokenAPIHandler;
+        private int maxRetries;
+
+        public String getApiName() {
+            return apiName;
+        }
+
+        /**
+         * @param apiName Set the name of the api. This name will be used to determine the API endpoint.
+         * @return {@link #self()}
+         */
+        public T setApiName(String apiName) {
+            this.apiName = apiName;
+            return self();
+        }
+
+        public String getEndpoint() {
+            return endpoint;
+        }
+
+        /**
+         * @param endpoint Set a custom endpoint directly, omitting automatic endpoint detection via apiName.
+         * @return {@link #self()}
+         */
+        public T setEndpoint(String endpoint) {
+            this.endpoint = endpoint;
+            return self();
+        }
+
+        public Long getHttpRequestTimeout() {
+            return this.httpRequestTimeout;
+        }
+
+        /**
+         * @param httpRequestTimeout Request timeout in ms.
+         * @return {@link #self()}
+         */
+        public T setHttpRequestTimeout(Long httpRequestTimeout) {
+            this.httpRequestTimeout = httpRequestTimeout;
+            return self();
+        }
+
+
+        public int getMaxRetries() {
+            return maxRetries;
+        }
+
+        /**
+         * @param maxRetries Max amount of retries when http errors are received.
+         * @return {@link #self()}
+         */
+        public T setMaxRetries(int maxRetries) {
+            this.maxRetries = maxRetries;
+            return self();
+        }
+
+        public AbstractTokenAPIHandler getTokenApiHandler() {
+            return this.tokenAPIHandler;
+        }
+
+        /**
+         * @param tokenAPIHandler The tokenAPIHandler for this API.
+         * @return {@link #self()}
+         */
+        public T setTokenApiHandler(AbstractTokenAPIHandler tokenAPIHandler) {
+            this.tokenAPIHandler = tokenAPIHandler;
+            return self();
+        }
+
+        protected abstract T self();
+
+        public abstract AuthenticatedAPIHandler build();
+    }
+
+    // ###############################################################################################
+    // ## Inner abstract classes for Builders of API calls ##
+    // ###############################################################################################
 
     /**
      * The basic configuration for all requests. Handle queries, headers and fragments.
@@ -93,7 +184,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * Convert the Map into a JSON body String.
          *
          * @param map The map to convert.
-         * @return this.
+         * @return {@link #self()}.
          */
         public T setJsonFromMap(Map<String, ?> map) throws JsonProcessingException {
             this.body = JsonTools.DEFAULT.toString(map);
@@ -114,7 +205,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * Set the body as plain String.
          *
          * @param body The body to set.
-         * @return this
+         * @return {@link #self()}
          */
         public T setBody(String body) {
             this.body = body;
@@ -160,7 +251,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
         /**
          * @param mediaType The mediaType / MIME-Type.
-         * @return this
+         * @return {@link #self()}
          */
         public T setMediaType(String mediaType) {
             this.streamContainer.setMediaType(mediaType);
@@ -171,7 +262,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * Decodes mediaType and charset from the contentType.
          *
          * @param contentType The HTTP header field "Content-Type".
-         * @return this
+         * @return {@link #self()}
          * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type">Documentation of Content-Type</a>
          */
         public T setContentType(String contentType) {
@@ -180,20 +271,21 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         }
 
         /**
-         * Override here to grab Content-Type header for {@link #streamContainer}.
+         * If "Content-Type" is present in the headers, also set it in the {@link #streamContainer}.
          *
          * @param headers The headers to set.
-         * @return this
+         * @return {@link #self()}
          */
         @Override
         public T setHeaders(Map<String, String> headers) {
 
             if (headers != null) {
-                headers.entrySet()
-                        .stream()
-                        .filter(entry -> StringUtils.equalsIgnoreCase("Content-Type", entry.getKey()))
-                        .findFirst()
-                        .ifPresent(contentType -> setContentType(contentType.getValue()));
+                for (Map.Entry<String, String> entry : headers.entrySet()) {
+                    if (StringUtils.equalsIgnoreCase("Content-Type", entry.getKey())) {
+                        setContentType(entry.getValue());
+                        break;
+                    }
+                }
             }
 
             return super.setHeaders(headers);
@@ -201,88 +293,9 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
     }
 
-
-    /**
-     * Configuration interface for all the parameters of an AuthenticatedAPIHandler.
-     * Builder need to implement this.
-     */
-    public static abstract class Conf<T extends Conf<T>> {
-        private String apiName;
-        private String endpoint;
-        private Long httpRequestTimeout;
-        private AbstractTokenAPIHandler tokenAPIHandler;
-        private int maxRetries;
-
-        public String getApiName() {
-            return apiName;
-        }
-
-        /**
-         * @param apiName Set the name of the api. This name will be used to determine the API endpoint.
-         * @return this
-         */
-        public T setApiName(String apiName) {
-            this.apiName = apiName;
-            return self();
-        }
-
-        public String getEndpoint() {
-            return endpoint;
-        }
-
-        /**
-         * @param endpoint Set a custom endpoint directly, omitting automatic endpoint detection via apiName.
-         * @return this
-         */
-        public T setEndpoint(String endpoint) {
-            this.endpoint = endpoint;
-            return self();
-        }
-
-        public Long getHttpRequestTimeout() {
-            return this.httpRequestTimeout;
-        }
-
-        /**
-         * @param httpRequestTimeout Request timeout in ms.
-         * @return this
-         */
-        public T setHttpRequestTimeout(Long httpRequestTimeout) {
-            this.httpRequestTimeout = httpRequestTimeout;
-            return self();
-        }
-
-
-        public int getMaxRetries() {
-            return maxRetries;
-        }
-
-        /**
-         * @param maxRetries Max amount of retries when http errors are received.
-         * @return this
-         */
-        public T setMaxRetries(int maxRetries) {
-            this.maxRetries = maxRetries;
-            return self();
-        }
-
-        public AbstractTokenAPIHandler getTokenApiHandler() {
-            return this.tokenAPIHandler;
-        }
-
-        /**
-         * @param tokenAPIHandler The tokenAPIHandler for this API.
-         * @return this
-         */
-        public T setTokenApiHandler(AbstractTokenAPIHandler tokenAPIHandler) {
-            this.tokenAPIHandler = tokenAPIHandler;
-            return self();
-        }
-
-        protected abstract T self();
-
-        public abstract AuthenticatedAPIHandler build();
-    }
+    // ###############################################################################################
+    // ## Main part ##
+    // ###############################################################################################
 
     protected final String apiName;
     protected final String endpoint;
@@ -336,35 +349,6 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     }
 
     /**
-     * Construct my URI.
-     * This method will query /api/version once to construct the URI unless {@link #endpoint} is set.
-     *
-     * @param path The path to append to the API path.
-     * @return The URI without query or fragment.
-     * @throws IOException          On a failed call to /api/version
-     * @throws InterruptedException Call got interrupted
-     * @throws HiroException        When calling /api/version responds with an error
-     */
-    public URI getUri(String path) throws IOException, InterruptedException, HiroException {
-        return getUri(path, null, null);
-    }
-
-    /**
-     * Construct my URI with query parameters
-     * This method will query /api/version once to construct the URI unless {@link #endpoint} is set.
-     *
-     * @param path  The path to append to the API path.
-     * @param query Map of query parameters for this URI
-     * @return The URI with query parameters.
-     * @throws IOException          On a failed call to /api/version
-     * @throws InterruptedException Call got interrupted
-     * @throws HiroException        When calling /api/version responds with an error
-     */
-    public URI getUri(String path, Map<String, String> query) throws IOException, InterruptedException, HiroException {
-        return getUri(path, query, null);
-    }
-
-    /**
      * Construct my URI with query parameters and fragment.
      * This method will query /api/version once to construct the URI unless {@link #endpoint} is set.
      *
@@ -380,7 +364,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         if (apiUri == null)
             apiUri = (endpoint != null ? buildURI(endpoint) : tokenAPIHandler.getApiUriOf(apiName));
 
-        URI pathUri = apiUri.resolve(StringUtils.removeStart(path, "/"));
+        URI pathUri = apiUri.resolve(RegExUtils.removePattern(path, "^/+"));
 
         return addQueryAndFragment(pathUri, query, fragment);
     }

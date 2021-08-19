@@ -1,6 +1,6 @@
 package co.arago.hiro.client.model.websocket.events;
 
-import co.arago.hiro.client.model.AbstractJsonMessage;
+import co.arago.hiro.client.model.JsonMessage;
 
 /**
  * <pre><code>
@@ -14,7 +14,7 @@ import co.arago.hiro.client.model.AbstractJsonMessage;
  *     }
  * </code></pre>
  */
-public class WebSocketEventRegisterMessage implements AbstractJsonMessage {
+public class WebSocketEventRegisterMessage implements JsonMessage {
 
 
     public final String type = "register";

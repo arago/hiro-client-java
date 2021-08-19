@@ -9,6 +9,7 @@ import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.JsonTools;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,10 @@ import java.util.concurrent.CompletionException;
 public abstract class AbstractAPIHandler {
 
     final static Logger log = LoggerFactory.getLogger(AbstractAPIHandler.class);
+
+    // ###############################################################################################
+    // ## Conf and Builder ##
+    // ###############################################################################################
 
     public interface GetterConf {
         URL getApiUrl();
@@ -61,16 +66,16 @@ public abstract class AbstractAPIHandler {
 
         /**
          * @param apiUrl The root url for the API
-         * @return this
+         * @return {@link #self()}
          */
         public T setApiUrl(String apiUrl) throws MalformedURLException {
-            this.apiUrl = new URL(StringUtils.removeEnd(apiUrl, "/") + "/");
+            this.apiUrl = new URL(RegExUtils.removePattern(apiUrl, "/+$") + "/");
             return self();
         }
 
         /**
          * @param apiUrl The root url for the API
-         * @return this
+         * @return {@link #self()}
          */
         public T setApiUrl(URL apiUrl) {
             this.apiUrl = apiUrl;
@@ -86,7 +91,7 @@ public abstract class AbstractAPIHandler {
          * For header "User-Agent". Default is determined by the package.
          *
          * @param userAgent The line for the User-Agent header.
-         * @return this
+         * @return {@link #self()}
          */
         public T setUserAgent(String userAgent) {
             this.userAgent = userAgent;
@@ -100,7 +105,7 @@ public abstract class AbstractAPIHandler {
 
         /**
          * @param httpRequestTimeout Request timeout in ms.
-         * @return this
+         * @return {@link #self()}
          */
         public T setHttpRequestTimeout(Long httpRequestTimeout) {
             this.httpRequestTimeout = httpRequestTimeout;
@@ -114,7 +119,7 @@ public abstract class AbstractAPIHandler {
 
         /**
          * @param maxRetries Max amount of retries when http errors are received. The default is 0.
-         * @return this
+         * @return {@link #self()}
          */
         public T setMaxRetries(int maxRetries) {
             this.maxRetries = maxRetries;
@@ -125,6 +130,10 @@ public abstract class AbstractAPIHandler {
 
         public abstract AbstractAPIHandler build();
     }
+
+    // ###############################################################################################
+    // ## Main part ##
+    // ###############################################################################################
 
     public static final String title;
     public static final String version;
@@ -172,7 +181,7 @@ public abstract class AbstractAPIHandler {
      */
     public URI buildURI(String endpoint) {
         try {
-            return apiUrl.toURI().resolve(StringUtils.removeStart(endpoint, "/"));
+            return apiUrl.toURI().resolve(RegExUtils.removePattern(endpoint, "^/+"));
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Cannot create URI using endpoint '" + endpoint + "'", e);
         }
@@ -199,7 +208,7 @@ public abstract class AbstractAPIHandler {
      * @param fragment URI Fragment. Can be null for no fragment.
      * @return The constructed URI
      */
-    public URI addQueryAndFragment(URI uri, Map<String, String> query, String fragment) {
+    public static URI addQueryAndFragment(URI uri, Map<String, String> query, String fragment) {
 
         String queryString = null;
 

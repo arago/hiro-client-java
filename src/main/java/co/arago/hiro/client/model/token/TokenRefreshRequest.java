@@ -1,6 +1,6 @@
 package co.arago.hiro.client.model.token;
 
-import co.arago.hiro.client.model.AbstractJsonMessage;
+import co.arago.hiro.client.model.JsonMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -16,7 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * </pre>
  * </code>
  */
-public class TokenRefreshRequest implements AbstractJsonMessage {
+public class TokenRefreshRequest implements JsonMessage {
 
     // Match the JSON structure for the request.
 

@@ -8,6 +8,7 @@ import co.arago.hiro.client.model.token.TokenRefreshRequest;
 import co.arago.hiro.client.model.token.TokenRequest;
 import co.arago.hiro.client.model.token.TokenResponse;
 import co.arago.hiro.client.util.RequiredFieldChecker;
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +24,10 @@ import java.util.Map;
 public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
     final static Logger log = LoggerFactory.getLogger(PasswordAuthTokenAPIHandler.class);
+
+    // ###############################################################################################
+    // ## Conf and Builder ##
+    // ###############################################################################################
 
     public static abstract class Conf<T extends Conf<T>> extends AbstractTokenAPIHandler.Conf<T> {
         private String username;
@@ -40,7 +45,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
         /**
          * @param username HIRO username for user account
-         * @return this
+         * @return {@link #self()}
          */
         public T setUsername(String username) {
             this.username = username;
@@ -53,7 +58,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
         /**
          * @param password HIRO password for user account
-         * @return this
+         * @return {@link #self()}
          */
         public T setPassword(String password) {
             this.password = password;
@@ -66,7 +71,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
         /**
          * @param clientId HIRO client_id of app
-         * @return this
+         * @return {@link #self()}
          */
         public T setClientId(String clientId) {
             this.clientId = clientId;
@@ -79,7 +84,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
         /**
          * @param clientSecret HIRO client_secret of app
-         * @return this
+         * @return {@link #self()}
          */
         public T setClientSecret(String clientSecret) {
             this.clientSecret = clientSecret;
@@ -93,7 +98,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * @param password     HIRO password for user account
          * @param clientId     HIRO client_id of app
          * @param clientSecret HIRO client_secret of app
-         * @return this
+         * @return {@link #self()}
          */
         public T setCredentials(String username, String password, String clientId, String clientSecret) {
             setUsername(username);
@@ -112,7 +117,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * before it runs out. Default is 5000 (5s).
          *
          * @param refreshOffset Offset in ms
-         * @return this
+         * @return {@link #self()}
          */
         public T setRefreshOffset(Long refreshOffset) {
             this.refreshOffset = refreshOffset;
@@ -128,7 +133,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * refresh floods that can happen with multiple threads using the same TokenAPIHandler. Default is 30000 (30s).
          *
          * @param refreshPause Buffer span in ms
-         * @return this
+         * @return {@link #self()}
          */
         public T setRefreshPause(Long refreshPause) {
             this.refreshPause = refreshPause;
@@ -143,7 +148,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          * Force logging of insecure request / response data. USE ONLY FOR DEBUGGING PURPOSES!!!
          *
          * @param forceLogging the flag to set.
-         * @return this
+         * @return {@link #self()}
          */
         public T setForceLogging(boolean forceLogging) {
             this.forceLogging = forceLogging;
@@ -156,7 +161,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
         /**
          * @param endpoint The endpoint set externally. Overrides the fetching of the endpoint via /api/version.
-         * @return this
+         * @return {@link #self()}
          */
         public T setEndpoint(String endpoint) {
             this.endpoint = endpoint;
@@ -181,6 +186,10 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
             return new PasswordAuthTokenAPIHandler(this);
         }
     }
+
+    // ###############################################################################################
+    // ## Inner classes ##
+    // ###############################################################################################
 
     /**
      * Extends the TokenResponse with additional data and operations.
@@ -251,6 +260,10 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
     }
+
+    // ###############################################################################################
+    // ## Main part ##
+    // ###############################################################################################
 
     protected final String apiName = "auth";
     protected final String username;
@@ -327,7 +340,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         if (apiUri == null)
             apiUri = (endpoint != null ? buildURI(endpoint) : getApiUriOf(apiName));
 
-        return apiUri.resolve(StringUtils.startsWith(path, "/") ? path.substring(1) : path);
+        return apiUri.resolve(RegExUtils.removePattern(path, "^/+"));
     }
 
     /**

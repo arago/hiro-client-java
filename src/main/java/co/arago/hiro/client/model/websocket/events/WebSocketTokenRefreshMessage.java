@@ -1,6 +1,6 @@
 package co.arago.hiro.client.model.websocket.events;
 
-import co.arago.hiro.client.model.AbstractJsonMessage;
+import co.arago.hiro.client.model.JsonMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
@@ -15,7 +15,7 @@ import java.io.Serializable;
  *     }
  * </code></pre>
  */
-public class WebSocketTokenRefreshMessage implements AbstractJsonMessage {
+public class WebSocketTokenRefreshMessage implements JsonMessage {
 
     public static class Token implements Serializable {
         @JsonProperty("_TOKEN")

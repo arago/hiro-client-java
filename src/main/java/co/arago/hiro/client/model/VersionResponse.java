@@ -2,11 +2,7 @@ package co.arago.hiro.client.model;
 
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.util.JsonTools;
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -31,7 +27,17 @@ import java.util.Map;
  */
 public class VersionResponse extends HiroMessage {
 
-    private static final long serialVersionUID = 1728631384531328476L;
+    public static class VersionEntry extends AbstractJsonMap {
+        public String endpoint;
+        public String version;
+        public String docs;
+        public String support;
+        public String specs;
+        public String protocols;
+        public String lifecycle;
+    }
+
+    protected final Map<String, VersionEntry> versionEntryMap = new LinkedHashMap<>();
 
     /**
      * Jackson Setter that transforms incoming maps into VersionEntries.
@@ -41,7 +47,14 @@ public class VersionResponse extends HiroMessage {
      */
     @Override
     public void setField(String key, Object value) {
-        super.setField(key, (value instanceof Map ? JsonTools.DEFAULT.toObject(value, VersionEntry.class) : value));
+        if (catchError(key, value))
+            return;
+
+        if (value instanceof Map) {
+            versionEntryMap.put(key, JsonTools.DEFAULT.toObject(value, VersionEntry.class));
+        } else {
+            super.setField(key, value);
+        }
     }
 
     /**
@@ -50,36 +63,10 @@ public class VersionResponse extends HiroMessage {
      * @throws HiroException If no API with this name can be found.
      */
     public VersionEntry getVersionEntryOf(String apiName) throws HiroException {
-        Object versionEntry = getMap().get(apiName);
+        VersionEntry versionEntry = versionEntryMap.get(apiName);
         if (versionEntry == null)
             throw new HiroException("No API named '" + apiName + "' found in versions.");
-        return (VersionEntry) versionEntry;
+        return versionEntry;
     }
 
-    public static class VersionEntry implements Serializable {
-        private static final long serialVersionUID = 7356571409803847816L;
-        public String endpoint;
-        public String version;
-        public String docs;
-        public String support;
-        public String specs;
-        public String protocols;
-        public String lifecycle;
-
-        /**
-         * All unknown keys - if any - of the JSON will be collected here
-         */
-        @JsonIgnore
-        public final Map<String, Object> remainingFieldsMap = new LinkedHashMap<>();
-
-        @JsonAnySetter
-        public void setField(String key, Object value) {
-            remainingFieldsMap.put(key, value);
-        }
-
-        @JsonAnyGetter
-        public Map<String, Object> getMap() {
-            return remainingFieldsMap;
-        }
-    }
 }

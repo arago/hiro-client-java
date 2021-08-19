@@ -1,6 +1,8 @@
 package co.arago.hiro.client.websocket;
 
+import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.hiro.client.exceptions.WebSocketException;
 import co.arago.hiro.client.model.websocket.events.*;
 import co.arago.hiro.client.util.RequiredFieldChecker;
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +29,10 @@ import java.util.concurrent.TimeUnit;
 public class EventWebSocket extends AbstractWebSocketHandler {
     final static Logger log = LoggerFactory.getLogger(EventWebSocket.class);
 
+    // ###############################################################################################
+    // ## Conf and Builder ##
+    // ###############################################################################################
+
     public static abstract class Conf<T extends Conf<T>> extends AbstractWebSocketHandler.Conf<T> {
 
         private Set<String> scopes = new HashSet<>();
@@ -41,7 +47,7 @@ public class EventWebSocket extends AbstractWebSocketHandler {
          * Set a list of scopes for the events.
          *
          * @param scopes List of scopes (ogit - ids of the scopes).
-         * @return this
+         * @return {@link #self()}
          */
         public T setScopes(Set<String> scopes) {
             this.scopes = scopes;
@@ -52,7 +58,7 @@ public class EventWebSocket extends AbstractWebSocketHandler {
          * Add a single scope to {@link #scopes}.
          *
          * @param scope The scope to add
-         * @return this
+         * @return {@link #self()}
          */
         public T addScope(String scope) {
             this.scopes.add(scope);
@@ -68,7 +74,7 @@ public class EventWebSocket extends AbstractWebSocketHandler {
          *
          * @param eventsFilterMap A map of filters to use. The keys are the
          *                        {@link EventsFilter#id}.
-         * @return this
+         * @return {@link #self()}
          */
         public T setEventsFilterMap(Map<String, EventsFilter> eventsFilterMap) {
             this.eventsFilterMap = eventsFilterMap;
@@ -80,7 +86,7 @@ public class EventWebSocket extends AbstractWebSocketHandler {
          *
          * @param id      ID of the filter
          * @param content Content of the filter
-         * @return this
+         * @return {@link #self()}
          */
         public T addEventsFilter(String id, String content) {
             this.eventsFilterMap.put(id, new EventsFilter(id, content));
@@ -93,7 +99,7 @@ public class EventWebSocket extends AbstractWebSocketHandler {
          * @param id      ID of the filter
          * @param content Content of the filter
          * @param type    Type of the filter (usually only "jfilter")
-         * @return this
+         * @return {@link #self()}
          */
         public T addEventsFilter(String id, String content, String type) {
             this.eventsFilterMap.put(id, new EventsFilter(id, content, type));
@@ -102,6 +108,12 @@ public class EventWebSocket extends AbstractWebSocketHandler {
     }
 
     public static final class Builder extends Conf<Builder> {
+
+        public Builder(String apiName, AbstractTokenAPIHandler tokenAPIHandler, HiroWebSocketListener webSocketListener) {
+            setApiName(apiName);
+            setTokenApiHandler(tokenAPIHandler);
+            setWebSocketListener(webSocketListener);
+        }
 
         @Override
         protected Builder self() {
@@ -118,7 +130,14 @@ public class EventWebSocket extends AbstractWebSocketHandler {
         }
     }
 
-    protected class EventWebSocketListener extends AbstractWebSocketHandler.WebSocketListener {
+    // ###############################################################################################
+    // ## InternalEventListener ##
+    // ###############################################################################################
+
+    /**
+     * Listener class for Event WebSockets.
+     */
+    protected class InternalEventListener extends InternalListener {
 
         /**
          * Constructor
@@ -126,7 +145,7 @@ public class EventWebSocket extends AbstractWebSocketHandler {
          * @param name     Name of the handler (mainly for logging)
          * @param listener The listener which received messages.
          */
-        public EventWebSocketListener(String name, Listener listener) {
+        public InternalEventListener(String name, HiroWebSocketListener listener) {
             super(name, listener);
         }
 
@@ -136,7 +155,7 @@ public class EventWebSocket extends AbstractWebSocketHandler {
          * Sets the filters, scopes and calls {@link TokenRefreshHandler#start()}. Sets {@link Status#FAILED}
          * when an exception occurs so the websocket will be taken down.
          *
-         * @param webSocket The webSocket using this Listener.
+         * @param webSocket The webSocket using this HiroWebSocketListener.
          * @throws IllegalStateException When the status is neither {@link Status#STARTING} nor
          *                               {@link Status#RESTARTING}.
          */
@@ -146,16 +165,16 @@ public class EventWebSocket extends AbstractWebSocketHandler {
 
             try {
                 for (String scopeId : scopes) {
-                    subscribeScope(scopeId);
+                    webSocket.sendText(new WebSocketSubscribeScopeMessage(scopeId).toJsonString(), true);
                 }
 
                 for (Map.Entry<String, EventsFilter> filterEntry : eventsFilterMap.entrySet()) {
-                    addEventsFilter(filterEntry.getValue());
+                    webSocket.sendText(new WebSocketEventRegisterMessage(filterEntry.getValue()).toJsonString(), true);
                 }
 
                 tokenRefreshHandler.start();
 
-            } catch (HiroException | IOException | InterruptedException e) {
+            } catch (IllegalStateException e) {
                 setStatus(Status.FAILED);
                 onError(webSocket, e);
             }
@@ -165,9 +184,8 @@ public class EventWebSocket extends AbstractWebSocketHandler {
         /**
          * Receives close messages. This will try to restart the WebSocket unless
          * the status is {@link Status#CLOSING}.
-         * Calls {@link TokenRefreshHandler#stop()}.
          *
-         * @param webSocket  The webSocket using this Listener.
+         * @param webSocket  The webSocket using this HiroWebSocketListener.
          * @param statusCode Status code sent from the remote side.
          * @param reason     Reason text sent from the remote side.
          * @return null
@@ -180,20 +198,6 @@ public class EventWebSocket extends AbstractWebSocketHandler {
                 tokenRefreshHandler.stop();
             }
         }
-    }
-
-    private final TokenRefreshHandler tokenRefreshHandler = new TokenRefreshHandler();
-
-    private final Set<String> scopes;
-    private final Map<String, EventsFilter> eventsFilterMap;
-
-    protected EventWebSocket(Conf<?> builder) {
-        super(builder);
-        this.scopes = builder.getScopes();
-        this.eventsFilterMap = builder.getEventsFilterMap();
-
-        if (! query.containsKey("allscopes"))
-            query.put("allscopes", "false");
     }
 
     // ###############################################################################################
@@ -209,7 +213,10 @@ public class EventWebSocket extends AbstractWebSocketHandler {
                 try {
                     send(new WebSocketTokenRefreshMessage(tokenAPIHandler.getToken()).toJsonString());
 
-                    tokenRefreshExecutor.schedule(this, msTillNextStart(), TimeUnit.MILLISECONDS);
+                    Long msTillNextStart = msTillNextStart();
+                    if (msTillNextStart != null) {
+                        tokenRefreshExecutor.schedule(this, msTillNextStart, TimeUnit.MILLISECONDS);
+                    }
                 } catch (IOException | InterruptedException | HiroException e) {
                     log.error("Cannot refresh token.", e);
                 }
@@ -223,8 +230,11 @@ public class EventWebSocket extends AbstractWebSocketHandler {
             if (tokenRefreshExecutor != null)
                 stop();
 
-            tokenRefreshExecutor = Executors.newSingleThreadScheduledExecutor();
-            tokenRefreshExecutor.schedule(new TokenRefreshThread(), msTillNextStart(), TimeUnit.MILLISECONDS);
+            Long msTillNextStart = msTillNextStart();
+            if (msTillNextStart != null) {
+                tokenRefreshExecutor = Executors.newSingleThreadScheduledExecutor();
+                tokenRefreshExecutor.schedule(new TokenRefreshThread(), msTillNextStart, TimeUnit.MILLISECONDS);
+            }
         }
 
         public synchronized void stop() {
@@ -243,12 +253,75 @@ public class EventWebSocket extends AbstractWebSocketHandler {
             tokenRefreshExecutor = null;
         }
 
-        private long msTillNextStart() {
-            Instant now = Instant.now();
+        private Long msTillNextStart() {
             Instant nextStart = tokenAPIHandler.expiryInstant();
+            if (nextStart == null)
+                return null;
 
-            return nextStart.toEpochMilli() - now.toEpochMilli();
+            return nextStart.toEpochMilli() - Instant.now().toEpochMilli();
         }
+    }
+
+    // ###############################################################################################
+    // ## Main part ##
+    // ###############################################################################################
+
+    private final TokenRefreshHandler tokenRefreshHandler = new TokenRefreshHandler();
+
+    private final Set<String> scopes;
+    private final Map<String, EventsFilter> eventsFilterMap;
+
+    /**
+     * Protected Constructor. Use {@link #newBuilder(AbstractTokenAPIHandler, HiroWebSocketListener)}.
+     *
+     * @param builder The {@link Builder} to use.
+     */
+    protected EventWebSocket(Conf<?> builder) {
+        super(builder);
+        this.scopes = builder.getScopes();
+        this.eventsFilterMap = builder.getEventsFilterMap();
+
+        if (!query.containsKey("allscopes"))
+            query.put("allscopes", "false");
+    }
+
+    /**
+     * Get a {@link Builder} for {@link EventWebSocket}.
+     *
+     * @param tokenAPIHandler The API handler for this websocket.
+     * @param webSocketListener The listener for this websocket.
+     * @return The {@link Builder} for {@link EventWebSocket}.
+     */
+    public static Builder newBuilder(AbstractTokenAPIHandler tokenAPIHandler, HiroWebSocketListener webSocketListener) {
+        return new EventWebSocket.Builder("events-ws", tokenAPIHandler, webSocketListener);
+    }
+
+    /**
+     * Embed the {@link HiroWebSocketListener} in the required {@link InternalEventListener}.
+     *
+     * @param webSocketListener The listener to embed.
+     * @return The {@link InternalEventListener} containing the {@link HiroWebSocketListener}.
+     */
+    @Override
+    protected InternalListener constructInternalListener(HiroWebSocketListener webSocketListener) {
+        return new InternalEventListener("event-listener", webSocketListener);
+    }
+
+    /**
+     * Because you cannot send data via an event websocket, a {@link WebSocketException} will be thrown here.
+     *
+     * @param message The message to send.
+     * @throws WebSocketException        When sending finally fails.
+     */
+    @Override
+    public void send(String message) throws WebSocketException {
+        throw new WebSocketException(this.getClass().getSimpleName() + " cannot send messages.");
+    }
+
+    @Override
+    public void close() {
+        super.close();
+        tokenRefreshHandler.stop();
     }
 
     // ###############################################################################################

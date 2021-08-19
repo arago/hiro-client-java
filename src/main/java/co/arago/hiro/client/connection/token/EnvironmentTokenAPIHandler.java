@@ -9,6 +9,10 @@ import java.time.Instant;
 
 public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
 
+    // ###############################################################################################
+    // ## Conf and Builder ##
+    // ###############################################################################################
+
     public static abstract class Conf<T extends Conf<T>> extends AbstractTokenAPIHandler.Conf<T> {
         private String tokenEnv;
 
@@ -18,7 +22,7 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
 
         /**
          * @param tokenEnv Name of the environment variable. Default is "HIRO_TOKEN".
-         * @return this
+         * @return {@link #self()}
          */
         public T setTokenEnv(String tokenEnv) {
             this.tokenEnv = tokenEnv;
@@ -39,6 +43,10 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
     }
+
+    // ###############################################################################################
+    // ## Main part ##
+    // ###############################################################################################
 
     protected final String tokenEnv;
 

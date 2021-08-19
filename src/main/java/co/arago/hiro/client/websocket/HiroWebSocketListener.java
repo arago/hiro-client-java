@@ -6,12 +6,15 @@ import co.arago.hiro.client.model.HiroMessage;
 /**
  * Interface for external WebSocket listeners
  */
-public interface Listener {
+public interface HiroWebSocketListener {
 
     /**
      * Called right after the websocket has been opened.
+     * Does nothing on default.
      */
-    void onOpen() throws WebSocketException;
+    default void onOpen() throws WebSocketException {
+
+    }
 
     /**
      * Called with an incoming message.
@@ -20,14 +23,20 @@ public interface Listener {
 
     /**
      * Called right before the websocket is about to close.
+     * Does nothing on default.
      */
-    void onClose() throws WebSocketException;
+    default void onClose() throws WebSocketException {
+
+    }
 
     /**
      * Called when an Exception is detected.
+     * Does nothing on default.
      *
      * @param t The Throwable thrown.
      */
-    void onError(Throwable t);
+    default void onError(Throwable t) {
+
+    }
 
 }

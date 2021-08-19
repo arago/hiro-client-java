@@ -2,9 +2,12 @@ package co.arago.hiro.client.websocket;
 
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.hiro.client.exceptions.UnauthorizedWebSocketException;
 import co.arago.hiro.client.exceptions.WebSocketException;
+import co.arago.hiro.client.exceptions.WebSocketMessageException;
 import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
+import co.arago.hiro.client.model.VersionResponse;
 import co.arago.hiro.client.util.JsonTools;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
@@ -12,15 +15,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.http.WebSocket;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Handles websockets. Tries to renew any aborted connection until the websocket gets closed from this side.
@@ -28,6 +34,10 @@ import java.util.concurrent.ExecutionException;
 public abstract class AbstractWebSocketHandler implements AutoCloseable {
 
     final static Logger log = LoggerFactory.getLogger(AbstractWebSocketHandler.class);
+
+    // ###############################################################################################
+    // ## Conf and Builder ##
+    // ###############################################################################################
 
     /**
      * Configuration interface for all the parameters of an AuthenticatedAPIHandler.
@@ -42,7 +52,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
         private String fragment;
         private Long httpRequestTimeout;
         private AbstractTokenAPIHandler tokenAPIHandler;
-        private WebSocketListener webSocketListener;
+        private HiroWebSocketListener webSocketListener;
         private int maxRetries = 2;
         private boolean reconnectOnFailedSend = false;
 
@@ -52,7 +62,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
 
         /**
          * @param apiName Set the name of the api. This name will be used to determine the API endpoint.
-         * @return this
+         * @return {@link #self()}
          */
         public T setApiName(String apiName) {
             this.apiName = apiName;
@@ -68,7 +78,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
          *
          * @param endpoint Set a custom endpoint.
          * @param protocol The protocol header for the websocket.
-         * @return this
+         * @return {@link #self()}
          */
         public T setEndpointAndProtocol(String endpoint, String protocol) {
             this.endpoint = endpoint;
@@ -84,7 +94,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
          * For initial connection to the WebSocket.
          *
          * @param query Map of query fields.
-         * @return this
+         * @return {@link #self()}
          */
         public T setQuery(Map<String, String> query) {
             this.query = query;
@@ -95,7 +105,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
          * For initial connection to the WebSocket.
          *
          * @param headers Map of header fields.
-         * @return this
+         * @return {@link #self()}
          */
         public T setHeaders(Map<String, String> headers) {
             this.headers = headers;
@@ -106,7 +116,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
          * For initial connection to the WebSocket.
          *
          * @param fragment The URI fragment.
-         * @return this
+         * @return {@link #self()}
          */
         public T setFragment(String fragment) {
             this.fragment = fragment;
@@ -119,7 +129,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
 
         /**
          * @param httpRequestTimeout Request timeout in ms.
-         * @return this
+         * @return {@link #self()}
          */
         public T setHttpRequestTimeout(Long httpRequestTimeout) {
             this.httpRequestTimeout = httpRequestTimeout;
@@ -133,7 +143,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
 
         /**
          * @param maxRetries Max amount of retries when http errors are received.
-         * @return this
+         * @return {@link #self()}
          */
         public T setMaxRetries(int maxRetries) {
             this.maxRetries = maxRetries;
@@ -146,7 +156,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
 
         /**
          * @param tokenAPIHandler The tokenAPIHandler for this API.
-         * @return this
+         * @return {@link #self()}
          */
         public T setTokenApiHandler(AbstractTokenAPIHandler tokenAPIHandler) {
             this.tokenAPIHandler = tokenAPIHandler;
@@ -162,24 +172,24 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
          * an Exception when all retries are exhausted.
          *
          * @param reconnectOnFailedSend The flag to set.
-         * @return this
+         * @return {@link #self()}
          */
         public T setReconnectOnFailedSend(boolean reconnectOnFailedSend) {
             this.reconnectOnFailedSend = reconnectOnFailedSend;
             return self();
         }
 
-        public WebSocketListener getWebSocketListener() {
+        public HiroWebSocketListener getWebSocketListener() {
             return webSocketListener;
         }
 
         /**
-         * Set the {@link Listener} for the websocket data.
+         * Set the {@link HiroWebSocketListener} for the websocket data.
          *
          * @param webSocketListener The listener to use.
-         * @return this
+         * @return {@link #self()}
          */
-        public T setWebSocketListener(WebSocketListener webSocketListener) {
+        public T setWebSocketListener(HiroWebSocketListener webSocketListener) {
             this.webSocketListener = webSocketListener;
             return self();
         }
@@ -190,14 +200,14 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
     }
 
     /**
-     * Listener (thread) for incoming websocket messages. Derivates of {@link AbstractWebSocketHandler} have
-     * to supply an Object implementing the interface {@link Listener} for specific handling.
+     * HiroWebSocketListener (thread) for incoming websocket messages. Derivates of {@link AbstractWebSocketHandler} have
+     * to supply an Object implementing the interface {@link HiroWebSocketListener} for specific handling.
      */
-    protected class WebSocketListener implements WebSocket.Listener {
+    protected class InternalListener implements WebSocket.Listener {
 
         private final StringBuffer stringBuffer = new StringBuffer();
 
-        private final Listener listener;
+        private final HiroWebSocketListener listener;
         private final String name;
 
         /**
@@ -206,7 +216,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
          * @param name     Name of the handler (mainly for logging)
          * @param listener The listener which received messages.
          */
-        public WebSocketListener(String name, Listener listener) {
+        public InternalListener(String name, HiroWebSocketListener listener) {
             this.name = name;
             this.listener = listener;
         }
@@ -215,7 +225,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
          * Sets the status from {@link Status#STARTING} or {@link Status#RESTARTING} to
          * {@link Status#RUNNING_PRELIMINARY}. Any other state will result in an Exception.
          *
-         * @param webSocket The webSocket using this Listener.
+         * @param webSocket The webSocket using this HiroWebSocketListener.
          * @throws IllegalStateException When the status is neither {@link Status#STARTING} nor
          *                               {@link Status#RESTARTING}.
          */
@@ -233,9 +243,11 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
                     setStatus(Status.RUNNING_PRELIMINARY);
                 }
 
-            } catch (WebSocketException e) {
+            } catch (Exception e) {
                 setStatus(Status.CLOSING);
                 onError(webSocket, e);
+            } finally {
+                WebSocket.Listener.super.onOpen(webSocket);
             }
         }
 
@@ -245,7 +257,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
          * When the first non-error message comes it, sets the status from {@link Status#RUNNING_PRELIMINARY} to
          * {@link Status#RUNNING}.
          *
-         * @param webSocket The webSocket using this Listener.
+         * @param webSocket The webSocket using this HiroWebSocketListener.
          * @param data      Message block
          * @param last      True if this is the last message block of a message
          * @return null.
@@ -272,13 +284,11 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
                                     log.info("{}: Refreshing token because of error: {}", name, message);
 
                                     restartWebSocket();
-                                } else if (getStatus() == Status.RUNNING_PRELIMINARY) {
-                                    throw new WebSocketException("Received error message while token was never valid: " + message);
                                 } else {
-                                    throw new WebSocketException("Received error message: " + message);
+                                    throw new UnauthorizedWebSocketException(hiroError.getMessage(), hiroError.getCode());
                                 }
                             } else {
-                                throw new WebSocketException("Received error message: " + message);
+                                throw new WebSocketMessageException(hiroError.getMessage(), hiroError.getCode());
                             }
                         }
 
@@ -308,20 +318,21 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
         /**
          * Keep-alive messages
          *
-         * @param webSocket The webSocket using this Listener.
+         * @param webSocket The webSocket using this HiroWebSocketListener.
          * @param message   The message received. It will be reflected back via Pong.
          * @return The CompletionStage of {@link WebSocket#sendPong(ByteBuffer)}.
          */
         @Override
         public CompletionStage<?> onPing(WebSocket webSocket, ByteBuffer message) {
-            return webSocket.sendPong(message);
+            webSocket.sendPong(message);
+            return WebSocket.Listener.super.onPing(webSocket, message);
         }
 
         /**
          * Receives close messages. This will try to restart the WebSocket unless
          * the status is {@link Status#CLOSING}.
          *
-         * @param webSocket  The webSocket using this Listener.
+         * @param webSocket  The webSocket using this HiroWebSocketListener.
          * @param statusCode Status code sent from the remote side.
          * @param reason     Reason text sent from the remote side.
          * @return null
@@ -334,16 +345,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
                 listener.onClose();
 
                 synchronized (AbstractWebSocketHandler.this) {
-                    if (getStatus() != Status.CLOSING && getStatus() != Status.CLOSED) {
-                        try {
-                            setStatus(Status.RESTARTING);
-                            restartWebSocket();
-                        } catch (HiroException | IOException | InterruptedException e) {
-                            log.error("{}: Cannot restart WebSocket because of error.", name, e);
-                            closeWebSocket(1011, "Abnormal close because of error " + e.getMessage(), false);
-                            setStatus(Status.FAILED);
-                        }
-                    }
+                    handleRestart();
                 }
 
             } catch (WebSocketException e) {
@@ -359,31 +361,35 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
          * the status is {@link Status#CLOSING}. This will tear down the WebSocket when the status is
          * {@link Status#FAILED}.
          *
-         * @param webSocket The webSocket using this Listener.
+         * @param webSocket The webSocket using this HiroWebSocketListener.
          * @param error     The Throwable to handle.
          */
         @Override
         public void onError(WebSocket webSocket, Throwable error) {
-            log.error("{}: WebSocket caught error.", name, error);
+            log.error("{}: WebSocket caught error: {}", name, error.toString());
 
             listener.onError(error);
 
             synchronized (AbstractWebSocketHandler.this) {
                 if (getStatus() == Status.FAILED) {
-                    closeWebSocket(1011, "Abnormal close because of status 'FAILED'.", true);
-                } else if (getStatus() != Status.CLOSING && getStatus() != Status.CLOSED) {
-                    try {
-                        setStatus(Status.RESTARTING);
-                        restartWebSocket();
-                    } catch (HiroException | IOException | InterruptedException e) {
-                        log.error("{}: Cannot restart WebSocket because of error.", name, e);
-                        closeWebSocket(1011, "Abnormal close because of error " + e.getMessage(), true);
-                        setStatus(Status.FAILED);
-                    }
-                }
+                    closeWebSocket(1011, "Abnormal close because of status 'FAILED'.");
+                } else handleRestart();
             }
 
             WebSocket.Listener.super.onError(webSocket, error);
+        }
+
+        private void handleRestart() {
+            if (getStatus() != Status.CLOSING && getStatus() != Status.CLOSED && getStatus() != Status.FAILED) {
+                try {
+                    setStatus(Status.RESTARTING);
+                    restartWebSocket();
+                } catch (HiroException | IOException | InterruptedException e) {
+                    log.error("{}: Cannot restart WebSocket because of error.", name, e);
+                    closeWebSocket(1011, "Abnormal close because of error " + e.getMessage());
+                    setStatus(Status.FAILED);
+                }
+            }
         }
 
     }
@@ -422,7 +428,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
     protected URI apiUri;
 
     private WebSocket webSocket;
-    private WebSocketListener webSocketListener;
+    private final InternalListener internalListener;
     private int reconnectDelay = 0;
 
     /**
@@ -435,7 +441,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
         this.endpoint = builder.getEndpoint();
         this.protocol = builder.getProtocol();
         this.maxRetries = builder.getMaxRetries();
-        this.webSocketListener = builder.getWebSocketListener();
+        this.internalListener = constructInternalListener(builder.getWebSocketListener());
         this.tokenAPIHandler = builder.getTokenApiHandler();
 
         this.query.putAll(builder.query);
@@ -445,53 +451,68 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
     }
 
     /**
-     * Construct my URI with query parameters and fragment.
-     * This method will query /api/version once to construct the URI unless {@link #endpoint} is set.
+     * Abstract method to embed the {@link HiroWebSocketListener} in the required {@link InternalListener}.
      *
-     * @param path     The path to append to the API path.
-     * @param query    Map of query parameters for this URI. Can be null for no query parameters.
-     * @param fragment The fragment to add to the URI.
-     * @return The URI with query parameters and fragment.
-     * @throws IOException          On a failed call to /api/version
-     * @throws InterruptedException Call got interrupted
-     * @throws HiroException        When calling /api/version responds with an error
+     * @param webSocketListener The listener to embed.
+     * @return The {@link InternalListener} containing the {@link HiroWebSocketListener}.
      */
-    public URI getUri(String path, Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
-        if (apiUri == null)
-            apiUri = (endpoint != null ? tokenAPIHandler.buildURI(endpoint) : tokenAPIHandler.getApiUriOf(apiName));
-
-        URI pathUri = apiUri.resolve(StringUtils.removeStart(path, "/"));
-
-        return tokenAPIHandler.addQueryAndFragment(pathUri, query, fragment);
-    }
+    protected abstract InternalListener constructInternalListener(HiroWebSocketListener webSocketListener);
 
     /**
      * Create new WebSocket. Closes any old websocket.
      *
-     * @param webSocketListener The listener to apply to the webSocket. Must not be null.
      * @throws HiroException        When creation of the webSocket fails.
      * @throws IOException          On IO problems.
      * @throws InterruptedException When the call gets interrupted.
-     * @throws NullPointerException When the webSocketListener is null.
      */
-    protected synchronized void createWebSocket(WebSocketListener webSocketListener) throws HiroException, IOException, InterruptedException {
-        if (webSocketListener == null)
-            throw new NullPointerException("WebSocketListener must not be null");
+    protected void createWebSocket() throws HiroException, IOException, InterruptedException {
+        synchronized (this) {
+            if (webSocket != null) {
+                closeWebSocket(1012, tokenAPIHandler.getUserAgent() + " restarts");
+            }
+        }
+
+        String protocol = this.protocol;
+        String endpoint = this.endpoint;
+
+        if (StringUtils.isAnyBlank(endpoint, protocol)) {
+            VersionResponse.VersionEntry versionEntry = tokenAPIHandler.getVersionMap().getVersionEntryOf(apiName);
+            if (StringUtils.isBlank(protocol))
+                protocol = versionEntry.protocols;
+            if (StringUtils.isBlank(endpoint))
+                endpoint = versionEntry.endpoint;
+        }
+
+        synchronized (this) {
+            if (apiUri == null)
+                apiUri = tokenAPIHandler.buildURI(endpoint);
+        }
 
         try {
-            if (webSocket != null) {
-                closeWebSocket(1012, tokenAPIHandler.getUserAgent() + " restarts", true);
+            URI uri = AbstractTokenAPIHandler.addQueryAndFragment(apiUri, query, fragment);
+            String scheme = StringUtils.equals(uri.getScheme(), "http") ? "ws" : "wss";
+            URI webSocketUri = new URI(scheme, uri.getAuthority(), uri.getPath(), uri.getQuery(), uri.getFragment());
+
+            try {
+                WebSocket webSocket = tokenAPIHandler.getOrBuildClient()
+                        .newWebSocketBuilder()
+                        .subprotocols(protocol, "token-" + tokenAPIHandler.getToken())
+                        .buildAsync(webSocketUri, internalListener)
+                        .get();
+
+                synchronized (this) {
+                    this.webSocket = webSocket;
+                }
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof ConnectException)
+                    throw new ConnectException("Cannot create webSocket " + webSocketUri.toString() + ".");
+                else if (e.getCause() instanceof IOException)
+                    throw new IOException("Cannot create webSocket " + webSocketUri.toString() + ".", e);
+                else
+                    throw new HiroException("Cannot create webSocket " + webSocketUri.toString() + ".", e);
             }
-
-            webSocket = tokenAPIHandler.getOrBuildClient()
-                    .newWebSocketBuilder()
-                    .header("Sec-WebSocket-Protocol", protocol + ", token-" + tokenAPIHandler.getToken())
-                    .buildAsync(getUri("/", query, fragment), webSocketListener)
-                    .get();
-
-            this.webSocketListener = webSocketListener;
-        } catch (ExecutionException e) {
-            throw new HiroException("Cannot create webSocket.", e);
+        } catch (URISyntaxException e) {
+            throw new HiroException("Cannot create webSocket because of invalid URI.", e);
         }
     }
 
@@ -501,32 +522,34 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
      *
      * @param status The status for the close message
      * @param reason The reason string for the close message.
-     * @param abort  Forcibly abort the websocket.
      */
-    protected synchronized void closeWebSocket(int status, String reason, boolean abort) {
+    protected synchronized void closeWebSocket(int status, String reason) {
         if (webSocket != null) {
-            CompletableFuture<WebSocket> stage = webSocket.sendClose(status, reason);
-            if (abort)
-                stage.thenAccept(WebSocket::abort);
-            stage.join();
+            try {
+                if (!webSocket.isOutputClosed())
+                    webSocket.sendClose(status, reason).get(5, TimeUnit.SECONDS);
+            } catch (InterruptedException | ExecutionException | TimeoutException e) {
+                log.warn("Exception when closing websocket.", e);
+            }
 
+            webSocket.abort();
             webSocket = null;
             System.gc();
         }
     }
 
     /**
-     * Restarts the websocket by closing the old and creating a new one. Uses the same {@link #webSocketListener}. Delays
+     * Restarts the websocket by closing the old and creating a new one. Uses the same {@link #internalListener}. Delays
      * the restart according to {@link #backoff(int reconnectDelay)}.
      *
      * @throws HiroException        When creation of the webSocket fails.
      * @throws IOException          On IO problems.
      * @throws InterruptedException When the call gets interrupted.
      */
-    protected synchronized void restartWebSocket() throws HiroException, IOException, InterruptedException {
+    protected void restartWebSocket() throws HiroException, IOException, InterruptedException {
         reconnectDelay = backoff(reconnectDelay);
 
-        createWebSocket(webSocketListener);
+        createWebSocket();
     }
 
     /**
@@ -601,21 +624,20 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
         }
     }
 
-    public synchronized void start(WebSocketListener webSocketListener) throws HiroException, IOException, InterruptedException {
-        if (webSocket != null && !webSocket.isInputClosed() && !webSocket.isOutputClosed())
-            return;
+    public void start() throws HiroException, IOException, InterruptedException {
+        synchronized (this) {
+            if (webSocket != null && !webSocket.isInputClosed() && !webSocket.isOutputClosed())
+                return;
 
-        if (webSocketListener == null)
-            throw new HiroException("WebSocketListener must not be null");
-
-        setStatus(Status.STARTING);
-        createWebSocket(webSocketListener);
+            setStatus(Status.STARTING);
+        }
+        createWebSocket();
     }
 
     @Override
     public synchronized void close() {
         setStatus(Status.CLOSING);
-        closeWebSocket(WebSocket.NORMAL_CLOSURE, tokenAPIHandler.getUserAgent() + " closing", true);
+        closeWebSocket(WebSocket.NORMAL_CLOSURE, tokenAPIHandler.getUserAgent() + " closing");
         setStatus(Status.CLOSED);
     }
 

@@ -18,6 +18,10 @@ import java.util.Map;
 
 public class AuthAPI extends AuthenticatedAPIHandler {
 
+    // ###############################################################################################
+    // ## Conf and Builder ##
+    // ###############################################################################################
+
     public static abstract class Conf<T extends Conf<T>> extends AuthenticatedAPIHandler.Conf<T> {
     }
 
@@ -41,9 +45,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
     }
 
+    // ###############################################################################################
+    // ## Main part ##
+    // ###############################################################################################
 
     /**
-     * Create this APIHandler by using its Builder.
+     * Protected constructor. Create this {@link AuthAPI} by using its {@link Builder}.
      *
      * @param builder The builder to use.
      */
@@ -51,6 +58,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         super(builder);
     }
 
+    /**
+     * Get a {@link Builder} for {@link AuthAPI}.
+     *
+     * @param tokenAPIHandler The API handler for this websocket.
+     * @return The {@link Builder} for {@link AuthAPI}.
+     */
     public static Builder newBuilder(AbstractTokenAPIHandler tokenAPIHandler) {
         return new Builder("auth", tokenAPIHandler);
     }
@@ -75,7 +88,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
 
         /**
          * @param profile Query parameter "profile=[true|false]".
-         * @return this
+         * @return {@link #self()}
          */
         public GetMeAccount setProfile(Boolean profile) {
             query.put("profile", String.valueOf(profile));
@@ -439,7 +452,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
 
         /**
          * @param includeVirtual Query parameter "include-virtual=[true|false]".
-         * @return this
+         * @return {@link #self()}
          */
         public GetMeTeams setIncludeVirtual(Boolean includeVirtual) {
             query.put("include-virtual", String.valueOf(includeVirtual));

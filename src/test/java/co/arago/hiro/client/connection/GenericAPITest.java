@@ -1,5 +1,6 @@
 package co.arago.hiro.client.connection;
 
+import co.arago.hiro.client.Config;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
@@ -21,7 +22,6 @@ import java.net.http.HttpTimeoutException;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class GenericAPITest {
     public static PasswordAuthTokenAPIHandler handler;
@@ -37,7 +37,7 @@ public class GenericAPITest {
                     .setApiUrl(config.api_url)
                     .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                     .setAcceptAllCerts(config.accept_all_certs)
-//                .setForceLogging(true)
+                    .setForceLogging(config.force_logging)
                     .build();
 
             apiHandler = GraphAPI.newBuilder(handler).build();

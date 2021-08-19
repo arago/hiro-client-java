@@ -1,6 +1,6 @@
 package co.arago.hiro.client.model.websocket.events;
 
-import co.arago.hiro.client.model.AbstractJsonMessage;
+import co.arago.hiro.client.model.JsonMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
@@ -15,7 +15,7 @@ import java.io.Serializable;
  *     }
  * </code></pre>
  */
-public class WebSocketEventUnregisterMessage implements AbstractJsonMessage {
+public class WebSocketEventUnregisterMessage implements JsonMessage {
 
     public static class FilterId implements Serializable {
         @JsonProperty("filter-id")

@@ -1,6 +1,6 @@
 package co.arago.hiro.client.model.websocket.events;
 
-import co.arago.hiro.client.model.AbstractJsonMessage;
+import co.arago.hiro.client.model.JsonMessage;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,7 +14,7 @@ import java.util.Map;
  *     }
  * </code></pre>
  */
-public class WebSocketClearEventsMessage implements AbstractJsonMessage {
+public class WebSocketClearEventsMessage implements JsonMessage {
     public final String type = "clear";
     public final Map<String, Object> args = new HashMap<>();
 }
