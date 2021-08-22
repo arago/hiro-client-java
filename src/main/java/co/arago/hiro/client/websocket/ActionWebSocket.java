@@ -2,6 +2,7 @@ package co.arago.hiro.client.websocket;
 
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.util.RequiredFieldChecker;
+import co.arago.hiro.client.websocket.listener.HiroWebSocketListener;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

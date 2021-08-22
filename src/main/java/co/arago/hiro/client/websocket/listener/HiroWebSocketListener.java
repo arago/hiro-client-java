@@ -1,4 +1,4 @@
-package co.arago.hiro.client.websocket;
+package co.arago.hiro.client.websocket.listener;
 
 import co.arago.hiro.client.exceptions.WebSocketException;
 import co.arago.hiro.client.model.HiroMessage;
@@ -12,9 +12,7 @@ public interface HiroWebSocketListener {
      * Called right after the websocket has been opened.
      * Does nothing on default.
      */
-    default void onOpen() throws WebSocketException {
-
-    }
+    void onOpen();
 
     /**
      * Called with an incoming message.
@@ -25,9 +23,7 @@ public interface HiroWebSocketListener {
      * Called right before the websocket is about to close.
      * Does nothing on default.
      */
-    default void onClose() throws WebSocketException {
-
-    }
+    void onClose() throws WebSocketException;
 
     /**
      * Called when an Exception is detected.
@@ -35,8 +31,6 @@ public interface HiroWebSocketListener {
      *
      * @param t The Throwable thrown.
      */
-    default void onError(Throwable t) {
-
-    }
+    void onError(Throwable t);
 
 }
