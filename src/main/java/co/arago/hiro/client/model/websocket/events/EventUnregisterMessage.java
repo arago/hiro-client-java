@@ -15,7 +15,7 @@ import java.io.Serializable;
  *     }
  * </code></pre>
  */
-public class WebSocketEventUnregisterMessage implements JsonMessage {
+public class EventUnregisterMessage implements JsonMessage {
 
     public static class FilterId implements Serializable {
         @JsonProperty("filter-id")
@@ -30,7 +30,7 @@ public class WebSocketEventUnregisterMessage implements JsonMessage {
 
     public final FilterId args;
 
-    public WebSocketEventUnregisterMessage(String id) {
+    public EventUnregisterMessage(String id) {
         args = new FilterId(id);
     }
 

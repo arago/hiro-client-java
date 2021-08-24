@@ -14,22 +14,22 @@ import co.arago.hiro.client.model.JsonMessage;
  *     }
  * </code></pre>
  */
-public class WebSocketEventRegisterMessage implements JsonMessage {
+public class EventRegisterMessage implements JsonMessage {
 
 
     public final String type = "register";
 
     public final EventsFilter args;
 
-    public WebSocketEventRegisterMessage(String id, String content) {
+    public EventRegisterMessage(String id, String content) {
         this(id, content, "jfilter");
     }
 
-    public WebSocketEventRegisterMessage(String id, String content, String type) {
+    public EventRegisterMessage(String id, String content, String type) {
         this(new EventsFilter(id, content, type));
     }
 
-    public WebSocketEventRegisterMessage(EventsFilter eventsFilter) {
+    public EventRegisterMessage(EventsFilter eventsFilter) {
         args = eventsFilter;
     }
 }

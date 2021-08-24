@@ -2,6 +2,7 @@ package co.arago.hiro.client.connection;
 
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
+import co.arago.hiro.client.exceptions.RetryException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
@@ -371,33 +372,27 @@ public abstract class AbstractAPIHandler {
     // ###############################################################################################
 
     /**
-     * Send a HttpRequest asynchronously and return a future for httpResponse
+     * <p>
+     * Send a HttpRequest asynchronously and return a future for a {@link HttpResponseParser}.
+     * </p><p>
+     * Applies the internal {@link #checkResponse(HttpResponse, int)}.
+     * The retry counter is irrelevant here. When the token expires, it will be detected and a new token will be
+     * requested, but you need to handle a {@link CompletionException} and look for the cause {@link RetryException}
+     * within it. If this is the cause, you need to retry the same HttpRequest again externally.
+     * </p><p>
+     * Also logs the response.
+     * </p>
      *
      * @param httpRequest The httpRequest to send
-     * @return A future for the HttpResponse&lt;InputStream&gt;.
-     * @see #getAsyncResponse(CompletableFuture)
+     * @return A future for a {@link HttpResponseParser} containing the response.
      */
-    public CompletableFuture<HttpResponse<InputStream>> sendAsync(HttpRequest httpRequest) {
-        return getOrBuildClient().sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream());
-    }
-
-    /**
-     * Check the future for the incoming response and appy the internal {@link #checkResponse(HttpResponse, int)}.
-     * The retry counter is irrelevant here. When the token expires, you need to handle this
-     * {@link co.arago.hiro.client.exceptions.TokenUnauthorizedException} externally by trying the same HttpRequest
-     * again.
-     * Also logs the response.
-     *
-     * @param asyncRequestFuture The future from {@link #sendAsync(HttpRequest)}
-     * @return A future for the {@link HttpResponseParser}.
-     */
-    public CompletableFuture<HttpResponseParser> getAsyncResponse(
-            CompletableFuture<HttpResponse<InputStream>> asyncRequestFuture
-    ) {
-        return asyncRequestFuture
+    public CompletableFuture<HttpResponseParser> sendAsync(HttpRequest httpRequest) {
+        return getOrBuildClient()
+                .sendAsync(httpRequest, HttpResponse.BodyHandlers.ofInputStream())
                 .thenApply(response -> {
                     try {
-                        checkResponse(response, 0);
+                        if (checkResponse(response, 0))
+                            throw new RetryException("Call needs a retry.");
                         return new HttpResponseParser(response, getHttpLogger());
                     } catch (HiroException | IOException | InterruptedException e) {
                         throw new CompletionException(e);

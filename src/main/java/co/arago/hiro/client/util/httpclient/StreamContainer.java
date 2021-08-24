@@ -7,7 +7,7 @@ import java.nio.charset.Charset;
  * Contains the inputStream for the body and decodes the headers Content-Type and Content-Length for further
  * information about that stream.
  */
-public class StreamContainer extends HeaderContainer {
+public class StreamContainer extends ContentHeaderHandler {
     /**
      * The inputStream for the response body
      */

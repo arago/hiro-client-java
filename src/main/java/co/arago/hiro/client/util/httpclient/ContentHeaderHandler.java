@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  *
  * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type">Documentation of Content-Type</a>
  */
-public class HeaderContainer {
+public class ContentHeaderHandler {
     /**
      * The Content-Length as read from the response header. This might be null when this header is missing.
      */
@@ -38,7 +38,7 @@ public class HeaderContainer {
      *
      * @param httpHeaders The httpHeaders to decode.
      */
-    public HeaderContainer(HttpHeaders httpHeaders) {
+    public ContentHeaderHandler(HttpHeaders httpHeaders) {
         setContentType(httpHeaders.firstValue("content-type").orElse(null));
 
         OptionalLong contentLength = httpHeaders.firstValueAsLong("content-length");
@@ -107,7 +107,7 @@ public class HeaderContainer {
      * @param charset       The charset - if any. Can be null.
      * @param contentLength The length of the content - if any. Can be null.
      */
-    public HeaderContainer(String mediaType, Charset charset, Long contentLength) {
+    public ContentHeaderHandler(String mediaType, Charset charset, Long contentLength) {
         this.mediaType = mediaType;
         this.charset = charset;
         this.contentLength = contentLength;

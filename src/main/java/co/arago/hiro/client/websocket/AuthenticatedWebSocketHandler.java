@@ -34,9 +34,9 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Handles websockets. Tries to renew any aborted connection until the websocket gets closed from this side.
  */
-public abstract class AbstractWebSocketHandler implements AutoCloseable {
+public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
 
-    final static Logger log = LoggerFactory.getLogger(AbstractWebSocketHandler.class);
+    final static Logger log = LoggerFactory.getLogger(AuthenticatedWebSocketHandler.class);
 
     // ###############################################################################################
     // ## Conf and Builder ##
@@ -198,7 +198,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
         }
 
         /**
-         * Reset the websocket when {@link AbstractWebSocketHandler#send(String)} fails. The default is false - throw
+         * Reset the websocket when {@link AuthenticatedWebSocketHandler#send(String)} fails. The default is false - throw
          * an Exception when all retries are exhausted.
          *
          * @param reconnectOnFailedSend The flag to set.
@@ -226,11 +226,11 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
 
         protected abstract T self();
 
-        public abstract AbstractWebSocketHandler build();
+        public abstract AuthenticatedWebSocketHandler build();
     }
 
     /**
-     * HiroWebSocketListener (thread) for incoming websocket messages. Derivates of {@link AbstractWebSocketHandler} have
+     * HiroWebSocketListener (thread) for incoming websocket messages. Derivates of {@link AuthenticatedWebSocketHandler} have
      * to supply an Object implementing the interface {@link HiroWebSocketListener} for specific handling.
      */
     protected abstract class InternalListener implements WebSocket.Listener {
@@ -477,7 +477,7 @@ public abstract class AbstractWebSocketHandler implements AutoCloseable {
      *
      * @param builder The builder for this Handler.
      */
-    protected AbstractWebSocketHandler(Conf<?> builder) {
+    protected AuthenticatedWebSocketHandler(Conf<?> builder) {
         this.name = builder.getName();
         this.apiName = builder.getApiName();
         this.endpoint = builder.getEndpoint();

@@ -15,7 +15,7 @@ import java.io.Serializable;
  *     }
  * </code></pre>
  */
-public class WebSocketTokenRefreshMessage implements JsonMessage {
+public class TokenRefreshMessage implements JsonMessage {
 
     public static class Token implements Serializable {
         @JsonProperty("_TOKEN")
@@ -30,7 +30,7 @@ public class WebSocketTokenRefreshMessage implements JsonMessage {
 
     public final Token args;
 
-    public WebSocketTokenRefreshMessage(String token) {
+    public TokenRefreshMessage(String token) {
         this.args = new Token(token);
     }
 }

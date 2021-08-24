@@ -21,7 +21,7 @@ import java.util.concurrent.*;
  *
  * @see <a href="https://core.arago.co/help/specs/?url=definitions/events-ws.yaml#/">API Documentation</a>
  */
-public class EventWebSocket extends AbstractWebSocketHandler {
+public class EventWebSocket extends AuthenticatedWebSocketHandler {
     final static Logger log = LoggerFactory.getLogger(EventWebSocket.class);
 
     public final static String API_NAME = "events-ws";
@@ -30,7 +30,7 @@ public class EventWebSocket extends AbstractWebSocketHandler {
     // ## Conf and Builder ##
     // ###############################################################################################
 
-    public static abstract class Conf<T extends Conf<T>> extends AbstractWebSocketHandler.Conf<T> {
+    public static abstract class Conf<T extends Conf<T>> extends AuthenticatedWebSocketHandler.Conf<T> {
 
         private Set<String> scopes = new HashSet<>();
         private Map<String, EventsFilter> eventsFilterMap = new LinkedHashMap<>();
@@ -210,11 +210,11 @@ public class EventWebSocket extends AbstractWebSocketHandler {
             List<CompletableFuture<WebSocket>> futures = new ArrayList<>();
 
             for (String scopeId : scopes) {
-                futures.add(webSocket.sendText(new WebSocketSubscribeScopeMessage(scopeId).toJsonString(), true));
+                futures.add(webSocket.sendText(new SubscribeScopeMessage(scopeId).toJsonString(), true));
             }
 
             for (Map.Entry<String, EventsFilter> filterEntry : eventsFilterMap.entrySet()) {
-                futures.add(webSocket.sendText(new WebSocketEventRegisterMessage(filterEntry.getValue()).toJsonString(), true));
+                futures.add(webSocket.sendText(new EventRegisterMessage(filterEntry.getValue()).toJsonString(), true));
             }
 
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get(webSocketRequestTimeout, TimeUnit.MILLISECONDS);
@@ -252,7 +252,7 @@ public class EventWebSocket extends AbstractWebSocketHandler {
             @Override
             public void run() {
                 try {
-                    send(new WebSocketTokenRefreshMessage(tokenAPIHandler.getToken()).toJsonString());
+                    send(new TokenRefreshMessage(tokenAPIHandler.getToken()).toJsonString());
 
                     Long msTillNextStart = msTillNextStart();
                     if (msTillNextStart != null) {
@@ -356,21 +356,21 @@ public class EventWebSocket extends AbstractWebSocketHandler {
     // ###############################################################################################
 
     public void addEventsFilter(EventsFilter filter) throws HiroException, IOException, InterruptedException {
-        send(new WebSocketEventRegisterMessage(filter).toJsonString());
+        send(new EventRegisterMessage(filter).toJsonString());
         synchronized (this) {
             eventsFilterMap.put(filter.id, filter);
         }
     }
 
     public void removeEventsFilter(String filterId) throws HiroException, IOException, InterruptedException {
-        send(new WebSocketEventUnregisterMessage(filterId).toJsonString());
+        send(new EventUnregisterMessage(filterId).toJsonString());
         synchronized (this) {
             eventsFilterMap.remove(filterId);
         }
     }
 
     public void clearEventsFilter() throws HiroException, IOException, InterruptedException {
-        send(new WebSocketClearEventsMessage().toJsonString());
+        send(new ClearEventsMessage().toJsonString());
         synchronized (this) {
             eventsFilterMap.clear();
         }
@@ -381,7 +381,7 @@ public class EventWebSocket extends AbstractWebSocketHandler {
     // ###############################################################################################
 
     public void subscribeScope(String scopeId) throws HiroException, IOException, InterruptedException {
-        send(new WebSocketSubscribeScopeMessage(scopeId).toJsonString());
+        send(new SubscribeScopeMessage(scopeId).toJsonString());
         synchronized (this) {
             scopes.add(scopeId);
         }

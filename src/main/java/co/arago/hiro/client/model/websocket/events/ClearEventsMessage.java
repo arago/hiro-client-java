@@ -14,7 +14,7 @@ import java.util.Map;
  *     }
  * </code></pre>
  */
-public class WebSocketClearEventsMessage implements JsonMessage {
+public class ClearEventsMessage implements JsonMessage {
     public final String type = "clear";
     public final Map<String, Object> args = new HashMap<>();
 }

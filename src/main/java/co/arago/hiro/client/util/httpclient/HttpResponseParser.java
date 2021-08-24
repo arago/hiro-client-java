@@ -24,7 +24,7 @@ import java.util.Optional;
  * Contains the httpResult and decodes the headers Content-Type and Content-Length for further
  * information about that stream.
  */
-public class HttpResponseParser extends HeaderContainer {
+public class HttpResponseParser extends ContentHeaderHandler {
 
     /**
      * The response with its InputStream.

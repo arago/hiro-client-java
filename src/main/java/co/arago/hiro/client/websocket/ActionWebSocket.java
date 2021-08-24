@@ -13,14 +13,14 @@ import java.io.IOException;
  * The handler for Action WebSocket.
  * @see <a href="https://core.arago.co/help/specs/?url=definitions/action-ws.yaml">API Documentation</a>
  */
-public class ActionWebSocket extends AbstractWebSocketHandler {
+public class ActionWebSocket extends AuthenticatedWebSocketHandler {
     final static Logger log = LoggerFactory.getLogger(ActionWebSocket.class);
 
     // ###############################################################################################
     // ## Conf and Builder ##
     // ###############################################################################################
 
-    public static abstract class Conf<T extends Conf<T>> extends AbstractWebSocketHandler.Conf<T> {
+    public static abstract class Conf<T extends Conf<T>> extends AuthenticatedWebSocketHandler.Conf<T> {
 
     }
 

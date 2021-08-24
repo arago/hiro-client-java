@@ -10,11 +10,11 @@ import co.arago.hiro.client.model.JsonMessage;
  *     }
  * </code></pre>
  */
-public class WebSocketSubscribeScopeMessage implements JsonMessage {
+public class SubscribeScopeMessage implements JsonMessage {
     public final String type = "subscribe";
     public final String id;
 
-    public WebSocketSubscribeScopeMessage(String id) {
+    public SubscribeScopeMessage(String id) {
         this.id = id;
     }
 }
