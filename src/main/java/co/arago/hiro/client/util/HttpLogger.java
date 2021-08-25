@@ -19,7 +19,12 @@ import java.util.Set;
 public class HttpLogger {
     final static Logger log = LoggerFactory.getLogger(HttpLogger.class);
 
-    protected Boolean logBody = true;
+    protected boolean logBody = true;
+    protected int maxBinaryLength;
+
+    public HttpLogger(int maxBinaryLength) {
+        this.maxBinaryLength = maxBinaryLength;
+    }
 
     /**
      * A list of paths from an URI. If such a filter matches, do not log body data.
@@ -53,8 +58,21 @@ public class HttpLogger {
      *
      * @param logBody The flag to set
      */
-    public void setLogBody(Boolean logBody) {
+    public void setLogBody(boolean logBody) {
         this.logBody = logBody;
+    }
+
+    public int getMaxBinaryLength() {
+        return maxBinaryLength;
+    }
+
+    /**
+     * Max length to log for binary data
+     *
+     * @param maxBinaryLength Length in bytes
+     */
+    public void setMaxBinaryLength(int maxBinaryLength) {
+        this.maxBinaryLength = maxBinaryLength;
     }
 
     /**

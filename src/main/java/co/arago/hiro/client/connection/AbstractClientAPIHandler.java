@@ -40,6 +40,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         protected HttpClient httpClient;
         protected SSLContext sslContext;
         protected int maxConnectionPool = 8;
+        protected int maxBinaryLogLength = 1024;
 
         ProxySpec getProxy() {
             return proxy;
@@ -155,6 +156,21 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
             return self();
         }
 
+        public int getMaxBinaryLogLength() {
+            return maxBinaryLogLength;
+        }
+
+        /**
+         * Maximum size to log binary data in logfiles. Default is 1024.
+         *
+         * @param maxBinaryLogLength Size in bytes
+         * @return {@link #self()}
+         */
+        public T setMaxBinaryLogLength(int maxBinaryLogLength) {
+            this.maxBinaryLogLength = maxBinaryLogLength;
+            return self();
+        }
+
         @Override
         public abstract AbstractClientAPIHandler build();
     }
@@ -211,7 +227,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     protected SSLContext sslContext;
     protected final int maxConnectionPool;
 
-    protected final HttpLogger httpLogger = new HttpLogger();
+    protected final HttpLogger httpLogger;
 
     private ExecutorService clientExecutorService;
 
@@ -229,6 +245,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         this.sslParameters = builder.getSslParameters();
         this.httpClient = builder.getHttpClient();
         this.maxConnectionPool = builder.getMaxConnectionPool();
+        this.httpLogger = new HttpLogger(builder.getMaxBinaryLogLength());
 
         if (acceptAllCerts == null) {
             this.sslContext = builder.getSslContext();

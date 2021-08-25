@@ -2,6 +2,7 @@ package co.arago.hiro.client.util.httpclient;
 
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.HiroMessage;
+import co.arago.hiro.client.util.HexUtil;
 import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.JsonTools;
 import org.apache.commons.io.IOUtils;
@@ -25,6 +26,13 @@ import java.util.Optional;
  * information about that stream.
  */
 public class HttpResponseParser extends ContentHeaderHandler {
+
+    private static final String[] TEXT_CONTENT = new String[]{
+            "text/",
+            "application/json",
+            "application/xhtml",
+            "application/xml"
+    };
 
     /**
      * The response with its InputStream.
@@ -76,23 +84,24 @@ public class HttpResponseParser extends ContentHeaderHandler {
         InputStream inputStream = httpResponse.body();
         if (httpLogger != null && httpLogger.active()) {
             return new TeeInputStream(httpResponse.body(), new OutputStream() {
-                private final int MAXLENGTH = 1024;
-
-                private final ByteBuffer buffer = ByteBuffer.allocate(MAXLENGTH);
+                private final ByteBuffer buffer = ByteBuffer.allocate(httpLogger.getMaxBinaryLength());
 
                 private long count = 0;
 
                 @Override
                 public void write(int b) throws IOException {
-                    if (count < MAXLENGTH)
+                    if (count < httpLogger.getMaxBinaryLength())
                         buffer.put((byte) b);
                     count++;
                 }
 
                 @Override
                 public void close() throws IOException {
-                    String message = StandardCharsets.UTF_8.decode(buffer).toString();
-                    if (count >= MAXLENGTH)
+                    String message = (StringUtils.startsWithAny(mediaType, TEXT_CONTENT)) ?
+                            new String(buffer.array(), (charset == null ? StandardCharsets.UTF_8 : charset)) :
+                            "(hex) " + HexUtil.bytesToHex(buffer.array());
+
+                    if (count >= httpLogger.getMaxBinaryLength())
                         message += "... [rest omitted. final size: " + count + " char]";
 
                     httpLogger.logResponseBody(httpResponse, message);
