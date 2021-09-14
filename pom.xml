@@ -23,6 +23,20 @@
         <arago-java-project-version>0.0.14-SNAPSHOT</arago-java-project-version>
     </properties>
 
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <uniqueVersion>false</uniqueVersion>
+            <name>arago GitHub Maven Repository</name>
+            <url>https://maven.pkg.github.com/arago/repository-public</url>
+        </repository>
+        <snapshotRepository>
+            <id>github</id>
+            <uniqueVersion>false</uniqueVersion>
+            <name>arago GitHub Maven Repository</name>
+            <url>https://maven.pkg.github.com/arago/repository-public</url>
+        </snapshotRepository>
+    </distributionManagement>
 
     <build>
         <plugins>
