@@ -20,7 +20,7 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
 
-        <arago-java-project-version>0.0.14-SNAPSHOT</arago-java-project-version>
+        <arago-java-project-version>0.0.15-SNAPSHOT</arago-java-project-version>
     </properties>
 
     <distributionManagement>
@@ -110,6 +110,7 @@
                 <version>3.0.1</version>
                 <configuration>
                     <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+                    <quiet>true</quiet>
                 </configuration>
                 <executions>
                     <execution>

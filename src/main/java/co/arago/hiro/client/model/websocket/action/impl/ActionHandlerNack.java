@@ -27,6 +27,12 @@ public class ActionHandlerNack extends AbstractActionHandlerIdMessage implements
         super(id);
     }
 
+    public ActionHandlerNack(String id, Integer code, String message) {
+        super(id);
+        this.code = code;
+        this.message = message;
+    }
+
     @Override
     public Integer getCode() {
         return code;

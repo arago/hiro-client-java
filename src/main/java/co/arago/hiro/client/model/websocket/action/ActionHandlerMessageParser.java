@@ -1,5 +1,6 @@
 package co.arago.hiro.client.model.websocket.action;
 
+import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.websocket.action.impl.*;
 import co.arago.util.json.JsonTools;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,19 +10,14 @@ import java.util.Map;
 
 public class ActionHandlerMessageParser {
 
-    private final Map<String, Object> message;
+    private final HiroMessage message;
 
-    public ActionHandlerMessageParser(Map<String, Object> message) {
+    public ActionHandlerMessageParser(HiroMessage message) {
         this.message = message;
     }
 
-    public ActionHandlerMessageParser(String message) throws JsonProcessingException {
-        this.message = JsonTools.DEFAULT.toObject(message, new TypeReference<>() {
-        });
-    }
-
-    ActionHandlerMessage parse() {
-        ActionMessageType type = ActionMessageType.fromString((String) message.get("type"));
+    public ActionHandlerMessage parse() {
+        ActionMessageType type = ActionMessageType.fromString((String) message.getMap().get("type"));
         switch (type) {
             case SUBMIT_ACTION:
                 return JsonTools.DEFAULT.toObject(message, ActionHandlerSubmit.class);

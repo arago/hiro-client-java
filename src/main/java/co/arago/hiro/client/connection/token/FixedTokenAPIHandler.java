@@ -40,8 +40,6 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         public FixedTokenAPIHandler build() {
-            RequiredFieldChecker.notNull(getApiUrl(), "apiUrl");
-            RequiredFieldChecker.notBlank(getToken(), "token");
             return new FixedTokenAPIHandler(this);
         }
     }
@@ -60,6 +58,8 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
     protected FixedTokenAPIHandler(Conf<Builder> builder) {
         super(builder);
         this.token = builder.getToken();
+
+        RequiredFieldChecker.notBlank(this.token, "token");
     }
 
     public static Builder newBuilder() {

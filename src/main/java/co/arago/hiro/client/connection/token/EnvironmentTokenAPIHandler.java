@@ -38,7 +38,6 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         public EnvironmentTokenAPIHandler build() {
-            RequiredFieldChecker.notNull(getApiUrl(), "apiUrl");
             return new EnvironmentTokenAPIHandler(this);
         }
 

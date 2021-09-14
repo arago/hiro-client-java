@@ -5,7 +5,7 @@ import co.arago.hiro.client.exceptions.*;
 import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.VersionResponse;
-import co.arago.hiro.client.websocket.listener.HiroWebSocketListener;
+import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.util.json.JsonTools;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
@@ -53,7 +53,6 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
         private String fragment;
         private long webSocketMessageTimeout = 60000L;
         private AbstractTokenAPIHandler tokenAPIHandler;
-        private HiroWebSocketListener webSocketListener;
         private int maxRetries = 2;
         private boolean reconnectOnFailedSend = false;
 
@@ -206,21 +205,6 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
             return self();
         }
 
-        public HiroWebSocketListener getWebSocketListener() {
-            return webSocketListener;
-        }
-
-        /**
-         * Set the {@link HiroWebSocketListener} for the websocket data.
-         *
-         * @param webSocketListener The listener to use.
-         * @return {@link #self()}
-         */
-        public T setWebSocketListener(HiroWebSocketListener webSocketListener) {
-            this.webSocketListener = webSocketListener;
-            return self();
-        }
-
         protected abstract T self();
 
         public abstract AuthenticatedWebSocketHandler build();
@@ -228,15 +212,15 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
 
     /**
      * HiroWebSocketListener (thread) for incoming websocket messages. Derivates of {@link AuthenticatedWebSocketHandler} have
-     * to supply an Object implementing the interface {@link HiroWebSocketListener} for specific handling.
+     * to supply an Object implementing the interface {@link SpecificWebSocketListener} for specific handling.
      */
-    protected abstract class InternalListener implements WebSocket.Listener {
+    protected class InternalListener implements WebSocket.Listener {
 
         private final StringBuffer stringBuffer = new StringBuffer();
 
         private Throwable exception;
 
-        private final HiroWebSocketListener listener;
+        private final SpecificWebSocketListener listener;
         private final String name;
 
         /**
@@ -245,7 +229,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
          * @param name     Name of the handler (mainly for logging)
          * @param listener The listener which received messages.
          */
-        public InternalListener(String name, HiroWebSocketListener listener) {
+        public InternalListener(String name, SpecificWebSocketListener listener) {
             this.name = name;
             this.listener = listener;
         }
@@ -273,9 +257,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
             log.debug("{}: WebSocket open.", name);
 
             try {
-                configureOnOpen(webSocket);
-
-                listener.onOpen();
+                listener.onOpen(webSocket);
 
                 Status currentStatus = status.updateAndGet(s ->
                         (s == Status.STARTING || s == Status.RESTARTING) ? Status.RUNNING_PRELIMINARY : s
@@ -292,17 +274,6 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
                     throw new RuntimeException(e);
             }
         }
-
-        /**
-         * Intercepts additional configuration after a WebSocket is opened.
-         *
-         * @param webSocket The webSocket using this HiroWebSocketListener.
-         * @throws InterruptedException Not used here.
-         * @throws ExecutionException   Not used here.
-         * @throws IOException          On IO errors.
-         * @throws TimeoutException     When handling of data took longer than {@link #webSocketRequestTimeout} ms.
-         */
-        protected abstract void configureOnOpen(WebSocket webSocket) throws InterruptedException, ExecutionException, TimeoutException, IOException;
 
         /**
          * Collects a text message from the websocket until 'last' is true. Then checks for an error message. If the
@@ -353,14 +324,14 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
 
                     reconnectDelay.set(0);
 
-                    listener.onMessage(hiroMessage);
+                    listener.onMessage(webSocket, hiroMessage);
 
                     status.compareAndSet(Status.RUNNING_PRELIMINARY, Status.RUNNING);
 
                 } catch (JsonProcessingException e) {
                     reconnectDelay.set(0);
                     log.warn("Ignoring unknown websocket message: {}", message, e);
-                } catch (HiroException e) {
+                } catch (HiroException | IOException | InterruptedException e) {
                     onError(webSocket, e);
                 }
             }
@@ -395,7 +366,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
             log.debug("{}: Got close message {}", name, (StringUtils.isBlank(reason) ? statusCode : statusCode + ": " + reason));
 
             try {
-                listener.onClose();
+                listener.onClose(webSocket, statusCode, reason);
 
                 handleRestart(status.get(), false);
 
@@ -420,7 +391,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
             log.error("{}: WebSocket caught error: {}", name, error.toString());
             this.exception = error;
 
-            listener.onError(error);
+            listener.onError(webSocket, error);
 
             handleRestart(status.get(), (error instanceof RefreshTokenWebSocketException));
 
@@ -477,7 +448,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
     protected URI apiUri;
 
     private WebSocket webSocket;
-    private final InternalListener internalListener;
+    protected InternalListener internalListener;
     private final AtomicInteger reconnectDelay = new AtomicInteger(0);
 
     /**
@@ -491,7 +462,6 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
         this.endpoint = builder.getEndpoint();
         this.protocol = builder.getProtocol();
         this.maxRetries = builder.getMaxRetries();
-        this.internalListener = constructInternalListener(builder.getWebSocketListener());
         this.tokenAPIHandler = builder.getTokenApiHandler();
 
         this.query.putAll(builder.query);
@@ -500,15 +470,12 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
         this.reconnectOnFailedSend = builder.isReconnectOnFailedSend();
 
         this.webSocketRequestTimeout = builder.getWebSocketMessageTimeout();
-    }
 
-    /**
-     * Abstract method to embed the {@link HiroWebSocketListener} in the required {@link InternalListener}.
-     *
-     * @param webSocketListener The listener to embed.
-     * @return The {@link InternalListener} containing the {@link HiroWebSocketListener}.
-     */
-    protected abstract InternalListener constructInternalListener(HiroWebSocketListener webSocketListener);
+        RequiredFieldChecker.notNull(this.tokenAPIHandler, "tokenApiHandler");
+        if (StringUtils.isBlank(this.apiName) && (StringUtils.isAnyBlank(this.endpoint, this.protocol)))
+            RequiredFieldChecker.anyError("Either 'apiName' or 'endpoint' and 'protocol' have to be set.");
+
+    }
 
     /**
      * Create new WebSocket. Closes any old websocket.

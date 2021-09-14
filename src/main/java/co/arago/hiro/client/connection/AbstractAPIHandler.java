@@ -7,6 +7,7 @@ import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.util.HttpLogger;
+import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import co.arago.util.json.JsonTools;
@@ -154,6 +155,9 @@ public abstract class AbstractAPIHandler {
 
     protected AbstractAPIHandler(GetterConf builder) {
         this.apiUrl = builder.getApiUrl();
+
+        RequiredFieldChecker.notNull(this.apiUrl, "apiUrl");
+
         this.maxRetries = builder.getMaxRetries();
         this.httpRequestTimeout = builder.getHttpRequestTimeout();
         this.userAgent = (builder.getUserAgent() != null ? builder.getUserAgent() : (version != null ? title + " " + version : title));

@@ -177,12 +177,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         public PasswordAuthTokenAPIHandler build() {
-            RequiredFieldChecker.notNull(getApiUrl(), "apiUrl");
-            RequiredFieldChecker.notBlank(getUsername(), "username");
-            RequiredFieldChecker.notBlank(getPassword(), "password");
-            RequiredFieldChecker.notBlank(getClientId(), "clientId");
-            RequiredFieldChecker.notBlank(getClientSecret(), "clientSecret");
-
             return new PasswordAuthTokenAPIHandler(this);
         }
     }
@@ -284,6 +278,11 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         this.clientId = builder.getClientId();
         this.clientSecret = builder.getClientSecret();
         this.endpoint = builder.getEndpoint();
+
+        RequiredFieldChecker.notBlank(this.username, "username");
+        RequiredFieldChecker.notBlank(this.password, "password");
+        RequiredFieldChecker.notBlank(this.clientId, "clientId");
+        RequiredFieldChecker.notBlank(this.clientSecret, "clientSecret");
 
         this.tokenInfo.refreshOffset = builder.getRefreshOffset();
         this.tokenInfo.refreshPause = builder.getRefreshPause();

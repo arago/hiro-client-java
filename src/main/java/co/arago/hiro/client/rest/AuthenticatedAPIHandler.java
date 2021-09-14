@@ -313,6 +313,10 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         this.apiName = builder.getApiName();
         this.endpoint = builder.getEndpoint();
         this.tokenAPIHandler = builder.getTokenApiHandler();
+
+        RequiredFieldChecker.notNull(this.tokenAPIHandler, "tokenApiHandler");
+        if (StringUtils.isBlank(this.apiName) && StringUtils.isBlank(this.endpoint))
+            RequiredFieldChecker.anyError("Either 'apiName' or 'endpoint' have to be set.");
     }
 
     /**

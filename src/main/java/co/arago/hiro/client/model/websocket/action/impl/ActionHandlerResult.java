@@ -24,6 +24,11 @@ public class ActionHandlerResult extends AbstractActionHandlerIdMessage {
         super(id);
     }
 
+    public ActionHandlerResult(String id, String result) {
+        super(id);
+        this.result = result;
+    }
+
     @Override
     public ActionMessageType getType() {
         return ActionMessageType.SEND_ACTION_RESULT;

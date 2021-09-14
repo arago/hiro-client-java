@@ -2,12 +2,13 @@ package co.arago.hiro.client.websocket;
 
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.hiro.client.exceptions.WebSocketException;
+import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.websocket.events.EventsFilter;
 import co.arago.hiro.client.model.websocket.events.impl.*;
 import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
-import co.arago.hiro.client.websocket.listener.HiroWebSocketListener;
-import org.apache.commons.lang3.StringUtils;
+import co.arago.util.json.JsonTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
 
         private Set<String> scopes = new HashSet<>();
         private Map<String, EventsFilter> eventsFilterMap = new LinkedHashMap<>();
+        private EventWebSocketListener eventWebSocketListener;
 
         public Conf() {
             setName(API_NAME);
@@ -156,13 +158,28 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
             this.eventsFilterMap.put(id, new EventsFilter(id, content, type));
             return self();
         }
+
+        public EventWebSocketListener getEventWebSocketListener() {
+            return eventWebSocketListener;
+        }
+
+        /**
+         * Set eventWebSocketListener. This will receive incoming data.
+         *
+         * @param eventWebSocketListener Reference to the listener to use.
+         * @return {@link #self()}
+         */
+        public T setEventWebSocketListener(EventWebSocketListener eventWebSocketListener) {
+            this.eventWebSocketListener = eventWebSocketListener;
+            return self();
+        }
     }
 
     public static final class Builder extends Conf<Builder> {
 
         private Builder(AbstractTokenAPIHandler tokenAPIHandler, EventWebSocketListener webSocketListener) {
             setTokenApiHandler(tokenAPIHandler);
-            setWebSocketListener(webSocketListener);
+            setEventWebSocketListener(webSocketListener);
         }
 
         @Override
@@ -172,10 +189,6 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
 
         @Override
         public EventWebSocket build() {
-            RequiredFieldChecker.notNull(getTokenApiHandler(), "tokenApiHandler");
-            RequiredFieldChecker.notNull(getWebSocketListener(), "webSocketListener");
-            if (StringUtils.isBlank(getApiName()) && (StringUtils.isAnyBlank(getEndpoint(), getProtocol())))
-                RequiredFieldChecker.anyError("Either 'apiName' or 'endpoint' and 'protocol' have to be set.");
             return new EventWebSocket(this);
         }
     }
@@ -187,15 +200,20 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
     /**
      * Listener class for Event WebSockets.
      */
-    protected class InternalEventListener extends InternalListener {
+    protected class InternalEventListener implements SpecificWebSocketListener {
+
+        /**
+         * Reference to the external listener
+         */
+        protected final EventWebSocketListener eventWebSocketListener;
 
         /**
          * Constructor
          *
          * @param listener The listener which received messages.
          */
-        public InternalEventListener(HiroWebSocketListener listener) {
-            super(name + "-listener", listener);
+        public InternalEventListener(EventWebSocketListener listener) {
+            eventWebSocketListener = listener;
         }
 
         /**
@@ -208,7 +226,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
          * @throws TimeoutException     When sending of data took longer than {@link #webSocketRequestTimeout} ms.
          */
         @Override
-        protected void configureOnOpen(WebSocket webSocket) throws InterruptedException, IOException, ExecutionException, TimeoutException {
+        public void onOpen(WebSocket webSocket) throws IOException, ExecutionException, InterruptedException, TimeoutException {
             List<CompletableFuture<WebSocket>> futures = new ArrayList<>();
 
             for (String scopeId : scopes) {
@@ -221,25 +239,34 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
 
             CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get(webSocketRequestTimeout, TimeUnit.MILLISECONDS);
 
+            eventWebSocketListener.onOpen();
+
             tokenRefreshHandler.start();
         }
 
+        @Override
+        public void onMessage(WebSocket webSocket, HiroMessage message) throws WebSocketException {
+            eventWebSocketListener.onEvent(JsonTools.DEFAULT.toObject(message, EventsMessage.class));
+        }
+
         /**
-         * Receives close messages. This will try to restart the WebSocket unless
-         * the status is {@link Status#CLOSING}.
+         * Receives close messages.
+         * <p>
+         * This will stop the {@link #tokenRefreshHandler}.
          *
-         * @param webSocket  The webSocket using this HiroWebSocketListener.
+         * @param webSocket  Reference to the websocket.
          * @param statusCode Status code sent from the remote side.
          * @param reason     Reason text sent from the remote side.
-         * @return null
          */
         @Override
-        public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-            try {
-                return super.onClose(webSocket, statusCode, reason);
-            } finally {
-                tokenRefreshHandler.stop();
-            }
+        public void onClose(WebSocket webSocket, int statusCode, String reason) {
+            tokenRefreshHandler.stop();
+            eventWebSocketListener.onClose(statusCode, reason);
+        }
+
+        @Override
+        public void onError(WebSocket webSocket, Throwable t) {
+            eventWebSocketListener.onError(t);
         }
     }
 
@@ -305,7 +332,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
         }
     }
 
-    // ###############################################################################################
+    // #############################################################################################
     // ## Main part ##
     // ###############################################################################################
 
@@ -323,28 +350,27 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
         super(builder);
         this.scopes = builder.getScopes();
         this.eventsFilterMap = builder.getEventsFilterMap();
+
+        RequiredFieldChecker.notNull(builder.getEventWebSocketListener(), "eventWebSocketListener");
+
+        this.internalListener = new InternalListener(
+                name + "-listener",
+                new InternalEventListener(builder.getEventWebSocketListener())
+        );
     }
 
     /**
      * Get a {@link Builder} for {@link EventWebSocket}.
      *
-     * @param tokenAPIHandler   The API handler for this websocket.
-     * @param webSocketListener The listener for this websocket.
+     * @param tokenAPIHandler        The API handler for this websocket.
+     * @param eventWebSocketListener The listener for this websocket.
      * @return The {@link Builder} for {@link EventWebSocket}.
      */
-    public static Builder newBuilder(AbstractTokenAPIHandler tokenAPIHandler, EventWebSocketListener webSocketListener) {
-        return new EventWebSocket.Builder(tokenAPIHandler, webSocketListener);
-    }
-
-    /**
-     * Embed the {@link HiroWebSocketListener} in the required {@link InternalEventListener}.
-     *
-     * @param webSocketListener The listener to embed.
-     * @return The {@link InternalEventListener} containing the {@link HiroWebSocketListener}.
-     */
-    @Override
-    protected InternalListener constructInternalListener(HiroWebSocketListener webSocketListener) {
-        return new InternalEventListener(webSocketListener);
+    public static Builder newBuilder(
+            AbstractTokenAPIHandler tokenAPIHandler,
+            EventWebSocketListener eventWebSocketListener
+    ) {
+        return new EventWebSocket.Builder(tokenAPIHandler, eventWebSocketListener);
     }
 
     @Override

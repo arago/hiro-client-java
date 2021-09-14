@@ -38,9 +38,6 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         public AuthAPI build() {
-            RequiredFieldChecker.notNull(getTokenApiHandler(), "tokenApiHandler");
-            if (StringUtils.isBlank(getApiName()) && StringUtils.isBlank(getEndpoint()))
-                RequiredFieldChecker.anyError("Either 'apiName' or 'endpoint' have to be set.");
             return new AuthAPI(this);
         }
     }
