@@ -8,7 +8,7 @@ import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.VersionResponse;
 import co.arago.hiro.client.rest.AuthenticatedAPIHandler;
 import co.arago.hiro.client.rest.GraphAPI;
-import co.arago.hiro.client.util.JsonTools;
+import co.arago.util.json.JsonTools;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

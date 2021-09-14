@@ -2,7 +2,7 @@ package co.arago.hiro.client.model.vertex;
 
 import co.arago.hiro.client.model.AbstractJsonMap;
 import co.arago.hiro.client.model.JsonMessage;
-import co.arago.hiro.client.util.JsonTools;
+import co.arago.util.json.JsonTools;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 /**
  * Implementation of a meta value from HIRO attributes in vertices.
  *
- * <code>
+ *
  * <pre>
  * [
  *     {
@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
  *     }
  * ]
  * </pre>
- * </code>
  */
 public class MetaValueList extends ArrayList<MetaValueList.MetaValueField> implements JsonMessage {
 

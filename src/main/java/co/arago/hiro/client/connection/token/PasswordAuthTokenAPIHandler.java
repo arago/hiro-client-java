@@ -398,6 +398,9 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
      * Return the current token.
      *
      * @return The current token.
+     * @throws InterruptedException When call gets interrupted.
+     * @throws IOException          When call has IO errors.
+     * @throws HiroException        On Hiro protocol / handling errors.
      */
     @Override
     public synchronized String getToken() throws IOException, InterruptedException, HiroException {
@@ -412,6 +415,10 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
     /**
      * Obtain a new token from the auth API.
+     *
+     * @throws InterruptedException When call gets interrupted.
+     * @throws IOException          When call has IO errors.
+     * @throws HiroException        On Hiro protocol / handling errors.
      */
     protected synchronized void requestToken() throws IOException, InterruptedException, HiroException {
 

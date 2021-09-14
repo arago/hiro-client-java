@@ -2,8 +2,8 @@ package co.arago.hiro.client.websocket.listener;
 
 import co.arago.hiro.client.exceptions.WebSocketException;
 import co.arago.hiro.client.model.HiroMessage;
-import co.arago.hiro.client.model.websocket.events.EventsMessage;
-import co.arago.hiro.client.util.JsonTools;
+import co.arago.hiro.client.model.websocket.events.impl.EventsMessage;
+import co.arago.util.json.JsonTools;
 
 public interface EventWebSocketListener extends HiroWebSocketListener {
 

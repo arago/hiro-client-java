@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Contains data of a HIRO vertex. Handles string and metaInfo list entries of vertices.
  *
- * <code>
+ *
  * <pre>
  * {
  *     "attribute1": "value",
@@ -22,7 +22,7 @@ import java.util.List;
  *     "attribute2": ...
  * }
  * </pre>
- * </code>
+ *
  *
  * <p>
  * Because the types of attributes can be manifold, they remain stored in the HiroMessage

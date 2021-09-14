@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * JSON for a token request.
  *
- * <code>
+ *
  * <pre>
  * {
  *     "username": "...",
@@ -15,7 +15,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *     "client_secret": "...",
  * }
  * </pre>
- * </code>
  */
 public class TokenRequest implements JsonMessage {
 

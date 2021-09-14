@@ -7,9 +7,9 @@ import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.util.HttpLogger;
-import co.arago.hiro.client.util.JsonTools;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
+import co.arago.util.json.JsonTools;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -68,6 +68,7 @@ public abstract class AbstractAPIHandler {
         /**
          * @param apiUrl The root url for the API
          * @return {@link #self()}
+         * @throws MalformedURLException When the apiUrl is a malformed URL.
          */
         public T setApiUrl(String apiUrl) throws MalformedURLException {
             this.apiUrl = new URL(RegExUtils.removePattern(apiUrl, "/+$") + "/");
@@ -245,6 +246,9 @@ public abstract class AbstractAPIHandler {
      * @param httpRequestTimeout The timeout in ms for the http request. If this is null, the
      *                           {@link #httpRequestTimeout} will be used.
      * @return The HttpRequest.Builder
+     * @throws InterruptedException When call gets interrupted.
+     * @throws IOException          When call has IO errors.
+     * @throws HiroException        On Hiro protocol / handling errors.
      */
     public HttpRequest.Builder getRequestBuilder(
             URI uri,
@@ -436,6 +440,7 @@ public abstract class AbstractAPIHandler {
      * @param httpRequestTimeout The timeout in ms for the http request. If this is null, the
      *                           {@link #httpRequestTimeout} will be used.
      * @param maxRetries         The amount of retries on errors. When this is null, {@link #maxRetries} will be used.
+     * @param <T>                Type of result object, derived of {@link HiroMessage}.
      * @return An object of clazz constructed from the JSON result or null if the response has no body.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
@@ -476,8 +481,9 @@ public abstract class AbstractAPIHandler {
      * @param bodyContainer      The body as {@link StreamContainer}. Can be null for methods that do not supply a body.
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
      * @param httpRequestTimeout The timeout in ms for the http request. If this is null, the
-     *                           {@link #httpRequestTimeout} will be used.
+     *                           {@link #httpRequestTimeout} will be used
      * @param maxRetries         The amount of retries on errors. When this is null, {@link #maxRetries} will be used.
+     * @param <T>                Type of result object, derived of {@link HiroMessage}.
      * @return An object of clazz constructed from the JSON result or null if the response has no body.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
@@ -551,9 +557,12 @@ public abstract class AbstractAPIHandler {
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
      * @param httpRequestTimeout The timeout in ms for the http request. If this is null, the
      *                           {@link #httpRequestTimeout} will be used.
-     * @return A future for the HttpResponse&lt;InputStream&gt;.
+     * @return A future for the {@link HttpResponseParser}.
+     * @throws HiroException        On errors with protocol handling.
+     * @throws IOException          On io errors
+     * @throws InterruptedException When the connection gets interrupted.
      */
-    public CompletableFuture<HttpResponse<InputStream>> executeAsyncWithStringBody(
+    public CompletableFuture<HttpResponseParser> executeAsyncWithStringBody(
             URI uri,
             String method,
             String body,
@@ -577,9 +586,12 @@ public abstract class AbstractAPIHandler {
      * @param headers            Initial headers for the httpRequest. Can be null for no additional headers.
      * @param httpRequestTimeout The timeout in ms for the http request. If this is null, the
      *                           {@link #httpRequestTimeout} will be used.
-     * @return A future for the HttpResponse&lt;InputStream&gt;.
+     * @return A future for the {@link HttpResponseParser}.
+     * @throws HiroException        On errors with protocol handling.
+     * @throws IOException          On io errors
+     * @throws InterruptedException When the connection gets interrupted.
      */
-    public CompletableFuture<HttpResponse<InputStream>> executeAsyncWithStreamBody(
+    public CompletableFuture<HttpResponseParser> executeAsyncWithStreamBody(
             URI uri,
             String method,
             StreamContainer bodyContainer,
@@ -607,6 +619,7 @@ public abstract class AbstractAPIHandler {
      * @param httpRequestTimeout The timeout in ms for the http request. If this is null, the
      *                           {@link #httpRequestTimeout} will be used.
      * @param maxRetries         The amount of retries on errors. When this is null, {@link #maxRetries} will be used.
+     * @param <T>                Type of result object, derived of {@link HiroMessage}.
      * @return A {@link HiroMessage} constructed from the JSON result.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
@@ -634,6 +647,7 @@ public abstract class AbstractAPIHandler {
      * @param httpRequestTimeout The timeout in ms for the http request. If this is null, the
      *                           {@link #httpRequestTimeout} will be used.
      * @param maxRetries         The amount of retries on errors. When this is null, {@link #maxRetries} will be used.
+     * @param <T>                Type of result object, derived of {@link HiroMessage}.
      * @return A {@link HiroMessage} constructed from the JSON result.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
@@ -662,6 +676,7 @@ public abstract class AbstractAPIHandler {
      * @param httpRequestTimeout The timeout in ms for the http request. If this is null, the
      *                           {@link #httpRequestTimeout} will be used.
      * @param maxRetries         The amount of retries on errors. When this is null, {@link #maxRetries} will be used.
+     * @param <T>                Type of result object, derived of {@link HiroMessage}.
      * @return A {@link HiroMessage} constructed from the JSON result.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
@@ -690,6 +705,7 @@ public abstract class AbstractAPIHandler {
      * @param httpRequestTimeout The timeout in ms for the http request. If this is null, the
      *                           {@link #httpRequestTimeout} will be used.
      * @param maxRetries         The amount of retries on errors. When this is null, {@link #maxRetries} will be used.
+     * @param <T>                Type of result object, derived of {@link HiroMessage}.
      * @return A {@link HiroMessage} constructed from the JSON result.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
@@ -717,6 +733,7 @@ public abstract class AbstractAPIHandler {
      * @param httpRequestTimeout The timeout in ms for the http request. If this is null, the
      *                           {@link #httpRequestTimeout} will be used.
      * @param maxRetries         The amount of retries on errors. When this is null, {@link #maxRetries} will be used.
+     * @param <T>                Type of result object, derived of {@link HiroMessage}.
      * @return A {@link HiroMessage} constructed from the JSON result.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
@@ -767,6 +784,7 @@ public abstract class AbstractAPIHandler {
      * @param httpRequestTimeout The timeout in ms for the http request. If this is null, the
      *                           {@link #httpRequestTimeout} will be used.
      * @param maxRetries         The amount of retries on errors. When this is null, {@link #maxRetries} will be used.
+     * @param <T>                Type of result object, derived of {@link HiroMessage}.
      * @return A {@link HiroMessage} constructed from the JSON result.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
@@ -794,6 +812,7 @@ public abstract class AbstractAPIHandler {
      * @param httpRequestTimeout The timeout in ms for the http request. If this is null, the
      *                           {@link #httpRequestTimeout} will be used.
      * @param maxRetries         The amount of retries on errors. When this is null, {@link #maxRetries} will be used.
+     * @param <T>                Type of result object, derived of {@link HiroMessage}.
      * @return A {@link HiroMessage} constructed from the JSON result.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
@@ -821,6 +840,7 @@ public abstract class AbstractAPIHandler {
      * @param httpRequestTimeout The timeout in ms for the http request. If this is null, the
      *                           {@link #httpRequestTimeout} will be used.
      * @param maxRetries         The amount of retries on errors. When this is null, {@link #maxRetries} will be used.
+     * @param <T>                Type of result object, derived of {@link HiroMessage}.
      * @return A {@link HiroMessage} constructed from the JSON result.
      * @throws HiroException        On errors indicated by http status codes.
      * @throws IOException          On io errors
@@ -860,6 +880,9 @@ public abstract class AbstractAPIHandler {
      * Override this to add authentication tokens.
      *
      * @param headers Map of headers with initial values.
+     * @throws HiroException        On internal errors regarding hiro data processing.
+     * @throws IOException          On IO errors.
+     * @throws InterruptedException When a call (possibly of an overwritten method) gets interrupted.
      */
     abstract public void addToHeaders(Map<String, String> headers) throws InterruptedException, IOException, HiroException;
 

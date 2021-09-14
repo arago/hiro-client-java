@@ -1,6 +1,6 @@
 package co.arago.hiro.client.model;
 
-import co.arago.hiro.client.util.JsonTools;
+import co.arago.util.json.JsonTools;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -43,7 +43,7 @@ public abstract class AbstractJsonMap implements JsonMessage {
      */
     @JsonIgnore
     public Map<String, Object> toMap() {
-        return JsonTools.DEFAULT.toObject(this, new TypeReference<Map<String, Object>>() {
+        return JsonTools.DEFAULT.toObject(this, new TypeReference<>() {
         });
     }
 }

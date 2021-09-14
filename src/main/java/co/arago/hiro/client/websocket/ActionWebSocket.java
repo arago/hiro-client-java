@@ -11,6 +11,7 @@ import java.io.IOException;
 
 /**
  * The handler for Action WebSocket.
+ *
  * @see <a href="https://core.arago.co/help/specs/?url=definitions/action-ws.yaml">API Documentation</a>
  */
 public class ActionWebSocket extends AuthenticatedWebSocketHandler {

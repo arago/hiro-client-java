@@ -5,10 +5,10 @@ import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.vertex.HiroVertexListResponse;
 import co.arago.hiro.client.model.vertex.HiroVertexResponse;
-import co.arago.hiro.client.util.JsonTools;
 import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
+import co.arago.util.json.JsonTools;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 
@@ -27,7 +27,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
 
     public static final class Builder extends Conf<Builder> {
 
-        public Builder(String apiName, AbstractTokenAPIHandler tokenAPIHandler) {
+        private Builder(String apiName, AbstractTokenAPIHandler tokenAPIHandler) {
             setApiName(apiName);
             setTokenApiHandler(tokenAPIHandler);
         }

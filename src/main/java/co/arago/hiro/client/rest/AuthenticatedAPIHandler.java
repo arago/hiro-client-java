@@ -6,9 +6,9 @@ import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.util.HttpLogger;
-import co.arago.hiro.client.util.JsonTools;
 import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
+import co.arago.util.json.JsonTools;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -185,6 +185,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          *
          * @param map The map to convert.
          * @return {@link #self()}.
+         * @throws JsonProcessingException When the map cannot be transformed to a Json String.
          */
         public T setJsonFromMap(Map<String, ?> map) throws JsonProcessingException {
             this.body = JsonTools.DEFAULT.toString(map);

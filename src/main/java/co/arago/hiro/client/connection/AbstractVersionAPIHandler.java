@@ -31,7 +31,7 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
      *
      * @param builder The builder to use.
      */
-    protected AbstractVersionAPIHandler(Conf builder) {
+    protected AbstractVersionAPIHandler(Conf<?> builder) {
         super(builder);
     }
 

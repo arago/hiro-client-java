@@ -1,9 +1,10 @@
-package co.arago.hiro.client.model.websocket.events;
+package co.arago.hiro.client.model.websocket.events.impl;
 
 import co.arago.hiro.client.model.JsonMessage;
+import co.arago.hiro.client.model.websocket.events.EventsFilter;
 
 /**
- * <pre><code>
+ * <pre>
  *     {
  *         "type": "register",
  *         "args": {
@@ -12,7 +13,7 @@ import co.arago.hiro.client.model.JsonMessage;
  *             "filter-content": {@link EventsFilter#content}
  *         }
  *     }
- * </code></pre>
+ * </pre>
  */
 public class EventRegisterMessage implements JsonMessage {
 

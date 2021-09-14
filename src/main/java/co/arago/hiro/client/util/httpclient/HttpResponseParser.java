@@ -4,7 +4,7 @@ import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.util.HexUtil;
 import co.arago.hiro.client.util.HttpLogger;
-import co.arago.hiro.client.util.JsonTools;
+import co.arago.util.json.JsonTools;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.lang3.StringUtils;

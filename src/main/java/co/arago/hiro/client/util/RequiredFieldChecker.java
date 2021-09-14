@@ -12,6 +12,7 @@ public class RequiredFieldChecker {
      *
      * @param item The item to check for null
      * @param name Name of the item for the exception message
+     * @param <N>  Type of any item.
      * @return The item itself
      * @throws NullPointerException when item == null
      */

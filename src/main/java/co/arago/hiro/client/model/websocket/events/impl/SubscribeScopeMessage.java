@@ -1,14 +1,14 @@
-package co.arago.hiro.client.model.websocket.events;
+package co.arago.hiro.client.model.websocket.events.impl;
 
 import co.arago.hiro.client.model.JsonMessage;
 
 /**
- * <pre><code>
+ * <pre>
  *     {
  *         "type": "subscribe",
  *         "id": {@link #id}
  *     }
- * </code></pre>
+ * </pre>
  */
 public class SubscribeScopeMessage implements JsonMessage {
     public final String type = "subscribe";

@@ -323,8 +323,6 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     }
 
     /**
-     * Abstract class that needs to be overwritten by a supplier of a HttpLogger.
-     *
      * @return The HttpLogger to use with this class.
      */
     @Override

@@ -3,7 +3,7 @@ package co.arago.hiro.client.rest;
 import co.arago.hiro.client.Config;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.util.JsonTools;
+import co.arago.util.json.JsonTools;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;

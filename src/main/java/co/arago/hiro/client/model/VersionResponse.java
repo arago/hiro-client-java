@@ -1,7 +1,7 @@
 package co.arago.hiro.client.model;
 
 import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.util.JsonTools;
+import co.arago.util.json.JsonTools;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * The response to a version GET request against "/api/version".
  *
- * <code>
+ *
  * <pre>
  * {
  *     "[name of first api]": {
@@ -22,7 +22,7 @@ import java.util.Map;
  *     },
  *     ...
  * }
- * </code>
+ *
  * </pre>
  */
 public class VersionResponse extends HiroMessage {

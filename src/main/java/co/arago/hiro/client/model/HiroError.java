@@ -1,6 +1,6 @@
 package co.arago.hiro.client.model;
 
-import co.arago.hiro.client.util.JsonTools;
+import co.arago.util.json.JsonTools;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -11,7 +11,6 @@ import java.util.Map;
 /**
  * Handles error responses from HIRO of the format.
  *
- * <code>
  * <pre>
  * {
  *     "error": {
@@ -20,17 +19,13 @@ import java.util.Map;
  *     }
  * }
  * </pre>
- * </code>
  * <p>
  * or
- *
- * <code>
  * <pre>
  * {
  *     "error": "error message"
  * }
  * </pre>
- * </code>
  */
 public class HiroError extends AbstractJsonMap {
 

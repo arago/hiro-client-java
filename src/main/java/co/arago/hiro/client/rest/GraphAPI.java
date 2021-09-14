@@ -15,7 +15,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
 
     public static final class Builder extends Conf<Builder> {
 
-        public Builder(String apiName, AbstractTokenAPIHandler tokenAPIHandler) {
+        private Builder(String apiName, AbstractTokenAPIHandler tokenAPIHandler) {
             setApiName(apiName);
             setTokenApiHandler(tokenAPIHandler);
         }

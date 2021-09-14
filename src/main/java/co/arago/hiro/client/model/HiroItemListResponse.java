@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * Represents a HIRO list of items.
  *
- * <code>
+ *
  * <pre>
  * {
  *     "items": [
@@ -16,7 +16,6 @@ import java.util.List;
  *     ]
  * }
  * </pre>
- * </code>
  */
 public class HiroItemListResponse<T extends HiroMessage> extends HiroMessage {
 

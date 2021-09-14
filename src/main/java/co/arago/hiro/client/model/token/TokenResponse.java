@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * The token response from the auth API
  *
- * <code>
+ *
  * <pre>
  * {
  *     "_TOKEN": "...",
@@ -18,7 +18,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *     "type": "..."
  * }
  * </pre>
- * </code>
  */
 public class TokenResponse extends HiroMessage {
 

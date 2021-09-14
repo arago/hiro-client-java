@@ -3,7 +3,7 @@ package co.arago.hiro.client.connection.token;
 import co.arago.hiro.client.Config;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.rest.AuthAPI;
-import co.arago.hiro.client.util.JsonTools;
+import co.arago.util.json.JsonTools;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;

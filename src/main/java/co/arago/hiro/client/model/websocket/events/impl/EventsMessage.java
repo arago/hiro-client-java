@@ -1,4 +1,4 @@
-package co.arago.hiro.client.model.websocket.events;
+package co.arago.hiro.client.model.websocket.events.impl;
 
 import co.arago.hiro.client.model.AbstractJsonMap;
 import co.arago.hiro.client.model.vertex.HiroVertexResponse;
@@ -7,9 +7,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * An incoming events message from the events-ws.<br />
+ * An incoming events message from the events-ws.<br>
  * <i>Example:</i>
- * <pre><code>
+ * <pre>
  * {
  *   "id": "c1234567890abcdefghijklmn_c1234567890abcdefghijklmn",
  *   "timestamp": 1442235678000,
@@ -22,7 +22,7 @@ import org.apache.commons.lang3.StringUtils;
  *     "ogit/_modified-by": "c1234567890abcdefghijklmn_c1234567890abcdefghijklmn"
  *   }
  * }
- * </code></pre>
+ * </pre>
  */
 public class EventsMessage extends AbstractJsonMap {
     public final String id;

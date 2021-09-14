@@ -16,12 +16,17 @@ public interface HiroWebSocketListener {
 
     /**
      * Called with an incoming message.
+     *
+     * @param message The incoming {@link HiroMessage}.
+     * @throws WebSocketException Thrown when handling the message results in an error.
      */
     void onMessage(HiroMessage message) throws WebSocketException;
 
     /**
      * Called right before the websocket is about to close.
      * Does nothing on default.
+     *
+     * @throws WebSocketException If the WebSocket has errors on closing.
      */
     void onClose() throws WebSocketException;
 

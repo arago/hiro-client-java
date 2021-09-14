@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * JSON for a token refresh request.
  *
- * <code>
+ *
  * <pre>
  * {
  *     "client_id": "...",
@@ -14,7 +14,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *     "refresh_token": "..."
  * }
  * </pre>
- * </code>
  */
 public class TokenRefreshRequest implements JsonMessage {
 

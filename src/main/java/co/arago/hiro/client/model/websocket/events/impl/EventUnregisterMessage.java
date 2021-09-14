@@ -1,4 +1,4 @@
-package co.arago.hiro.client.model.websocket.events;
+package co.arago.hiro.client.model.websocket.events.impl;
 
 import co.arago.hiro.client.model.JsonMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -6,14 +6,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 
 /**
- * <pre><code>
+ * <pre>
  *     {
  *         "type": "unregister",
  *         "args": {
  *             "filter-id": {@link FilterId#id}
  *         }
  *     }
- * </code></pre>
+ * </pre>
  */
 public class EventUnregisterMessage implements JsonMessage {
 

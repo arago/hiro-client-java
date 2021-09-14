@@ -5,10 +5,10 @@ import co.arago.hiro.client.connection.token.FixedTokenAPIHandler;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.UnauthorizedWebSocketException;
-import co.arago.hiro.client.model.websocket.events.EventsMessage;
+import co.arago.hiro.client.model.websocket.events.impl.EventsMessage;
 import co.arago.hiro.client.rest.AuthAPI;
-import co.arago.hiro.client.util.JsonTools;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
+import co.arago.util.json.JsonTools;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -98,11 +98,12 @@ public class EventWebSocketTest {
                 .setApiUrl(config.api_url)
                 .setToken("Invalid")
                 .setAcceptAllCerts(config.accept_all_certs)
-                .build()) {
-
+                .build()
+        ) {
             try (EventWebSocket eventWebSocket = EventWebSocket.newBuilder(handler, listener)
                     .setName("events-ws-test")
-                    .build()) {
+                    .build()
+            ) {
                 eventWebSocket.start();
                 Thread.sleep(1000);
             }

@@ -2,7 +2,8 @@ package co.arago.hiro.client.websocket;
 
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.model.websocket.events.*;
+import co.arago.hiro.client.model.websocket.events.EventsFilter;
+import co.arago.hiro.client.model.websocket.events.impl.*;
 import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
 import co.arago.hiro.client.websocket.listener.HiroWebSocketListener;
@@ -159,7 +160,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
 
     public static final class Builder extends Conf<Builder> {
 
-        protected Builder(AbstractTokenAPIHandler tokenAPIHandler, EventWebSocketListener webSocketListener) {
+        private Builder(AbstractTokenAPIHandler tokenAPIHandler, EventWebSocketListener webSocketListener) {
             setTokenApiHandler(tokenAPIHandler);
             setWebSocketListener(webSocketListener);
         }
@@ -202,11 +203,12 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
          *
          * @param webSocket The webSocket using this HiroWebSocketListener.
          * @throws InterruptedException On interrupt on sending.
+         * @throws IOException          On IO errors or when messages cannot be parsed to JSON strings.
          * @throws ExecutionException   When sending fails generally.
          * @throws TimeoutException     When sending of data took longer than {@link #webSocketRequestTimeout} ms.
          */
         @Override
-        protected void configureOnOpen(WebSocket webSocket) throws InterruptedException, ExecutionException, TimeoutException {
+        protected void configureOnOpen(WebSocket webSocket) throws InterruptedException, IOException, ExecutionException, TimeoutException {
             List<CompletableFuture<WebSocket>> futures = new ArrayList<>();
 
             for (String scopeId : scopes) {

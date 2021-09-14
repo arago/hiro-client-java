@@ -46,16 +46,27 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      * Return the current token.
      *
      * @return The current token.
+     * @throws InterruptedException When call gets interrupted.
+     * @throws IOException          When call has IO errors.
+     * @throws HiroException        On Hiro protocol / handling errors.
      */
     public abstract String getToken() throws IOException, InterruptedException, HiroException;
 
     /**
      * Refresh an invalid token.
+     *
+     * @throws InterruptedException When call gets interrupted.
+     * @throws IOException          When call has IO errors.
+     * @throws HiroException        On Hiro protocol / handling errors.
      */
     public abstract void refreshToken() throws IOException, InterruptedException, HiroException;
 
     /**
      * Revoke a token
+     *
+     * @throws InterruptedException When call gets interrupted.
+     * @throws IOException          When call has IO errors.
+     * @throws HiroException        On Hiro protocol / handling errors.
      */
     public abstract void revokeToken() throws IOException, InterruptedException, HiroException;
 

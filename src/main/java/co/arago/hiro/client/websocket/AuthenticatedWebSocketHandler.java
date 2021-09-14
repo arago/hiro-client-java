@@ -1,15 +1,12 @@
 package co.arago.hiro.client.websocket;
 
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
-import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.exceptions.UnauthorizedWebSocketException;
-import co.arago.hiro.client.exceptions.WebSocketException;
-import co.arago.hiro.client.exceptions.WebSocketMessageException;
+import co.arago.hiro.client.exceptions.*;
 import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.VersionResponse;
-import co.arago.hiro.client.util.JsonTools;
 import co.arago.hiro.client.websocket.listener.HiroWebSocketListener;
+import co.arago.util.json.JsonTools;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -122,7 +119,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
         /**
          * For initial connection to the WebSocket.
          *
-         * @param key Name of the query parameter
+         * @param key   Name of the query parameter
          * @param value Value of the query parameter
          * @return {@link #self()}
          */
@@ -254,13 +251,22 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
         }
 
         /**
+         * <p>
          * Sets the status from {@link Status#STARTING} or {@link Status#RESTARTING} to
          * {@link Status#RUNNING_PRELIMINARY}. Any other state will result in an Exception.
+         * </p>
+         * <p>
+         * {@link WebSocket#request(long)} is NOT called here, but only after the CompletableFuture of
+         * {@link WebSocket.Builder#buildAsync(URI, WebSocket.Listener)} has finished successfully in
+         * {@link #createWebSocket()} and {@link #status} is not FAILURE. This ensures, that
+         * {@link #onText(WebSocket, CharSequence, boolean)} is only called after that.
+         * </p>
          *
          * @param webSocket The webSocket using this HiroWebSocketListener.
          * @throws IllegalStateException When the status is neither {@link Status#STARTING} nor
          *                               {@link Status#RESTARTING}.
          * @throws RuntimeException      On all other exceptions caught.
+         * @see #createWebSocket()
          */
         @Override
         public void onOpen(WebSocket webSocket) {
@@ -280,9 +286,10 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
 
             } catch (Exception e) {
                 status.set(Status.FAILED);
-                throw new RuntimeException(e);
-            } finally {
-                WebSocket.Listener.super.onOpen(webSocket);
+                if (e instanceof RuntimeException)
+                    throw (RuntimeException) e;
+                else
+                    throw new RuntimeException(e);
             }
         }
 
@@ -292,9 +299,10 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
          * @param webSocket The webSocket using this HiroWebSocketListener.
          * @throws InterruptedException Not used here.
          * @throws ExecutionException   Not used here.
+         * @throws IOException          On IO errors.
          * @throws TimeoutException     When handling of data took longer than {@link #webSocketRequestTimeout} ms.
          */
-        protected abstract void configureOnOpen(WebSocket webSocket) throws InterruptedException, ExecutionException, TimeoutException;
+        protected abstract void configureOnOpen(WebSocket webSocket) throws InterruptedException, ExecutionException, TimeoutException, IOException;
 
         /**
          * Collects a text message from the websocket until 'last' is true. Then checks for an error message. If the
@@ -323,16 +331,18 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
                         if (hiroError.getCode() == 401) {
 
                             Status currentStatus = status.updateAndGet(s -> {
-                                if (s == Status.RUNNING_PRELIMINARY)
-                                    return Status.FAILED;
-                                if (s == Status.RUNNING)
-                                    return Status.RESTARTING;
-                                return s;
+                                switch (s) {
+                                    case RUNNING_PRELIMINARY:
+                                        return Status.FAILED;
+                                    case RUNNING:
+                                        return Status.RESTARTING;
+                                    default:
+                                        return s;
+                                }
                             });
 
                             if (currentStatus == Status.RESTARTING) {
-                                log.info("{}: Refreshing token because of: {}", name, message);
-                                restartWebSocket(true);
+                                throw new RefreshTokenWebSocketException("Refreshing token because of: " + message);
                             } else {
                                 throw new UnauthorizedWebSocketException(hiroError.getMessage(), hiroError.getCode());
                             }
@@ -346,14 +356,12 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
                     listener.onMessage(hiroMessage);
 
                     status.compareAndSet(Status.RUNNING_PRELIMINARY, Status.RUNNING);
+
                 } catch (JsonProcessingException e) {
                     reconnectDelay.set(0);
                     log.warn("Ignoring unknown websocket message: {}", message, e);
-                } catch (HiroException | IOException e) {
+                } catch (HiroException e) {
                     onError(webSocket, e);
-                } catch (InterruptedException e) {
-                    // Just return immediately
-                    return null;
                 }
             }
 
@@ -384,12 +392,12 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
          */
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-            log.debug("{}: Got close message {}: {}", name, statusCode, reason);
+            log.debug("{}: Got close message {}", name, (StringUtils.isBlank(reason) ? statusCode : statusCode + ": " + reason));
 
             try {
                 listener.onClose();
 
-                handleRestart(status.get());
+                handleRestart(status.get(), false);
 
             } catch (WebSocketException e) {
                 log.error("{}: WebSocket caught error while closing.", name, e);
@@ -414,16 +422,16 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
 
             listener.onError(error);
 
-            handleRestart(status.get());
+            handleRestart(status.get(), (error instanceof RefreshTokenWebSocketException));
 
             WebSocket.Listener.super.onError(webSocket, error);
         }
 
-        private void handleRestart(Status currentStatus) {
+        private void handleRestart(Status currentStatus, boolean refreshToken) {
             if (currentStatus != Status.CLOSING && currentStatus != Status.CLOSED && currentStatus != Status.FAILED) {
                 try {
                     status.set(Status.RESTARTING);
-                    restartWebSocket(false);
+                    restartWebSocket(refreshToken);
                 } catch (HiroException | IOException | InterruptedException e) {
                     status.set(Status.FAILED);
                     log.error("{}: Cannot restart WebSocket because of error.", name, e);
@@ -543,22 +551,27 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
                             .buildAsync(webSocketUri, internalListener)
                             .get();
 
-                    if (status.get() == Status.FAILED)
-                        throw new WebSocketException("Creating websocket returned with status \"FAILED\".", internalListener.exception);
+                    if (status.get() == Status.FAILED) {
+                        throw new WebSocketException("Creating websocket returned with status \"FAILED\".",
+                                internalListener.exception);
+                    }
+
+                    // After the webSocket has been created and the status been checked, start requesting messages.
+                    this.webSocket.request(1);
 
                 } catch (ExecutionException e) {
                     if (e.getCause() instanceof ConnectException)
-                        throw new ConnectException("Cannot create webSocket " + webSocketUri.toString() + ".");
+                        throw new ConnectException("Cannot create webSocket " + webSocketUri + ".");
                     else if (e.getCause() instanceof IOException)
-                        throw new IOException("Cannot create webSocket " + webSocketUri.toString() + ".", e);
+                        throw new IOException("Cannot create webSocket " + webSocketUri + ".", e);
                     else
-                        throw new HiroException("Cannot create webSocket " + webSocketUri.toString() + ".", e);
+                        throw new HiroException("Cannot create webSocket " + webSocketUri + ".", e);
                 }
             } catch (URISyntaxException e) {
                 throw new WebSocketException("Cannot create webSocket because of invalid URI.", e);
             }
         } catch (Exception e) {
-            closeWebSocket(1006, e.getMessage());
+            closeWebSocket(1006, "Error at startup: " + e.getMessage());
             throw e;
         }
     }
@@ -662,13 +675,14 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
             } catch (Exception e) {
                 if (retries >= maxRetries) {
                     if (reconnectOnFailedSend) {
-                        log.warn("Restarting webSocket.", e);
+                        log.warn("Restarting webSocket because of: {}.", e.toString());
+                        status.set(Status.RESTARTING);
                         restartWebSocket(false);
                     } else {
                         throw new HiroException("Cannot send message because of error.", e);
                     }
                 } else {
-                    log.warn("Retry to send message.", e);
+                    log.warn("Retry to send message because of: {}", e.toString());
                     retries++;
                 }
             }

@@ -9,14 +9,12 @@ import org.apache.commons.lang3.StringUtils;
  * <p>
  * This class is meant to parse HTTP responses and WebSocket messages received from HIRO.
  *
- * <code>
  * <pre>
  * {
  *     "key": [any value]
  *     ...
  * }
  * </pre>
- * </code>
  */
 public class HiroMessage extends AbstractJsonMap {
 
