@@ -10,7 +10,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Interface for external WebSocket listeners
+ * Interface for internal WebSocket listeners of different WebSocket protocols.
  */
 public interface SpecificWebSocketListener {
 

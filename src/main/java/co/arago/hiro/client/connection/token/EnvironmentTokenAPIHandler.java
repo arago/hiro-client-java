@@ -2,7 +2,6 @@ package co.arago.hiro.client.connection.token;
 
 import co.arago.hiro.client.exceptions.FixedTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.util.RequiredFieldChecker;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;

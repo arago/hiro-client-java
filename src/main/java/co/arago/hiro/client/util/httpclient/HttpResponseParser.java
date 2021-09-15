@@ -4,7 +4,7 @@ import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.util.HexUtil;
 import co.arago.hiro.client.util.HttpLogger;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.lang3.StringUtils;
@@ -147,7 +147,7 @@ public class HttpResponseParser extends ContentHeaderHandler {
         if (!contentIsJson())
             throw new HiroException("Incoming data is not of type 'application/json'");
 
-        return JsonTools.DEFAULT.toObject(body, clazz);
+        return JsonUtil.DEFAULT.toObject(body, clazz);
     }
 
 }

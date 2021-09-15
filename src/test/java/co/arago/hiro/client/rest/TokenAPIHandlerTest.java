@@ -3,7 +3,7 @@ package co.arago.hiro.client.rest;
 import co.arago.hiro.client.Config;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,7 +25,7 @@ class TokenAPIHandlerTest {
     @BeforeAll
     static void init() throws IOException {
         try {
-            Config config = JsonTools.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
 
             handler = PasswordAuthTokenAPIHandler.newBuilder()
                     .setApiUrl(config.api_url)

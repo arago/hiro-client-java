@@ -5,12 +5,10 @@ import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.vertex.HiroVertexListResponse;
 import co.arago.hiro.client.model.vertex.HiroVertexResponse;
-import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -206,7 +204,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          * @throws IllegalArgumentException When the Content-Type is missing.
          */
         public String execute() throws HiroException, IOException, InterruptedException {
-            RequiredFieldChecker.notBlank(streamContainer.getContentType(), "contentType");
+            notBlank(streamContainer.getContentType(), "contentType");
             return executeBinary(
                     getUri("me/avatar", query, fragment),
                     "PUT",
@@ -249,7 +247,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
 
         public PutMePassword setPasswords(String oldPassword, String newPassword) {
             try {
-                body = JsonTools.DEFAULT.toString(
+                body = JsonUtil.DEFAULT.toString(
                         Map.of("oldPassword", oldPassword,
                                 "newPassword", newPassword)
                 );
@@ -275,11 +273,10 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
-            RequiredFieldChecker.notBlank(body, "body");
             return put(
                     HiroVertexResponse.class,
                     getUri("me/password", query, fragment),
-                    body,
+                    notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -369,11 +366,10 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
-            RequiredFieldChecker.notBlank(body, "body");
             return post(
                     HiroVertexResponse.class,
                     getUri("me/profile", query, fragment),
-                    body,
+                    notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
                     maxRetries);

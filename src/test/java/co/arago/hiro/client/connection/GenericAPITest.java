@@ -8,7 +8,7 @@ import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.VersionResponse;
 import co.arago.hiro.client.rest.AuthenticatedAPIHandler;
 import co.arago.hiro.client.rest.GraphAPI;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ public class GenericAPITest {
     @BeforeAll
     static void init() throws IOException {
         try {
-            Config config = JsonTools.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
 
             handler = PasswordAuthTokenAPIHandler.newBuilder()
                     .setApiUrl(config.api_url)

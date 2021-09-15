@@ -1,6 +1,6 @@
 package co.arago.hiro.client.model;
 
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -57,7 +57,7 @@ public class HiroError extends AbstractJsonMap {
             @JsonProperty("error") Object errorObj
     ) {
         if (errorObj instanceof Map)
-            this.error = JsonTools.DEFAULT.toObject(errorObj, HiroErrorEntry.class);
+            this.error = JsonUtil.DEFAULT.toObject(errorObj, HiroErrorEntry.class);
         if (errorObj instanceof String)
             this.error = new HiroErrorEntry((String) errorObj, null);
     }

@@ -8,7 +8,7 @@ import co.arago.hiro.client.exceptions.UnauthorizedWebSocketException;
 import co.arago.hiro.client.model.websocket.events.impl.EventsMessage;
 import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public class EventWebSocketTest {
     @BeforeAll
     static void init() throws IOException {
         try {
-            config = JsonTools.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+            config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
         } catch (FileNotFoundException e) {
             log.warn("Skipping tests: {}.", e.getMessage());
         }

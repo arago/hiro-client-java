@@ -3,7 +3,7 @@ package co.arago.hiro.client.connection.token;
 import co.arago.hiro.client.Config;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.rest.AuthAPI;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ public class InvalidCredentialsAPITest {
     @BeforeEach
     void init() throws IOException {
         try {
-            Config config = JsonTools.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
 
             handlerBuilder = PasswordAuthTokenAPIHandler.newBuilder()
                     .setApiUrl(config.api_url)

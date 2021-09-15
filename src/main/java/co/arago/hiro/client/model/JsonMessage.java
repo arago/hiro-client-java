@@ -1,6 +1,6 @@
 package co.arago.hiro.client.model;
 
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.io.Serializable;
@@ -15,7 +15,7 @@ public interface JsonMessage extends Serializable {
      * @throws JsonProcessingException When no JSON string can be created from this object.
      */
     default String toJsonString() throws JsonProcessingException {
-        return JsonTools.DEFAULT.toString(this);
+        return JsonUtil.DEFAULT.toString(this);
     }
 
     /**
@@ -23,6 +23,6 @@ public interface JsonMessage extends Serializable {
      * @throws JsonProcessingException When no JSON string can be created from this object.
      */
     default String toPrettyJsonString() throws JsonProcessingException {
-        return JsonTools.DEFAULT.toPrettyString(this);
+        return JsonUtil.DEFAULT.toPrettyString(this);
     }
 }

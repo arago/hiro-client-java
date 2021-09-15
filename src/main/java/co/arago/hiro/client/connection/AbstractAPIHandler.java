@@ -7,10 +7,10 @@ import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.util.HttpLogger;
-import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
+import co.arago.util.validation.RequiredFieldChecks;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -32,7 +32,7 @@ import java.util.concurrent.CompletionException;
 /**
  * Root class with fields and tool methods for all API Handlers
  */
-public abstract class AbstractAPIHandler {
+public abstract class AbstractAPIHandler implements RequiredFieldChecks {
 
     final static Logger log = LoggerFactory.getLogger(AbstractAPIHandler.class);
 
@@ -154,10 +154,7 @@ public abstract class AbstractAPIHandler {
     protected int maxRetries;
 
     protected AbstractAPIHandler(GetterConf builder) {
-        this.apiUrl = builder.getApiUrl();
-
-        RequiredFieldChecker.notNull(this.apiUrl, "apiUrl");
-
+        this.apiUrl = notNull(builder.getApiUrl(), "apiUrl");
         this.maxRetries = builder.getMaxRetries();
         this.httpRequestTimeout = builder.getHttpRequestTimeout();
         this.userAgent = (builder.getUserAgent() != null ? builder.getUserAgent() : (version != null ? title + " " + version : title));
@@ -914,7 +911,7 @@ public abstract class AbstractAPIHandler {
             try {
 
                 if (responseParser.contentIsJson()) {
-                    HiroError hiroError = JsonTools.DEFAULT.toObject(body, HiroError.class);
+                    HiroError hiroError = JsonUtil.DEFAULT.toObject(body, HiroError.class);
                     String hiroMessage = hiroError.getMessage();
                     if (StringUtils.isNotBlank(hiroMessage))
                         message = statusCode + ": " + hiroMessage;

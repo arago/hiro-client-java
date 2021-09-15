@@ -7,7 +7,6 @@ import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.model.token.TokenRefreshRequest;
 import co.arago.hiro.client.model.token.TokenRequest;
 import co.arago.hiro.client.model.token.TokenResponse;
-import co.arago.hiro.client.util.RequiredFieldChecker;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -273,16 +272,11 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
     protected PasswordAuthTokenAPIHandler(Conf<?> builder) {
         super(builder);
-        this.username = builder.getUsername();
-        this.password = builder.getPassword();
-        this.clientId = builder.getClientId();
-        this.clientSecret = builder.getClientSecret();
+        this.username = notBlank(builder.getUsername(), "username");
+        this.password = notBlank(builder.getPassword(), "password");
+        this.clientId = notBlank(builder.getClientId(), "clientId");
+        this.clientSecret = notBlank(builder.getClientSecret(), "clientSecret");
         this.endpoint = builder.getEndpoint();
-
-        RequiredFieldChecker.notBlank(this.username, "username");
-        RequiredFieldChecker.notBlank(this.password, "password");
-        RequiredFieldChecker.notBlank(this.clientId, "clientId");
-        RequiredFieldChecker.notBlank(this.clientSecret, "clientSecret");
 
         this.tokenInfo.refreshOffset = builder.getRefreshOffset();
         this.tokenInfo.refreshPause = builder.getRefreshPause();

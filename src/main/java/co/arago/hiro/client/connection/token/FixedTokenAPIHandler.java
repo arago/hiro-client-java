@@ -2,7 +2,6 @@ package co.arago.hiro.client.connection.token;
 
 import co.arago.hiro.client.exceptions.FixedTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.util.RequiredFieldChecker;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;
@@ -57,9 +56,7 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
      */
     protected FixedTokenAPIHandler(Conf<Builder> builder) {
         super(builder);
-        this.token = builder.getToken();
-
-        RequiredFieldChecker.notBlank(this.token, "token");
+        this.token = notNull(builder.getToken(), "token");
     }
 
     public static Builder newBuilder() {

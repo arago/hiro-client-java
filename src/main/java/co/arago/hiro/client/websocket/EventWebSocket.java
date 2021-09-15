@@ -2,13 +2,11 @@ package co.arago.hiro.client.websocket;
 
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.exceptions.WebSocketException;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.websocket.events.EventsFilter;
 import co.arago.hiro.client.model.websocket.events.impl.*;
-import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -245,8 +243,8 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
         }
 
         @Override
-        public void onMessage(WebSocket webSocket, HiroMessage message) throws WebSocketException {
-            eventWebSocketListener.onEvent(JsonTools.DEFAULT.toObject(message, EventsMessage.class));
+        public void onMessage(WebSocket webSocket, HiroMessage message) {
+            eventWebSocketListener.onEvent(JsonUtil.DEFAULT.toObject(message, EventsMessage.class));
         }
 
         /**
@@ -351,11 +349,11 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
         this.scopes = builder.getScopes();
         this.eventsFilterMap = builder.getEventsFilterMap();
 
-        RequiredFieldChecker.notNull(builder.getEventWebSocketListener(), "eventWebSocketListener");
-
         this.internalListener = new InternalListener(
                 name + "-listener",
-                new InternalEventListener(builder.getEventWebSocketListener())
+                new InternalEventListener(
+                        notNull(builder.getEventWebSocketListener(), "eventWebSocketListener")
+                )
         );
     }
 

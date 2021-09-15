@@ -6,19 +6,18 @@ import co.arago.hiro.client.exceptions.WebSocketException;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.websocket.action.ActionMessageType;
 import co.arago.hiro.client.model.websocket.action.impl.*;
-import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.hiro.client.websocket.listener.ActionWebSocketListener;
 import co.arago.util.collections.expiringstore.ExpiringRetryStore;
 import co.arago.util.collections.expiringstore.ExpiringStore;
 import co.arago.util.collections.expiringstore.exceptions.StoreItemExistsException;
 import co.arago.util.collections.expiringstore.exceptions.StoreItemExpiredException;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.http.WebSocket;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -129,7 +128,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
                 switch (actionMessageType) {
                     case SUBMIT_ACTION: {
 
-                        ActionHandlerSubmit actionHandlerSubmit = JsonTools.DEFAULT.toObject(message, ActionHandlerSubmit.class);
+                        ActionHandlerSubmit actionHandlerSubmit = JsonUtil.DEFAULT.toObject(message, ActionHandlerSubmit.class);
                         log.info("Handling \"{}\" (id: {})", actionHandlerSubmit.getType(), actionHandlerSubmit.getId());
 
                         send(new ActionHandlerAck(actionHandlerSubmit.getId()).toJsonString());
@@ -156,14 +155,14 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
                             actionWebSocketListener.onActionSubmit(actionHandlerSubmit);
                         } catch (Exception e) {
                             log.error("Handling action threw exception.", e);
-                            sendActionResult(actionHandlerSubmit.getId(), null, 500, e.getMessage());
+                            sendActionResult(actionHandlerSubmit.getId(), new ResultParams().setCode(500).setMessage(e.getMessage()));
                         }
 
                         break;
                     }
                     case SEND_ACTION_RESULT: {
 
-                        ActionHandlerResult actionHandlerResult = JsonTools.DEFAULT.toObject(message, ActionHandlerResult.class);
+                        ActionHandlerResult actionHandlerResult = JsonUtil.DEFAULT.toObject(message, ActionHandlerResult.class);
                         log.info("Handling \"{}\" (id: {})", actionHandlerResult.getType(), actionHandlerResult.getId());
 
                         send(new ActionHandlerNack(actionHandlerResult.getId(), 400, "sendActionResult rejected").toJsonString());
@@ -172,7 +171,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
                     }
                     case ACKNOWLEDGED: {
 
-                        ActionHandlerAck actionHandlerAck = JsonTools.DEFAULT.toObject(message, ActionHandlerAck.class);
+                        ActionHandlerAck actionHandlerAck = JsonUtil.DEFAULT.toObject(message, ActionHandlerAck.class);
                         log.info("Handling \"{}\" (id: {})", actionHandlerAck.getType(), actionHandlerAck.getId());
 
                         actionResultStore.remove(actionHandlerAck.getId());
@@ -181,7 +180,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
                     }
                     case NEGATIVE_ACKNOWLEDGED: {
 
-                        ActionHandlerNack actionHandlerNack = JsonTools.DEFAULT.toObject(message, ActionHandlerNack.class);
+                        ActionHandlerNack actionHandlerNack = JsonUtil.DEFAULT.toObject(message, ActionHandlerNack.class);
                         log.info("Handling \"{}\" (id: {})", actionHandlerNack.getType(), actionHandlerNack.getId());
 
                         ActionHandlerResult actionHandlerResult = actionResultStore.get(actionHandlerNack.getId());
@@ -194,7 +193,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
                     }
                     case ERROR: {
 
-                        ActionHandlerError actionHandlerError = JsonTools.DEFAULT.toObject(message, ActionHandlerError.class);
+                        ActionHandlerError actionHandlerError = JsonUtil.DEFAULT.toObject(message, ActionHandlerError.class);
                         log.info("Received error message (code {}): {}", actionHandlerError.getCode(), actionHandlerError.getMessage());
 
                         break;
@@ -225,8 +224,128 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
     }
 
     // #############################################################################################
+    // ## ActionResult payload builder ##
+    // #############################################################################################
+
+    /**
+     * This creates a useful payload for the {@link ActionHandlerResult}.
+     * <p>
+     * If no code is set, 200 or 204 will be assumed depending on whether data is present or not.
+     * <p>
+     * If no message is set, a standard message will be generated depending on whether data is present or not.
+     * <p>
+     * Without data:
+     * <pre>
+     *     {
+     *         "code": code,
+     *         "message": message
+     *     }
+     * </pre>
+     * <p>
+     * or with data:
+     * <pre>
+     *     {
+     *         "code": code,
+     *         "message": message,
+     *         "data": data
+     *     }
+     * </pre>
+     */
+    protected static class ResultParams {
+        private Integer code;
+        private String message;
+        private String data;
+
+        /**
+         * Sets the status code.
+         *
+         * @param code The status code.
+         * @return this
+         */
+        public ResultParams setCode(Integer code) {
+            this.code = code;
+            return this;
+        }
+
+        /**
+         * Sets the status message
+         *
+         * @param message The status message
+         * @return this
+         */
+        public ResultParams setMessage(String message) {
+            this.message = message;
+            return this;
+        }
+
+        /**
+         * Sets the data as String
+         *
+         * @param data The data to set
+         * @return this
+         */
+        public ResultParams setData(String data) {
+            this.data = data;
+            return this;
+        }
+
+        /**
+         * Sets the data string from a map.
+         *
+         * @param result The data to set
+         * @return this
+         * @throws JsonProcessingException If the map cannot be transformed to a String.
+         */
+        public ResultParams setData(Map<String, Object> result) throws JsonProcessingException {
+            this.data = JsonUtil.DEFAULT.toString(result);
+            return this;
+        }
+
+        /**
+         * Get the code.
+         *
+         * @return The code or 200 when code == null and data != null or 204 when both are null.
+         */
+        public Integer getCode() {
+            return (code != null ? code : (data != null ? 200 : 204));
+        }
+
+        /**
+         * Get the message.
+         *
+         * @return The message or a standard message when message == null.
+         */
+        public String getMessage() {
+            return (message != null ? message : "Action successful" + (data == null ? " (no data)" : ""));
+        }
+
+        /**
+         * Get data
+         *
+         * @return The data. Can be null.
+         */
+        public String getData() {
+            return data;
+        }
+
+        /**
+         * Transform message to message string. Skip {@link #data} if it is null.
+         *
+         * @return The string representation of this message.
+         */
+        public String toResultPayload() {
+            try {
+                return JsonUtil.SKIP_NULL.toString(this);
+            } catch (JsonProcessingException e) {
+                // should not happen.
+                return "";
+            }
+        }
+    }
+
+    // #############################################################################################
     // ## Main part ##
-    // ###############################################################################################
+    // #############################################################################################
 
     /**
      * Stores submitAction messages
@@ -248,11 +367,11 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
     protected ActionWebSocket(Conf<?> builder) {
         super(builder);
 
-        RequiredFieldChecker.notNull(builder.getActionWebSocketListener(), "actionWebSocketListener");
-
         this.internalListener = new InternalListener(
                 name + "-listener",
-                new InternalActionListener(builder.getActionWebSocketListener())
+                new InternalActionListener(
+                        notNull(builder.getActionWebSocketListener(), "actionWebSocketListener")
+                )
         );
 
         this.resultRetries = builder.resultRetries;
@@ -276,37 +395,41 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
     }
 
     /**
-     * @param id      Id of the action message conversation.
-     * @param result  Result string with detailed payload data.
-     * @param code    Result code.
-     * @param message Result message.
+     * Send an {@link ActionHandlerResult} using the provided id and a ResultParams structure.
+     *
+     * @param id           The id of the action message conversation.
+     * @param resultParams Standard result structure for the result.
      * @throws HiroException        On protocol errors
      * @throws IOException          On IO or JSON parsing errors.
      * @throws InterruptedException When a sleep gets interrupted.
      */
-    protected void sendActionResult(String id, String result, Integer code, String message) throws HiroException, IOException, InterruptedException {
-        ActionHandlerResult actionHandlerResult;
+    protected void sendActionResult(String id, ResultParams resultParams) throws HiroException, IOException, InterruptedException {
+        sendActionResult(id, resultParams.toResultPayload());
+    }
+
+    /**
+     * Send an {@link ActionHandlerResult} using the provided id and result string.
+     *
+     * @param id     The id of the action message conversation.
+     * @param result The result string for the {@link ActionHandlerResult}.
+     * @throws HiroException        On protocol errors
+     * @throws IOException          On IO or JSON parsing errors.
+     * @throws InterruptedException When a sleep gets interrupted.
+     */
+    protected void sendActionResult(String id, String result) throws HiroException, IOException, InterruptedException {
         ActionHandlerSubmit actionHandlerSubmit = submitActionStore.get(id);
+        if (actionHandlerSubmit == null) {
+            log.info("Handling \"{}\" (id: {}): Submit not stored - maybe it has expired?",
+                    ActionMessageType.SEND_ACTION_RESULT,
+                    id);
+            return;
+        }
+
+        ActionHandlerResult actionHandlerResult;
         try {
             try {
-                if (actionHandlerSubmit == null) {
-                    log.info("Handling \"{}\" (id: {}): Submit not stored - maybe it has expired?",
-                            ActionMessageType.SEND_ACTION_RESULT,
-                            id);
-                    return;
-                }
 
-                Map<String, Object> resultParams = new HashMap<>();
-                if (result == null) {
-                    resultParams.put("message", (message != null ? message : "Action successful (no data)"));
-                    resultParams.put("code", (code != null ? code : 204));
-                } else {
-                    resultParams.put("message", (message != null ? message : "Action successful"));
-                    resultParams.put("code", (code != null ? code : 200));
-                    resultParams.put("data", result);
-                }
-
-                actionHandlerResult = new ActionHandlerResult(id, JsonTools.DEFAULT.toString(resultParams));
+                actionHandlerResult = new ActionHandlerResult(id, result);
 
                 actionResultStore.add(actionHandlerSubmit.expiresAt(), actionHandlerResult.getId(), actionHandlerResult);
             } catch (StoreItemExpiredException e) {

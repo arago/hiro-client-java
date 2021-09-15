@@ -4,7 +4,7 @@ import co.arago.hiro.client.Config;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,7 +28,7 @@ class AuthAPIHandlerTest {
     @BeforeAll
     static void init() throws IOException {
         try {
-            Config config = JsonTools.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
 
             handler = PasswordAuthTokenAPIHandler.newBuilder()
                     .setApiUrl(config.api_url)
@@ -56,7 +56,7 @@ class AuthAPIHandlerTest {
             return;
 
         log.info(
-                JsonTools.DEFAULT.toString(
+                JsonUtil.DEFAULT.toString(
                         authAPI.getMeAccount()
                                 .setProfile(true)
                                 .execute()
@@ -96,7 +96,7 @@ class AuthAPIHandlerTest {
             return;
 
         log.info(
-                JsonTools.DEFAULT.toString(
+                JsonUtil.DEFAULT.toString(
                         authAPI.getMeProfile()
                                 .execute()
                 )
@@ -109,7 +109,7 @@ class AuthAPIHandlerTest {
             return;
 
         log.info(
-                JsonTools.DEFAULT.toString(
+                JsonUtil.DEFAULT.toString(
                         authAPI.getMeRoles()
                                 .execute().getMap().get("items")
                 )
@@ -122,7 +122,7 @@ class AuthAPIHandlerTest {
             return;
 
         log.info(
-                JsonTools.DEFAULT.toString(
+                JsonUtil.DEFAULT.toString(
                         authAPI.getMeTeams()
                                 .setIncludeVirtual(true)
                                 .execute().getItems()

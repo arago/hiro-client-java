@@ -1,7 +1,7 @@
 package co.arago.hiro.client.model;
 
 import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -51,7 +51,7 @@ public class VersionResponse extends HiroMessage {
             return;
 
         if (value instanceof Map) {
-            versionEntryMap.put(key, JsonTools.DEFAULT.toObject(value, VersionEntry.class));
+            versionEntryMap.put(key, JsonUtil.DEFAULT.toObject(value, VersionEntry.class));
         } else {
             super.setField(key, value);
         }

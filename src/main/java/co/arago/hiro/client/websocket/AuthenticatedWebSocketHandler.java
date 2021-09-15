@@ -5,8 +5,8 @@ import co.arago.hiro.client.exceptions.*;
 import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.VersionResponse;
-import co.arago.hiro.client.util.RequiredFieldChecker;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
+import co.arago.util.validation.RequiredFieldChecks;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -21,17 +21,14 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Handles websockets. Tries to renew any aborted connection until the websocket gets closed from this side.
  */
-public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
+public abstract class AuthenticatedWebSocketHandler implements AutoCloseable, RequiredFieldChecks {
 
     final static Logger log = LoggerFactory.getLogger(AuthenticatedWebSocketHandler.class);
 
@@ -276,6 +273,11 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
         }
 
         /**
+         * @see WebSocket.Listener
+         */
+        private CompletableFuture<?> accumulatedMessage = new CompletableFuture<>();
+
+        /**
          * Collects a text message from the websocket until 'last' is true. Then checks for an error message. If the
          * error is 401 and the status is {@link Status#RUNNING}, tries to refresh the token.
          * When the first non-error message comes it, sets the status from {@link Status#RUNNING_PRELIMINARY} to
@@ -284,18 +286,19 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
          * @param webSocket The webSocket using this HiroWebSocketListener.
          * @param data      Message block
          * @param last      True if this is the last message block of a message
-         * @return null.
+         * @return CompletionStage. See documentation at {@link WebSocket.Listener}.
          */
         @Override
         public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
             stringBuffer.append(data);
+            webSocket.request(1);
 
+            CompletableFuture<?> currentFutureRef = accumulatedMessage;
             if (last) {
                 String message = stringBuffer.toString();
-                stringBuffer.setLength(0);
 
                 try {
-                    HiroMessage hiroMessage = JsonTools.DEFAULT.toObject(message, HiroMessage.class);
+                    HiroMessage hiroMessage = JsonUtil.DEFAULT.toObject(message, HiroMessage.class);
 
                     HiroError hiroError = hiroMessage.getError();
                     if (hiroError != null) {
@@ -333,10 +336,16 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
                     log.warn("Ignoring unknown websocket message: {}", message, e);
                 } catch (HiroException | IOException | InterruptedException e) {
                     onError(webSocket, e);
+                } finally {
+                    // Reset buffer and complete future when message has been fully received.
+                    stringBuffer.setLength(0);
+
+                    currentFutureRef.complete(null);
+                    accumulatedMessage = new CompletableFuture<>();
                 }
             }
 
-            return WebSocket.Listener.super.onText(webSocket, data, last);
+            return currentFutureRef;
         }
 
         /**
@@ -462,7 +471,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
         this.endpoint = builder.getEndpoint();
         this.protocol = builder.getProtocol();
         this.maxRetries = builder.getMaxRetries();
-        this.tokenAPIHandler = builder.getTokenApiHandler();
+        this.tokenAPIHandler = notNull(builder.getTokenApiHandler(), "tokenApiHandler");
 
         this.query.putAll(builder.query);
         this.headers.putAll(builder.headers);
@@ -471,9 +480,8 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
 
         this.webSocketRequestTimeout = builder.getWebSocketMessageTimeout();
 
-        RequiredFieldChecker.notNull(this.tokenAPIHandler, "tokenApiHandler");
         if (StringUtils.isBlank(this.apiName) && (StringUtils.isAnyBlank(this.endpoint, this.protocol)))
-            RequiredFieldChecker.anyError("Either 'apiName' or 'endpoint' and 'protocol' have to be set.");
+            anyError("Either 'apiName' or 'endpoint' and 'protocol' have to be set.");
 
     }
 

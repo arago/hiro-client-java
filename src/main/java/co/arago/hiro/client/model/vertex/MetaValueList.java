@@ -2,7 +2,7 @@ package co.arago.hiro.client.model.vertex;
 
 import co.arago.hiro.client.model.AbstractJsonMap;
 import co.arago.hiro.client.model.JsonMessage;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -48,13 +48,13 @@ public class MetaValueList extends ArrayList<MetaValueList.MetaValueField> imple
         }
 
         public static MetaValueField create(Object object) {
-            return JsonTools.DEFAULT.toObject(object, MetaValueField.class);
+            return JsonUtil.DEFAULT.toObject(object, MetaValueField.class);
         }
 
     }
 
     public static MetaValueList create(Object object) {
-        return JsonTools.DEFAULT.toObject(object, MetaValueList.class);
+        return JsonUtil.DEFAULT.toObject(object, MetaValueList.class);
     }
 
     public String createSingleValue() {

@@ -1,8 +1,6 @@
 package co.arago.hiro.client.rest;
 
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
-import co.arago.hiro.client.util.RequiredFieldChecker;
-import org.apache.commons.lang3.StringUtils;
 
 public class GraphAPI extends AuthenticatedAPIHandler {
 
@@ -13,7 +11,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
     public static abstract class Conf<T extends Conf<T>> extends AuthenticatedAPIHandler.Conf<T> {
     }
 
-    public static final class Builder extends Conf<Builder> {
+    public static final class Builder extends Conf<Builder>  {
 
         private Builder(String apiName, AbstractTokenAPIHandler tokenAPIHandler) {
             setApiName(apiName);
@@ -26,9 +24,6 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         }
 
         public GraphAPI build() {
-            RequiredFieldChecker.notNull(getTokenApiHandler(), "tokenApiHandler");
-            if (StringUtils.isBlank(getApiName()) && StringUtils.isBlank(getEndpoint()))
-                RequiredFieldChecker.anyError("Either 'apiName' or 'endpoint' have to be set.");
             return new GraphAPI(this);
         }
     }

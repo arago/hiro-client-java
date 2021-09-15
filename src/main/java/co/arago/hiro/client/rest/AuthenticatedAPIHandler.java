@@ -6,9 +6,9 @@ import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.util.HttpLogger;
-import co.arago.hiro.client.util.RequiredFieldChecker;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
-import co.arago.util.json.JsonTools;
+import co.arago.util.json.JsonUtil;
+import co.arago.util.validation.RequiredFieldChecks;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -188,7 +188,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @throws JsonProcessingException When the map cannot be transformed to a Json String.
          */
         public T setJsonFromMap(Map<String, ?> map) throws JsonProcessingException {
-            this.body = JsonTools.DEFAULT.toString(map);
+            this.body = JsonUtil.DEFAULT.toString(map);
             return self();
         }
     }
@@ -222,7 +222,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param <T> The Builder type
      * @param <R> The type of the result expected from {@link #execute()}
      */
-    public static abstract class SendBinaryAPIRequestConf<T extends SendBinaryAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> {
+    public static abstract class SendBinaryAPIRequestConf<T extends SendBinaryAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> implements RequiredFieldChecks {
         protected StreamContainer streamContainer;
 
         /**
@@ -231,8 +231,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @param streamContainer The existing {@link StreamContainer}. Must not be null.
          */
         public SendBinaryAPIRequestConf(StreamContainer streamContainer) {
-            RequiredFieldChecker.notNull(streamContainer, "streamContainer");
-            this.streamContainer = streamContainer;
+            this.streamContainer = notNull(streamContainer, "streamContainer");
         }
 
         /**
@@ -241,8 +240,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @param inputStream The inputStream for the request body. Must not be null.
          */
         public SendBinaryAPIRequestConf(InputStream inputStream) {
-            RequiredFieldChecker.notNull(inputStream, "inputStream");
-            this.streamContainer = new StreamContainer(inputStream, null, null, null);
+            this.streamContainer = new StreamContainer(notNull(inputStream, "inputStream"), null, null, null);
         }
 
         public T setCharset(Charset charset) {
@@ -312,11 +310,10 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         super(makeHandlerConf(builder, builder.getTokenApiHandler()));
         this.apiName = builder.getApiName();
         this.endpoint = builder.getEndpoint();
-        this.tokenAPIHandler = builder.getTokenApiHandler();
+        this.tokenAPIHandler = notNull(builder.getTokenApiHandler(), "tokenApiHandler");
 
-        RequiredFieldChecker.notNull(this.tokenAPIHandler, "tokenApiHandler");
         if (StringUtils.isBlank(this.apiName) && StringUtils.isBlank(this.endpoint))
-            RequiredFieldChecker.anyError("Either 'apiName' or 'endpoint' have to be set.");
+            anyError("Either 'apiName' or 'endpoint' have to be set.");
     }
 
     /**
