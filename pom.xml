@@ -131,12 +131,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>co.arago</groupId>
-            <artifactId>java-project</artifactId>
-            <version>${arago-java-project-version}</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
             <groupId>co.arago.util</groupId>
             <artifactId>json</artifactId>
             <version>${arago-java-project-version}</version>

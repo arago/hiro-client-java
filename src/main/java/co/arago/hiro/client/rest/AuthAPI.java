@@ -96,15 +96,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * get account information about current token
-         * <p>
-         * API GET /api/auth/[version]/me/account
-         *
          * @return A {@link HiroVertexResponse} with the result data.
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
+        @Override
         public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexResponse.class,
@@ -116,7 +113,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
     }
 
     /**
+     * get account information about current token
+     * <p>
+     * API GET /api/auth/[version]/me/account
+     *
      * @return New instance of the request.
+     * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity">API Documentation</a>
      */
     public GetMeAccount getMeAccount() {
         return new GetMeAccount();
@@ -142,16 +144,13 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * get avatar of current token's account
-         * <p>
-         * API GET /api/auth/[version]/me/avatar
-         *
          * @return A {@link HttpResponseParser} containing the InputStream of the image, the mediaType and the size
          * (if available).
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
+        @Override
         public HttpResponseParser execute() throws HiroException, IOException, InterruptedException {
             return getBinary(
                     getUri("me/avatar", query, fragment),
@@ -162,7 +161,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
     }
 
     /**
+     * get avatar of current token's account
+     * <p>
+     * API GET /api/auth/[version]/me/avatar
+     *
      * @return New instance of the request.
+     * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_avatar">API Documentation</a>
      */
     public GetMeAvatar getMeAvatar() {
         return new GetMeAvatar();
@@ -193,16 +197,13 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * set avatar of current token's account
-         * <p>
-         * API PUT /api/auth/[version]/me/avatar
-         *
          * @return A String with the size of the uploaded avatar.
          * @throws HiroException            When the call returns a http status error.
          * @throws IOException              When the call got an IO error.
          * @throws InterruptedException     When the call gets interrupted.
          * @throws IllegalArgumentException When the Content-Type is missing.
          */
+        @Override
         public String execute() throws HiroException, IOException, InterruptedException {
             notBlank(streamContainer.getContentType(), "contentType");
             return executeBinary(
@@ -216,16 +217,26 @@ public class AuthAPI extends AuthenticatedAPIHandler {
     }
 
     /**
+     * set avatar of current token's account
+     * <p>
+     * API PUT /api/auth/[version]/me/avatar
+     *
      * @param streamContainer The existing {@link StreamContainer}. Must not be null.
      * @return New instance of the request.
+     * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/put_me_avatar">API Documentation</a>
      */
     public PutMeAvatar putMeAvatar(StreamContainer streamContainer) {
         return new PutMeAvatar(streamContainer);
     }
 
     /**
+     * set avatar of current token's account
+     * <p>
+     * API PUT /api/auth/[version]/me/avatar
+     *
      * @param inputStream The inputStream for the request body. Must not be null.
      * @return New instance of the request.
+     * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/put_me_avatar">API Documentation</a>
      */
     public PutMeAvatar putMeAvatar(InputStream inputStream) {
         return new PutMeAvatar(inputStream);
@@ -263,15 +274,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * change password of current token's account
-         * <p>
-         * API PUT /api/auth/[version]/me/password
-         *
          * @return A {@link HiroVertexResponse} with the result data.
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
+        @Override
         public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
             return put(
                     HiroVertexResponse.class,
@@ -284,7 +292,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
     }
 
     /**
+     * change password of current token's account
+     * <p>
+     * API PUT /api/auth/[version]/me/password
+     *
      * @return New instance of the request.
+     * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/put_me_password">API Documentation</a>
      */
     public PutMePassword putMePassword() {
         return new PutMePassword();
@@ -310,15 +323,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * get profile of current token's account
-         * <p>
-         * API GET /api/auth/[version]/me/profile
-         *
          * @return A {@link HiroVertexResponse} with the result data.
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
+        @Override
         public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexResponse.class,
@@ -330,7 +340,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
     }
 
     /**
+     * get profile of current token's account
+     * <p>
+     * API GET /api/auth/[version]/me/profile
+     *
      * @return New instance of the request.
+     * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_profile">API Documentation</a>
      */
     public GetMeProfile getMeProfile() {
         return new GetMeProfile();
@@ -356,15 +371,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * change profile of current token's account
-         * <p>
-         * API POST /api/auth/[version]/me/profile
-         *
          * @return A {@link HiroVertexResponse} with the result data.
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
+        @Override
         public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
             return post(
                     HiroVertexResponse.class,
@@ -377,7 +389,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
     }
 
     /**
+     * change profile of current token's account
+     * <p>
+     * API POST /api/auth/[version]/me/profile
+     *
      * @return New instance of the request.
+     * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/post_me_profile">API Documentation</a>
      */
     public PostMeProfile postMeProfile() {
         return new PostMeProfile();
@@ -403,15 +420,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * get roles connected to of current token teams
-         * <p>
-         * API GET /api/auth/[version]/me/roles
-         *
          * @return A {@link HiroMessage} with the result data.
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
+        @Override
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroMessage.class,
@@ -423,7 +437,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
     }
 
     /**
+     * get roles connected to of current token teams
+     * <p>
+     * API GET /api/auth/[version]/me/roles
+     *
      * @return New instance of the request.
+     * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_roles">API Documentation</a>
      */
     public GetMeRoles getMeRoles() {
         return new GetMeRoles();
@@ -459,15 +478,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * gets the teams connected to current token
-         * <p>
-         * API GET /api/auth/[version]/me/teams
-         *
          * @return A {@link HiroVertexListResponse} with the result data.
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
+        @Override
         public HiroVertexListResponse execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexListResponse.class,
@@ -479,7 +495,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
     }
 
     /**
+     * gets the teams connected to current token
+     * <p>
+     * API GET /api/auth/[version]/me/teams
+     *
      * @return New instance of the request.
+     * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_teams">API Documentation</a>
      */
     public GetMeTeams getMeTeams() {
         return new GetMeTeams();

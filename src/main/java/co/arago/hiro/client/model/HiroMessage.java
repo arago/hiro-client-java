@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 
 /**
- * This contains a LinkedHashMap&lt;String, Object&gt; {@link #fieldsMap} (from {@link AbstractJsonMap} for the generic
+ * This contains a LinkedHashMap&lt;String, Object&gt; {@link #fieldsMap} (from {@link JacksonJsonMap} for the generic
  * incoming data.
  * <p>
  * This class is meant to parse HTTP responses and WebSocket messages received from HIRO.
@@ -16,7 +16,7 @@ import org.apache.commons.lang3.StringUtils;
  * }
  * </pre>
  */
-public class HiroMessage extends AbstractJsonMap {
+public class HiroMessage extends JacksonJsonMap {
 
     protected HiroError hiroError;
 

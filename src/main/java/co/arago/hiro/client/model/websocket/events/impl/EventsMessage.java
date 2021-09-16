@@ -1,6 +1,6 @@
 package co.arago.hiro.client.model.websocket.events.impl;
 
-import co.arago.hiro.client.model.AbstractJsonMap;
+import co.arago.hiro.client.model.JacksonJsonMap;
 import co.arago.hiro.client.model.vertex.HiroVertexResponse;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -24,7 +24,7 @@ import org.apache.commons.lang3.StringUtils;
  * }
  * </pre>
  */
-public class EventsMessage extends AbstractJsonMap {
+public class EventsMessage extends JacksonJsonMap {
     public final String id;
     public final Long timestamp;
     public final Long nanotime;

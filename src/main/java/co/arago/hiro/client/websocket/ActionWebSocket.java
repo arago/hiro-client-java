@@ -387,7 +387,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
      * @param actionWebSocketListener The listener for this websocket.
      * @return The {@link ActionWebSocket.Builder} for {@link ActionWebSocket}.
      */
-    public static ActionWebSocket.Builder newBuilder(
+    public static Builder newBuilder(
             AbstractTokenAPIHandler tokenAPIHandler,
             ActionWebSocketListener actionWebSocketListener
     ) {

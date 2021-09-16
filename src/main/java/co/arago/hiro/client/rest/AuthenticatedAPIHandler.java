@@ -5,6 +5,7 @@ import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
+import co.arago.hiro.client.model.JsonMessage;
 import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import co.arago.util.json.JsonUtil;
@@ -19,11 +20,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * This class is the basis of all authenticated API handlers that make use of the different sections of the HIRO API.
@@ -130,6 +136,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      */
     public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> {
 
+        protected List<String> path = new ArrayList<>();
         protected Map<String, String> query = new HashMap<>();
         protected Map<String, String> headers = new HashMap<>();
         protected String fragment;
@@ -137,16 +144,37 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         protected Long httpRequestTimeout;
         protected Integer maxRetries;
 
+        /**
+         * @param path Path fragments to add to the path of the URL.
+         * @return {@link #self()}
+         */
+        public T appendToPath(String path) {
+            this.path.add(path);
+            return self();
+        }
+
+        /**
+         * @param query Set query parameters.
+         * @return {@link #self()}
+         */
         public T setQuery(Map<String, String> query) {
             this.query = query;
             return self();
         }
 
+        /**
+         * @param headers Set headers.
+         * @return {@link #self()}
+         */
         public T setHeaders(Map<String, String> headers) {
             this.headers = headers;
             return self();
         }
 
+        /**
+         * @param fragment Set URL fragment (http://...#[fragment])
+         * @return {@link #self()}
+         */
         public T setFragment(String fragment) {
             this.fragment = fragment;
             return self();
@@ -185,10 +213,37 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          *
          * @param map The map to convert.
          * @return {@link #self()}.
-         * @throws JsonProcessingException When the map cannot be transformed to a Json String.
+         * @throws IllegalArgumentException When the map cannot be transformed to a Json String.
          */
-        public T setJsonFromMap(Map<String, ?> map) throws JsonProcessingException {
-            this.body = JsonUtil.DEFAULT.toString(map);
+        public T setBodyFromMap(Map<String, ?> map) {
+            try {
+                return setBody(JsonUtil.DEFAULT.toString(map));
+            } catch (JsonProcessingException e) {
+                throw new IllegalArgumentException("Cannot construct body.", e);
+            }
+        }
+
+        /**
+         * Convert the jsonMessage into a JSON body String.
+         *
+         * @param jsonMessage The jsonMessage to convert.
+         * @return {@link #self()}.
+         * @throws IllegalArgumentException When the jsonMessage cannot be transformed to a Json String.
+         */
+        public T setBodyFromMessage(JsonMessage jsonMessage) {
+            try {
+                return setBody(jsonMessage.toJsonString());
+            } catch (JsonProcessingException e) {
+                throw new IllegalArgumentException("Cannot construct body.", e);
+            }
+        }
+
+        /**
+         * @param body the body to set.
+         * @return {@link #self()}
+         */
+        public T setBody(String body) {
+            this.body = body;
             return self();
         }
     }
@@ -369,6 +424,18 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         URI pathUri = apiUri.resolve(RegExUtils.removePattern(path, "^/+"));
 
         return addQueryAndFragment(pathUri, query, fragment);
+    }
+
+    /**
+     * Create a valid path to append to a URI path.
+     *
+     * @param path List of path parts.
+     * @return The encoded path. The path has a leading '/'.
+     */
+    public String getRequestPath(List<String> path) {
+        return "/" + path.stream()
+                .map(part -> URLEncoder.encode(part, StandardCharsets.UTF_8))
+                .collect(Collectors.joining("/"));
     }
 
     /**

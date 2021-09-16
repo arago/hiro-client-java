@@ -14,7 +14,7 @@ import java.util.Map;
  * The keys need to be strings. Derived children will specify specific fields for JSON data, while all remaining
  * data will be collected in this map.
  */
-public abstract class AbstractJsonMap implements JsonMessage {
+public abstract class JacksonJsonMap implements JsonMessage {
     /**
      * All unknown keys - if any - of the JSON will be collected here
      */

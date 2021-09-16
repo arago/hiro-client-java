@@ -96,7 +96,7 @@ public class HttpResponseParser extends ContentHeaderHandler {
                 }
 
                 @Override
-                public void close() throws IOException {
+                public void close() {
                     String message = (StringUtils.startsWithAny(mediaType, TEXT_CONTENT)) ?
                             new String(buffer.array(), (charset == null ? StandardCharsets.UTF_8 : charset)) :
                             "(hex) " + HexUtil.bytesToHex(buffer.array());

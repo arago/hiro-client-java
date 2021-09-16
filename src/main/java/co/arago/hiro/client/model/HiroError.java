@@ -27,9 +27,9 @@ import java.util.Map;
  * }
  * </pre>
  */
-public class HiroError extends AbstractJsonMap {
+public class HiroError extends JacksonJsonMap {
 
-    public static class HiroErrorEntry extends AbstractJsonMap {
+    public static class HiroErrorEntry extends JacksonJsonMap {
         public String message;
         public Integer code;
 
