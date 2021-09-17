@@ -13,5 +13,5 @@ package co.arago.hiro.client.model;
  * }
  * </pre>
  */
-public class DefaultHiroItemListResponse extends HiroItemListResponse<JacksonJsonMap> {
+public class DefaultHiroItemListMessage extends HiroItemListMessage<HiroJsonMap> {
 }

@@ -2,11 +2,11 @@ package co.arago.hiro.client.rest;
 
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.model.DefaultHiroItemListResponse;
+import co.arago.hiro.client.model.DefaultHiroItemListMessage;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.timeseries.HiroTimeseriesListMessage;
-import co.arago.hiro.client.model.vertex.HiroVertexListResponse;
-import co.arago.hiro.client.model.vertex.HiroVertexResponse;
+import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
+import co.arago.hiro.client.model.vertex.HiroVertexMessage;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 
@@ -136,7 +136,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_vertices">API Documentation</a>
      * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/6.2/query-dsl-query-string-query.html#query-string-syntax">ElasticSearch query syntax</a>
      */
-    public class QueryVertices extends QueryBodyHandler<QueryVertices, HiroVertexListResponse> {
+    public class QueryVertices extends QueryBodyHandler<QueryVertices, HiroVertexListMessage> {
 
         /**
          * @param query The query string, e.g. ogit\/_type: ogit\/Question.
@@ -191,14 +191,14 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return {@link HiroVertexListResponse} The Json Response
+         * @return {@link HiroVertexListMessage} The Json Response
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexListResponse execute() throws HiroException, IOException, InterruptedException {
-            return post(HiroVertexListResponse.class,
+        public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
+            return post(HiroVertexListMessage.class,
                     getUri("query/vertices", query, fragment),
                     createBody(),
                     headers,
@@ -233,7 +233,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_gremlin">API Documentation</a>
      * @see <a href="https://github.com/spmallette/GremlinDocs">Gremlin query syntax</a>
      */
-    public class QueryGremlin extends QueryBodyHandler<QueryGremlin, HiroVertexListResponse> {
+    public class QueryGremlin extends QueryBodyHandler<QueryGremlin, HiroVertexListMessage> {
 
         /**
          * @param ogitId The root ogitId to start the query from.
@@ -250,14 +250,14 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return {@link HiroVertexListResponse} The Json Response
+         * @return {@link HiroVertexListMessage} The Json Response
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexListResponse execute() throws HiroException, IOException, InterruptedException {
-            return post(HiroVertexListResponse.class,
+        public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
+            return post(HiroVertexListMessage.class,
                     getUri("query/gremlin", query, fragment),
                     createBody(),
                     headers,
@@ -291,7 +291,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_ids">API Documentation</a>
      */
-    public class QueryByIds extends QueryBodyHandler<QueryByIds, HiroVertexListResponse> {
+    public class QueryByIds extends QueryBodyHandler<QueryByIds, HiroVertexListMessage> {
 
         /**
          * @param ids The comma separated list of ids, e.g. id1,id2,id3
@@ -306,14 +306,14 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return {@link HiroVertexListResponse} The Json Response
+         * @return {@link HiroVertexListMessage} The Json Response
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexListResponse execute() throws HiroException, IOException, InterruptedException {
-            return post(HiroVertexListResponse.class,
+        public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
+            return post(HiroVertexListMessage.class,
                     getUri("query/ids", query, fragment),
                     createBody(),
                     headers,
@@ -345,7 +345,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_xid">API Documentation</a>
      */
-    public class QueryByXid extends QueryBodyHandler<QueryByXid, HiroVertexListResponse> {
+    public class QueryByXid extends QueryBodyHandler<QueryByXid, HiroVertexListMessage> {
 
         /**
          * @param xid The xid
@@ -360,14 +360,14 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return {@link HiroVertexListResponse} The Json Response
+         * @return {@link HiroVertexListMessage} The Json Response
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexListResponse execute() throws HiroException, IOException, InterruptedException {
-            return post(HiroVertexListResponse.class,
+        public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
+            return post(HiroVertexListMessage.class,
                     getUri("query/xid", query, fragment),
                     createBody(),
                     headers,
@@ -399,7 +399,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_values">API Documentation</a>
      */
-    public class QueryTimeseries extends QueryBodyHandler<QueryTimeseries, HiroVertexListResponse> {
+    public class QueryTimeseries extends QueryBodyHandler<QueryTimeseries, HiroVertexListMessage> {
 
         /**
          * @param query The actual query.
@@ -460,14 +460,14 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return {@link HiroVertexListResponse} The Json Response
+         * @return {@link HiroVertexListMessage} The Json Response
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexListResponse execute() throws HiroException, IOException, InterruptedException {
-            return post(HiroVertexListResponse.class,
+        public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
+            return post(HiroVertexListMessage.class,
                     getUri("query/values", query, fragment),
                     createBody(),
                     headers,
@@ -499,7 +499,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/get__id_">API Documentation</a>
      */
-    public class GetEntity extends APIRequestConf<GetEntity, HiroVertexResponse> {
+    public class GetEntity extends APIRequestConf<GetEntity, HiroVertexMessage> {
 
         /**
          * @param ogitId ogit/_id of the entity. This can be a vertex id or a composed edge id.
@@ -550,15 +550,15 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return {@link HiroVertexResponse} The Json Response
+         * @return {@link HiroVertexMessage} The Json Response
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
-            return get(HiroVertexResponse.class,
-                    getUri(getRequestPath(path), query, fragment),
+        public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
+            return get(HiroVertexMessage.class,
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries
@@ -603,13 +603,22 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/post__id_">API Documentation</a>
      */
-    public class UpdateEntity extends SendJsonAPIRequestConf<UpdateEntity, HiroVertexResponse> {
+    public class UpdateEntity extends SendJsonAPIRequestConf<UpdateEntity, HiroVertexMessage> {
 
         /**
          * @param ogitId ogit/_id of the vertex.
          */
         protected UpdateEntity(String ogitId) {
             appendToPath(notBlank(ogitId, "ogitId"));
+        }
+
+        /**
+         * @param attributes The complete entity data. Map 'attributes' needs to contain a key "ogit/_id" with a
+         *                   non-blank value.
+         */
+        protected UpdateEntity(Map<String, Object> attributes) {
+            appendToPath(notBlank((String) attributes.get("ogit/_id"), "ogit/_id in attributes"));
+            setBodyFromMap(attributes);
         }
 
         /**
@@ -637,15 +646,15 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return {@link HiroVertexResponse} The Json Response
+         * @return {@link HiroVertexMessage} The Json Response
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
-            return post(HiroVertexResponse.class,
-                    getUri(getRequestPath(path), query, fragment),
+        public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
+            return post(HiroVertexMessage.class,
+                    getUri(path, query, fragment),
                     notBlank(body, "body with entity (vertex) data"),
                     headers,
                     httpRequestTimeout,
@@ -667,6 +676,20 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         return new UpdateEntity(ogitId);
     }
 
+    /**
+     * update vertex entity by ogit/_id.
+     * <p>
+     * API POST /api/graph/[version]/{ogit/_id}
+     *
+     * @param attributes The complete entity data. Map 'attributes' needs to contain a key "ogit/_id" with a
+     *                   non-blank value.
+     * @return New instance of the request
+     * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/post__id_">API Documentation</a>
+     */
+    public UpdateEntity updateVertex(Map<String, Object> attributes) {
+        return new UpdateEntity(attributes);
+    }
+
     // ----------------------------------- DeleteEntity (vertex / edge) -----------------------------------
 
     /**
@@ -676,7 +699,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/delete__id_">API Documentation</a>
      */
-    public class DeleteEntity extends APIRequestConf<DeleteEntity, HiroVertexResponse> {
+    public class DeleteEntity extends APIRequestConf<DeleteEntity, HiroVertexMessage> {
 
         /**
          * @param ogitId ogit/_id of the vertex.
@@ -691,15 +714,15 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return {@link HiroVertexResponse} The Json Response
+         * @return {@link HiroVertexMessage} The Json Response
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
-            return delete(HiroVertexResponse.class,
-                    getUri(getRequestPath(path), query, fragment),
+        public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
+            return delete(HiroVertexMessage.class,
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries
@@ -746,7 +769,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/post_new__type_">API Documentation</a>
      */
-    public class CreateEntity extends SendJsonAPIRequestConf<CreateEntity, HiroVertexResponse> {
+    public class CreateEntity extends SendJsonAPIRequestConf<CreateEntity, HiroVertexMessage> {
 
         /**
          * @param ogitType ogit/_type of the vertex.
@@ -755,21 +778,31 @@ public class GraphAPI extends AuthenticatedAPIHandler {
             appendToPath(notBlank(ogitType, "ogitType"));
         }
 
+        /**
+         * @param attributes The complete entity data. Map 'attributes' needs to contain a key "ogit/_type" with a
+         *                   non-blank value.
+         */
+        protected CreateEntity(Map<String, Object> attributes) {
+            appendToPath(notBlank((String) attributes.get("ogit/_type"), "ogit/_type in attributes"));
+            setBodyFromMap(attributes);
+        }
+
         @Override
         protected CreateEntity self() {
             return this;
         }
 
         /**
-         * @return {@link HiroVertexResponse} The Json Response
+         * @return {@link HiroVertexMessage} The Json Response
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
-            return post(HiroVertexResponse.class,
-                    getUri("new" + getRequestPath(path), query, fragment),
+        public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
+            prependPath("new");
+            return post(HiroVertexMessage.class,
+                    getUri(path, query, fragment),
                     notBlank(body, "body with entity (vertex) data"),
                     headers,
                     httpRequestTimeout,
@@ -793,6 +826,22 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         return new CreateEntity(ogitType);
     }
 
+    /**
+     * create vertex entity using ogit/_type.
+     * <p>
+     * If defined in OGIT for entity type one may set in content ogit/isPermanent = true to make entity immutable
+     * <p>
+     * API POST /api/graph/[version]/new/{ogit/_type}
+     *
+     * @param attributes The complete entity data. Map 'attributes' needs to contain a key "ogit/_type" with a
+     *                   non-blank value.
+     * @return New instance of the request
+     * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/post_new__type_">API Documentation</a>
+     */
+    public CreateEntity createVertex(Map<String, Object> attributes) {
+        return new CreateEntity(attributes);
+    }
+
     // ----------------------------------- PostVerb -----------------------------------
 
     /**
@@ -802,7 +851,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Verb/post_connect__type_">API Documentation</a>
      */
-    public class PostVerb extends SendJsonAPIRequestConf<PostVerb, HiroVertexResponse> {
+    public class PostVerb extends SendJsonAPIRequestConf<PostVerb, HiroVertexMessage> {
 
         /**
          * @param fromNodeId Source vertex of the edge.
@@ -823,15 +872,16 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return {@link HiroVertexResponse} The Json Response
+         * @return {@link HiroVertexMessage} The Json Response
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
-            return post(HiroVertexResponse.class,
-                    getUri("connect" + getRequestPath(path), query, fragment),
+        public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
+            prependPath("connect");
+            return post(HiroVertexMessage.class,
+                    getUri(path, query, fragment),
                     notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
@@ -904,8 +954,9 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HttpResponseParser execute() throws HiroException, IOException, InterruptedException {
+            appendToPath("content");
             return getBinary(
-                    getUri(getRequestPath(path) + "/content", query, fragment),
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -968,8 +1019,9 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             notBlank(streamContainer.getContentType(), "contentType");
+            appendToPath("content");
             return postBinary(HiroMessage.class,
-                    getUri(getRequestPath(path) + "/content", query, fragment),
+                    getUri(path, query, fragment),
                     streamContainer,
                     headers,
                     httpRequestTimeout,
@@ -1014,7 +1066,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_History/get__id__history">API Documentation</a>
      */
-    public class GetHistory extends APIRequestConf<GetHistory, DefaultHiroItemListResponse> {
+    public class GetHistory extends APIRequestConf<GetHistory, DefaultHiroItemListMessage> {
 
         /**
          * @param ogitId ogit/_id of the vertex.
@@ -1115,14 +1167,15 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return A {@link DefaultHiroItemListResponse} with the Json result data.
+         * @return A {@link DefaultHiroItemListMessage} with the Json result data.
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
-        public DefaultHiroItemListResponse execute() throws HiroException, IOException, InterruptedException {
-            return get(DefaultHiroItemListResponse.class,
-                    getUri(getRequestPath(path) + "/history", query, fragment),
+        public DefaultHiroItemListMessage execute() throws HiroException, IOException, InterruptedException {
+            appendToPath("history");
+            return get(DefaultHiroItemListMessage.class,
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -1235,8 +1288,9 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HiroTimeseriesListMessage execute() throws HiroException, IOException, InterruptedException {
+            appendToPath("values");
             return get(HiroTimeseriesListMessage.class,
-                    getUri(getRequestPath(path) + "/values", query, fragment),
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -1297,8 +1351,10 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
+            appendToPath("values");
+            appendToPath("history");
             return get(HiroMessage.class,
-                    getUri(getRequestPath(path) + "/values/history", query, fragment),
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -1359,8 +1415,9 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         @Override
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
+            appendToPath("values");
             return post(HiroMessage.class,
-                    getUri(getRequestPath(path) + "/values", query, fragment),
+                    getUri(path, query, fragment),
                     notBlank(body, "body for timeseries data"),
                     headers,
                     httpRequestTimeout,

@@ -1,7 +1,7 @@
 package co.arago.hiro.client.model.websocket.events.impl;
 
-import co.arago.hiro.client.model.JacksonJsonMap;
-import co.arago.hiro.client.model.vertex.HiroVertexResponse;
+import co.arago.hiro.client.model.HiroJsonMap;
+import co.arago.hiro.client.model.vertex.HiroVertexMessage;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
@@ -24,13 +24,13 @@ import org.apache.commons.lang3.StringUtils;
  * }
  * </pre>
  */
-public class EventsMessage extends JacksonJsonMap {
+public class EventsMessage extends HiroJsonMap {
     public final String id;
     public final Long timestamp;
     public final Long nanotime;
-    public final HiroVertexResponse body;
+    public final HiroVertexMessage body;
     public final String type;
-    public final HiroVertexResponse metadata;
+    public final HiroVertexMessage metadata;
 
     @JsonCreator
     public EventsMessage(
@@ -38,8 +38,8 @@ public class EventsMessage extends JacksonJsonMap {
             @JsonProperty(value = "type", required = true) String type,
             @JsonProperty("timestamp") Long timestamp,
             @JsonProperty("nanotime") Long nanotime,
-            @JsonProperty("body") HiroVertexResponse body,
-            @JsonProperty("metadata") HiroVertexResponse metadata
+            @JsonProperty("body") HiroVertexMessage body,
+            @JsonProperty("metadata") HiroVertexMessage metadata
     ) {
         this.id = id;
         this.timestamp = timestamp;

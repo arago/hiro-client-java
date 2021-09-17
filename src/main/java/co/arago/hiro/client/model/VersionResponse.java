@@ -27,7 +27,7 @@ import java.util.Map;
  */
 public class VersionResponse extends HiroMessage {
 
-    public static class VersionEntry extends JacksonJsonMap {
+    public static class VersionEntry extends HiroJsonMap {
         public String endpoint;
         public String version;
         public String docs;

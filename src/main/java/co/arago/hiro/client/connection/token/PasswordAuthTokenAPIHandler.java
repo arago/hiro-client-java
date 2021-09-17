@@ -331,7 +331,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
      */
     public URI getUri(String path) throws IOException, InterruptedException, HiroException {
         if (apiUri == null)
-            apiUri = (endpoint != null ? buildURI(endpoint) : getApiUriOf(apiName));
+            apiUri = (endpoint != null ? buildApiURI(endpoint) : getApiUriOf(apiName));
 
         return apiUri.resolve(RegExUtils.removePattern(path, "^/+"));
     }

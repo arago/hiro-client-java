@@ -1,12 +1,12 @@
 package co.arago.hiro.client.model.timeseries;
 
-import co.arago.hiro.client.model.HiroItemListResponse;
+import co.arago.hiro.client.model.HiroItemListMessage;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.util.json.JsonUtil;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class HiroTimeseriesListMessage extends HiroItemListResponse<HiroTimeseriesListMessage.TimeseriesEntry> {
+public class HiroTimeseriesListMessage extends HiroItemListMessage<HiroTimeseriesListMessage.TimeseriesEntry> {
 
     public static class TimeseriesEntry extends HiroMessage {
         public String value;

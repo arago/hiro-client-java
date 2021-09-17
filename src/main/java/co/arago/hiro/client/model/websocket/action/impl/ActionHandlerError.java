@@ -1,6 +1,6 @@
 package co.arago.hiro.client.model.websocket.action.impl;
 
-import co.arago.hiro.client.model.JacksonJsonMap;
+import co.arago.hiro.client.model.HiroJsonMap;
 import co.arago.hiro.client.model.websocket.action.ActionHandlerCodeMessage;
 import co.arago.hiro.client.model.websocket.action.ActionMessageType;
 
@@ -13,7 +13,7 @@ import co.arago.hiro.client.model.websocket.action.ActionMessageType;
  *     }
  * </pre>
  */
-public class ActionHandlerError extends JacksonJsonMap implements ActionHandlerCodeMessage {
+public class ActionHandlerError extends HiroJsonMap implements ActionHandlerCodeMessage {
     public Integer code;
     public String message;
 

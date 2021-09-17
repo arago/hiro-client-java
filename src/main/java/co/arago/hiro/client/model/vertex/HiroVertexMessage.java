@@ -4,6 +4,7 @@ import co.arago.hiro.client.model.HiroMessage;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Contains data of a HIRO vertex. Handles string and metaInfo list entries of vertices.
@@ -29,7 +30,22 @@ import java.util.List;
  * and will be cast to the correct types when reading them with {@link #getAttributeAsString(String)} or
  * {@link #getAttributeAsMetaValue(String)}.
  */
-public class HiroVertexResponse extends HiroMessage {
+public class HiroVertexMessage extends HiroMessage {
+
+    /**
+     * Default constructor for Jackson
+     */
+    public HiroVertexMessage() {
+    }
+
+    /**
+     * Constructor
+     *
+     * @param initialData Initial data for the fieldsMap.
+     */
+    public HiroVertexMessage(Map<String, Object> initialData) {
+        super(initialData);
+    }
 
     /**
      * Jackson Setter that transforms incoming lists into MetaValueLists.

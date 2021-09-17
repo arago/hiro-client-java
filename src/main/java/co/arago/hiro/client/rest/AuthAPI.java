@@ -3,8 +3,8 @@ package co.arago.hiro.client.rest;
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.HiroMessage;
-import co.arago.hiro.client.model.vertex.HiroVertexListResponse;
-import co.arago.hiro.client.model.vertex.HiroVertexResponse;
+import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
+import co.arago.hiro.client.model.vertex.HiroVertexMessage;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import co.arago.util.json.JsonUtil;
@@ -76,7 +76,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity">API Documentation</a>
      */
-    public class GetMeAccount extends APIRequestConf<GetMeAccount, HiroVertexResponse> {
+    public class GetMeAccount extends APIRequestConf<GetMeAccount, HiroVertexMessage> {
 
         protected GetMeAccount() {
         }
@@ -96,15 +96,15 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return A {@link HiroVertexResponse} with the result data.
+         * @return A {@link HiroVertexMessage} with the result data.
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
+        public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
-                    HiroVertexResponse.class,
+                    HiroVertexMessage.class,
                     getUri("me/account", query, fragment),
                     headers,
                     httpRequestTimeout,
@@ -251,7 +251,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/put_me_password">API Documentation</a>
      */
-    public class PutMePassword extends SendJsonAPIRequestConf<PutMePassword, HiroVertexResponse> {
+    public class PutMePassword extends SendJsonAPIRequestConf<PutMePassword, HiroVertexMessage> {
 
         protected PutMePassword() {
         }
@@ -274,15 +274,15 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return A {@link HiroVertexResponse} with the result data.
+         * @return A {@link HiroVertexMessage} with the result data.
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
+        public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return put(
-                    HiroVertexResponse.class,
+                    HiroVertexMessage.class,
                     getUri("me/password", query, fragment),
                     notBlank(body, "body"),
                     headers,
@@ -312,7 +312,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_profile">API Documentation</a>
      */
-    public class GetMeProfile extends APIRequestConf<GetMeProfile, HiroVertexResponse> {
+    public class GetMeProfile extends APIRequestConf<GetMeProfile, HiroVertexMessage> {
 
         protected GetMeProfile() {
         }
@@ -323,15 +323,15 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return A {@link HiroVertexResponse} with the result data.
+         * @return A {@link HiroVertexMessage} with the result data.
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
+        public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
-                    HiroVertexResponse.class,
+                    HiroVertexMessage.class,
                     getUri("me/profile", query, fragment),
                     headers,
                     httpRequestTimeout,
@@ -360,7 +360,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/post_me_profile">API Documentation</a>
      */
-    public class PostMeProfile extends SendJsonAPIRequestConf<PostMeProfile, HiroVertexResponse> {
+    public class PostMeProfile extends SendJsonAPIRequestConf<PostMeProfile, HiroVertexMessage> {
 
         protected PostMeProfile() {
         }
@@ -371,15 +371,15 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return A {@link HiroVertexResponse} with the result data.
+         * @return A {@link HiroVertexMessage} with the result data.
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexResponse execute() throws HiroException, IOException, InterruptedException {
+        public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return post(
-                    HiroVertexResponse.class,
+                    HiroVertexMessage.class,
                     getUri("me/profile", query, fragment),
                     notBlank(body, "body"),
                     headers,
@@ -457,7 +457,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_teams">API Documentation</a>
      */
-    public class GetMeTeams extends APIRequestConf<GetMeTeams, HiroVertexListResponse> {
+    public class GetMeTeams extends APIRequestConf<GetMeTeams, HiroVertexListMessage> {
 
         protected GetMeTeams() {
         }
@@ -478,15 +478,15 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         /**
-         * @return A {@link HiroVertexListResponse} with the result data.
+         * @return A {@link HiroVertexListMessage} with the result data.
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
         @Override
-        public HiroVertexListResponse execute() throws HiroException, IOException, InterruptedException {
+        public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
-                    HiroVertexListResponse.class,
+                    HiroVertexListMessage.class,
                     getUri("me/teams", query, fragment),
                     headers,
                     httpRequestTimeout,

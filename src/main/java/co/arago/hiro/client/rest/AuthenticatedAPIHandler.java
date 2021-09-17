@@ -25,8 +25,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -136,7 +136,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      */
     public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> {
 
-        protected List<String> path = new ArrayList<>();
+        protected LinkedList<String> path = new LinkedList<>();
         protected Map<String, String> query = new HashMap<>();
         protected Map<String, String> headers = new HashMap<>();
         protected String fragment;
@@ -154,10 +154,19 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         }
 
         /**
+         * @param path Path fragments to add to the path of the URL.
+         * @return {@link #self()}
+         */
+        public T prependPath(String path) {
+            this.path.addFirst(path);
+            return self();
+        }
+
+        /**
          * @param query Set query parameters.
          * @return {@link #self()}
          */
-        public T setQuery(Map<String, String> query) {
+        public T setUrlQuery(Map<String, String> query) {
             this.query = query;
             return self();
         }
@@ -166,7 +175,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @param headers Set headers.
          * @return {@link #self()}
          */
-        public T setHeaders(Map<String, String> headers) {
+        public T setHttpHeaders(Map<String, String> headers) {
             this.headers = headers;
             return self();
         }
@@ -175,7 +184,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @param fragment Set URL fragment (http://...#[fragment])
          * @return {@link #self()}
          */
-        public T setFragment(String fragment) {
+        public T setUrlFragment(String fragment) {
             this.fragment = fragment;
             return self();
         }
@@ -331,7 +340,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @return {@link #self()}
          */
         @Override
-        public T setHeaders(Map<String, String> headers) {
+        public T setHttpHeaders(Map<String, String> headers) {
 
             if (headers != null) {
                 for (Map.Entry<String, String> entry : headers.entrySet()) {
@@ -342,7 +351,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
                 }
             }
 
-            return super.setHeaders(headers);
+            return super.setHttpHeaders(headers);
         }
 
     }
@@ -389,6 +398,11 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
             }
 
             @Override
+            public URI getWebSocketUri() {
+                return tokenAPIHandler.getWebSocketUri();
+            }
+
+            @Override
             public Long getHttpRequestTimeout() {
                 return builder.getHttpRequestTimeout() != null ? builder.getHttpRequestTimeout() : tokenAPIHandler.getHttpRequestTimeout();
             }
@@ -419,7 +433,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      */
     public URI getUri(String path, Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
         if (apiUri == null)
-            apiUri = (endpoint != null ? buildURI(endpoint) : tokenAPIHandler.getApiUriOf(apiName));
+            apiUri = (endpoint != null ? buildApiURI(endpoint) : tokenAPIHandler.getApiUriOf(apiName));
 
         URI pathUri = apiUri.resolve(RegExUtils.removePattern(path, "^/+"));
 
@@ -427,10 +441,27 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     }
 
     /**
+     * Construct my URI with query parameters and fragment.
+     * This method will query /api/version once to construct the URI unless {@link #endpoint} is set.
+     *
+     * @param pathPart The pathParts to append to the API path.
+     * @param query    Map of query parameters for this URI. Can be null for no query parameters.
+     * @param fragment The fragment to add to the URI.
+     * @return The URI with query parameters and fragment.
+     * @throws IOException          On a failed call to /api/version
+     * @throws InterruptedException Call got interrupted
+     * @throws HiroException        When calling /api/version responds with an error
+     */
+    public URI getUri(List<String> pathPart, Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
+        return getUri(getRequestPath(pathPart), query, fragment);
+    }
+
+
+    /**
      * Create a valid path to append to a URI path.
      *
      * @param path List of path parts.
-     * @return The encoded path. The path has a leading '/'.
+     * @return The encoded path with a leading '/'.
      */
     public String getRequestPath(List<String> path) {
         return "/" + path.stream()

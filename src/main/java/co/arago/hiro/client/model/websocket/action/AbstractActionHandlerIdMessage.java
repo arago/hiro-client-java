@@ -1,8 +1,8 @@
 package co.arago.hiro.client.model.websocket.action;
 
-import co.arago.hiro.client.model.JacksonJsonMap;
+import co.arago.hiro.client.model.HiroJsonMap;
 
-public abstract class AbstractActionHandlerIdMessage extends JacksonJsonMap implements ActionHandlerIdMessage {
+public abstract class AbstractActionHandlerIdMessage extends HiroJsonMap implements ActionHandlerIdMessage {
 
     private final String id;
 

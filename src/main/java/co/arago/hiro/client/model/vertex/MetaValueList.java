@@ -1,6 +1,6 @@
 package co.arago.hiro.client.model.vertex;
 
-import co.arago.hiro.client.model.JacksonJsonMap;
+import co.arago.hiro.client.model.HiroJsonMap;
 import co.arago.hiro.client.model.JsonMessage;
 import co.arago.util.json.JsonUtil;
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -27,7 +27,7 @@ public class MetaValueList extends ArrayList<MetaValueList.MetaValueField> imple
 
     private static final long serialVersionUID = 8233445177105381442L;
 
-    public static class MetaValueField extends JacksonJsonMap {
+    public static class MetaValueField extends HiroJsonMap {
         public String value;
         public Long created;
         public String key;

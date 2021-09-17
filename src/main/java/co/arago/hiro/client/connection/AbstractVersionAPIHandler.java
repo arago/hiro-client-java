@@ -47,7 +47,7 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
      */
     protected VersionResponse requestVersionMap() throws IOException, InterruptedException, HiroException {
         return get(VersionResponse.class,
-                buildURI("/api/version", null, null),
+                buildApiURI("/api/version"),
                 null,
                 httpRequestTimeout,
                 maxRetries);
@@ -79,7 +79,7 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
      * @throws InterruptedException When interrupted.
      */
     public URI getApiUriOf(String apiName) throws IOException, InterruptedException, HiroException {
-        return buildURI(getVersionMap().getVersionEntryOf(apiName).endpoint, null, null);
+        return buildApiURI(getVersionMap().getVersionEntryOf(apiName).endpoint);
     }
 
 }

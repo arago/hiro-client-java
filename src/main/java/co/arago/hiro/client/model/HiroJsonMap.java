@@ -14,16 +14,55 @@ import java.util.Map;
  * The keys need to be strings. Derived children will specify specific fields for JSON data, while all remaining
  * data will be collected in this map.
  */
-public abstract class JacksonJsonMap implements JsonMessage {
+public class HiroJsonMap implements JsonMessage {
     /**
      * All unknown keys - if any - of the JSON will be collected here
      */
     @JsonIgnore
     protected final Map<String, Object> fieldsMap = new LinkedHashMap<>();
 
+    /**
+     * Default constructor for Jackson
+     */
+    public HiroJsonMap() {
+    }
+
+    /**
+     * Constructor
+     *
+     * @param initialData Initial data for the fieldsMap. Data will be copied via {@link Map#putAll(Map)}
+     *                    into {@link #fieldsMap}.
+     */
+    public HiroJsonMap(Map<String, Object> initialData) {
+        addFields(initialData);
+    }
+
+    /**
+     * Set a single field in {@link #fieldsMap}. This is also the generic method for Jackson to set fields.
+     *
+     * @param key   Key of the field.
+     * @param value Value of the field.
+     */
     @JsonAnySetter
     public void setField(String key, Object value) {
         fieldsMap.put(key, value);
+    }
+
+    /**
+     * @param data {@link #fieldsMap} will be cleared and data will be copied via {@link Map#putAll(Map)} into it.
+     */
+    @JsonIgnore
+    public void setFields(Map<String, Object> data) {
+        fieldsMap.clear();
+        addFields(data);
+    }
+
+    /**
+     * @param data Data will be copied via {@link Map#putAll(Map)} into {@link #fieldsMap}.
+     */
+    @JsonIgnore
+    public void addFields(Map<String, Object> data) {
+        fieldsMap.putAll(data);
     }
 
     /**

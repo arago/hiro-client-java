@@ -3,8 +3,10 @@ package co.arago.hiro.client.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Map;
+
 /**
- * This contains a LinkedHashMap&lt;String, Object&gt; {@link #fieldsMap} (from {@link JacksonJsonMap} for the generic
+ * This contains a LinkedHashMap&lt;String, Object&gt; {@link #fieldsMap} (from {@link HiroJsonMap} for the generic
  * incoming data.
  * <p>
  * This class is meant to parse HTTP responses and WebSocket messages received from HIRO.
@@ -16,9 +18,24 @@ import org.apache.commons.lang3.StringUtils;
  * }
  * </pre>
  */
-public class HiroMessage extends JacksonJsonMap {
+public class HiroMessage extends HiroJsonMap {
 
     protected HiroError hiroError;
+
+    /**
+     * Default constructor for Jackson
+     */
+    public HiroMessage() {
+    }
+
+    /**
+     * Constructor
+     *
+     * @param initialData Initial data for the fieldsMap.
+     */
+    public HiroMessage(Map<String, Object> initialData) {
+        super(initialData);
+    }
 
     /**
      * Set the field in {@link #fieldsMap} unless an error message is found via {@link #catchError(String, Object)}.

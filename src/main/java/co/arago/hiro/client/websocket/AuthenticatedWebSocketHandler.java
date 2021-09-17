@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.http.WebSocket;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
@@ -454,7 +453,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable, Re
     protected final boolean reconnectOnFailedSend;
     protected final long webSocketRequestTimeout;
 
-    protected URI apiUri;
+    protected URI webSocketUri;
 
     private WebSocket webSocket;
     protected InternalListener internalListener;
@@ -508,42 +507,34 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable, Re
                 endpoint = versionEntry.endpoint;
         }
 
-        if (apiUri == null)
-            apiUri = tokenAPIHandler.buildURI(endpoint);
+        if (webSocketUri == null)
+            webSocketUri = tokenAPIHandler.buildWebSocketURI(endpoint);
 
         try {
             try {
-                URI uri = AbstractTokenAPIHandler.addQueryAndFragment(apiUri, query, fragment);
-                String scheme = StringUtils.equals(uri.getScheme(), "http") ? "ws" : "wss";
-                URI webSocketUri = new URI(scheme, uri.getAuthority(), uri.getPath(), uri.getQuery(), uri.getFragment());
+                internalListener.reset();
 
-                try {
-                    internalListener.reset();
+                this.webSocket = tokenAPIHandler.getOrBuildClient()
+                        .newWebSocketBuilder()
+                        .subprotocols(protocol, "token-" + tokenAPIHandler.getToken())
+                        .buildAsync(webSocketUri, internalListener)
+                        .get();
 
-                    this.webSocket = tokenAPIHandler.getOrBuildClient()
-                            .newWebSocketBuilder()
-                            .subprotocols(protocol, "token-" + tokenAPIHandler.getToken())
-                            .buildAsync(webSocketUri, internalListener)
-                            .get();
-
-                    if (status.get() == Status.FAILED) {
-                        throw new WebSocketException("Creating websocket returned with status \"FAILED\".",
-                                internalListener.exception);
-                    }
-
-                    // After the webSocket has been created and the status been checked, start requesting messages.
-                    this.webSocket.request(1);
-
-                } catch (ExecutionException e) {
-                    if (e.getCause() instanceof ConnectException)
-                        throw new ConnectException("Cannot create webSocket " + webSocketUri + ".");
-                    else if (e.getCause() instanceof IOException)
-                        throw new IOException("Cannot create webSocket " + webSocketUri + ".", e);
-                    else
-                        throw new HiroException("Cannot create webSocket " + webSocketUri + ".", e);
+                if (status.get() == Status.FAILED) {
+                    throw new WebSocketException("Creating websocket returned with status \"FAILED\".",
+                            internalListener.exception);
                 }
-            } catch (URISyntaxException e) {
-                throw new WebSocketException("Cannot create webSocket because of invalid URI.", e);
+
+                // After the webSocket has been created and the status been checked, start requesting messages.
+                this.webSocket.request(1);
+
+            } catch (ExecutionException e) {
+                if (e.getCause() instanceof ConnectException)
+                    throw new ConnectException("Cannot create webSocket " + webSocketUri + ".");
+                else if (e.getCause() instanceof IOException)
+                    throw new IOException("Cannot create webSocket " + webSocketUri + ".", e);
+                else
+                    throw new HiroException("Cannot create webSocket " + webSocketUri + ".", e);
             }
         } catch (Exception e) {
             closeWebSocket(1006, "Error at startup: " + e.getMessage());
