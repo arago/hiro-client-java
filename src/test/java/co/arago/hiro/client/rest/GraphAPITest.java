@@ -48,7 +48,7 @@ class GraphAPITest {
     }
 
     @Test
-    void createVertices() throws HiroException, IOException, InterruptedException {
+    void batchTest() throws HiroException, IOException, InterruptedException {
         // Cleanup remainders from previous runs.
         HiroVertexListMessage queryA = graphAPI.queryByXid("test:machine:Server").execute();
         HiroVertexListMessage queryB = graphAPI.queryByXid("test:software:Webserver").execute();
@@ -84,6 +84,8 @@ class GraphAPITest {
 
         String idA = resultA.getAttributeAsString("ogit/_id");
         String idB = resultB.getAttributeAsString("ogit/_id");
+
+        log.info(graphAPI.connectVertices(idB, "ogit/dependsOn", idA).execute().toJsonString());
 
         graphAPI.deleteVertex(idA).execute();
         graphAPI.deleteVertex(idB).execute();
