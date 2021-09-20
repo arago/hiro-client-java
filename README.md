@@ -328,9 +328,12 @@ class Example {
                                 }
                             })
                     .addScope(defaultScope)
-                    .addEventsFilter("default", "(element.ogit/_type = ogit/Automation/AutomationIssue")
+                    .addEventsFilter(
+                            "default",
+                            "(element.ogit/_type = ogit/Automation/AutomationIssue"
+                    )
                     .build()) {
-                
+
                 eventWebSocket.start();
 
                 // Listen for 1 second for incoming events.
@@ -403,7 +406,7 @@ class Example {
                                 }
                             })
                     .build()) {
-                
+
                 actionWebSocket.start();
 
                 // Listen for 1 second for incoming actions.
