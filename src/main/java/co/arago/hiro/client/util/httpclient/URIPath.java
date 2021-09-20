@@ -19,7 +19,7 @@ public class URIPath {
     }
 
     public URIPath(List<String> pathParts) {
-        scanAndAppendPaths(pathParts);
+        append(pathParts);
     }
 
     public URIPath(String... pathParts) {
@@ -31,38 +31,21 @@ public class URIPath {
         return this;
     }
 
-    private void scanAndAppendPaths(List<String> pathParts) {
-        for (String part : pathParts) {
-            String[] subParts = part.split("/");
-            for (String subPart : subParts) {
-                if (StringUtils.isNotBlank(subPart))
-                    this.path.add(subPart);
-            }
-        }
-    }
-
-    private void scanAndPrependPaths(List<String> pathParts) {
-        for (int i = pathParts.size() - 1; i >= 0; i--) {
-            String[] subParts = pathParts.get(i).split("/");
-            for (int j = subParts.length - 1; j >= 0; j--) {
-                if (StringUtils.isNotBlank(subParts[j]))
-                    this.path.add(subParts[j]);
-            }
-        }
-    }
-
     /**
      * @param pathParts Path fragments to add to the back of the path.
-     * @return {@link #self()}
+     * @return this
      */
     public URIPath append(List<String> pathParts) {
-        scanAndAppendPaths(pathParts);
+        for (String part : pathParts) {
+            if (StringUtils.isNotBlank(part))
+                this.path.add(part);
+        }
         return this;
     }
 
     /**
      * @param pathParts Path fragments to add to the back of the path.
-     * @return {@link #self()}
+     * @return this
      */
     public URIPath append(String... pathParts) {
         return append(Arrays.asList(pathParts));
@@ -70,16 +53,19 @@ public class URIPath {
 
     /**
      * @param pathParts Path fragments to add to the front of the path.
-     * @return {@link #self()}
+     * @return this
      */
     public URIPath prepend(List<String> pathParts) {
-        scanAndPrependPaths(pathParts);
+        for (int i = pathParts.size() - 1; i >= 0; i--) {
+            if (StringUtils.isNotBlank(pathParts.get(i)))
+                this.path.addFirst(pathParts.get(i));
+        }
         return this;
     }
 
     /**
      * @param pathParts Path fragments to add to the front of the path.
-     * @return {@link #self()}
+     * @return this
      */
     public URIPath prepend(String... pathParts) {
         return prepend(Arrays.asList(pathParts));

@@ -152,7 +152,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
                         }
 
                         try {
-                            actionWebSocketListener.onActionSubmit(actionHandlerSubmit);
+                            actionWebSocketListener.onActionSubmit(ActionWebSocket.this, actionHandlerSubmit);
                         } catch (Exception e) {
                             log.error("Handling action threw exception.", e);
                             sendActionResult(actionHandlerSubmit.getId(), new ResultParams().setCode(500).setMessage(e.getMessage()));
@@ -200,7 +200,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
                     }
                     case CONFIG_CHANGED: {
 
-                        actionWebSocketListener.onConfigChanged();
+                        actionWebSocketListener.onConfigChanged(ActionWebSocket.this);
 
                         break;
                     }
@@ -251,7 +251,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
      *     }
      * </pre>
      */
-    protected static class ResultParams {
+    public static class ResultParams {
         private Integer code;
         private String message;
         private String data;
@@ -343,6 +343,15 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
         }
     }
 
+    /**
+     * Static creator
+     *
+     * @return A new {@link ResultParams} structure.
+     */
+    public static ResultParams newResultParams() {
+        return new ResultParams();
+    }
+
     // #############################################################################################
     // ## Main part ##
     // #############################################################################################
@@ -403,7 +412,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
      * @throws IOException          On IO or JSON parsing errors.
      * @throws InterruptedException When a sleep gets interrupted.
      */
-    protected void sendActionResult(String id, ResultParams resultParams) throws HiroException, IOException, InterruptedException {
+    public void sendActionResult(String id, ResultParams resultParams) throws HiroException, IOException, InterruptedException {
         sendActionResult(id, resultParams.toResultPayload());
     }
 
@@ -416,7 +425,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
      * @throws IOException          On IO or JSON parsing errors.
      * @throws InterruptedException When a sleep gets interrupted.
      */
-    protected void sendActionResult(String id, String result) throws HiroException, IOException, InterruptedException {
+    public void sendActionResult(String id, String result) throws HiroException, IOException, InterruptedException {
         ActionHandlerSubmit actionHandlerSubmit = submitActionStore.get(id);
         if (actionHandlerSubmit == null) {
             log.info("Handling \"{}\" (id: {}): Submit not stored - maybe it has expired?",

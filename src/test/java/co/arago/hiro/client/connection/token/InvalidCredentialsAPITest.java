@@ -49,7 +49,7 @@ public class InvalidCredentialsAPITest {
 
             TokenUnauthorizedException tokenUnauthorizedException = assertThrows(
                     TokenUnauthorizedException.class,
-                    () -> apiHandler.getMeAccount().execute()
+                    () -> apiHandler.getMeAccountCommand().execute()
             );
 
             log.info(tokenUnauthorizedException.toString());
@@ -69,7 +69,7 @@ public class InvalidCredentialsAPITest {
 
             TokenUnauthorizedException tokenUnauthorizedException = assertThrows(
                     TokenUnauthorizedException.class,
-                    () -> apiHandler.getMeAccount().execute()
+                    () -> apiHandler.getMeAccountCommand().execute()
             );
 
             log.info(tokenUnauthorizedException.toString());
@@ -89,7 +89,7 @@ public class InvalidCredentialsAPITest {
 
             ConnectException exception = assertThrows(
                     ConnectException.class,
-                    () -> apiHandler.getMeAccount().execute()
+                    () -> apiHandler.getMeAccountCommand().execute()
             );
 
             log.info(exception.toString());

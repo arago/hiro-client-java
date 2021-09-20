@@ -9,6 +9,7 @@ import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
 import co.arago.hiro.client.model.vertex.HiroVertexMessage;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
+import co.arago.hiro.client.util.httpclient.URIPath;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -74,7 +75,13 @@ public class GraphAPI extends AuthenticatedAPIHandler {
     // ## API Requests ##
     // ###############################################################################################
 
-    protected abstract static class QueryBodyHandler<T extends QueryBodyHandler<T, R>, R> extends SendJsonAPIRequestConf<T, R> {
+    /**
+     * A config class that contains common parameters for all Graph Queries.
+     *
+     * @param <T> The Builder type
+     * @param <R> The type of the result expected from {@link #execute()}
+     */
+    protected abstract static class QueryBodyConf<T extends QueryBodyConf<T, R>, R> extends SendBodyAPIRequestConf<T, R> {
 
         protected Map<String, String> bodyMap = new HashMap<>();
 
@@ -121,7 +128,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         }
 
         protected String createBody() {
-            setBodyFromMap(bodyMap);
+            setJsonBodyFromMap(bodyMap);
             return body;
         }
     }
@@ -136,12 +143,14 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_vertices">API Documentation</a>
      * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/6.2/query-dsl-query-string-query.html#query-string-syntax">ElasticSearch query syntax</a>
      */
-    public class QueryVertices extends QueryBodyHandler<QueryVertices, HiroVertexListMessage> {
+    public class QueryVerticesCommand extends QueryBodyConf<QueryVerticesCommand, HiroVertexListMessage> {
+
+        protected final URIPath path = new URIPath("query", "vertices");
 
         /**
          * @param query The query string, e.g. ogit\/_type: ogit\/Question.
          */
-        protected QueryVertices(String query) {
+        protected QueryVerticesCommand(String query) {
             addToBody("query", notBlank(query, "query"));
         }
 
@@ -151,7 +160,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param limit limit of entries to return
          * @return this
          */
-        public QueryVertices setLimit(Integer limit) {
+        public QueryVerticesCommand setLimit(Integer limit) {
             return addToBody("limit", (limit != null ? limit.toString() : null));
         }
 
@@ -161,7 +170,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param offset offset where to start returning entries
          * @return this
          */
-        public QueryVertices setOffset(Integer offset) {
+        public QueryVerticesCommand setOffset(Integer offset) {
             return addToBody("offset", (offset != null ? offset.toString() : null));
         }
 
@@ -171,7 +180,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param order order by a field asc|desc, e.g. ogit/name desc.
          * @return this
          */
-        public QueryVertices setOrder(String order) {
+        public QueryVerticesCommand setOrder(String order) {
             return addToBody("order", order);
         }
 
@@ -181,12 +190,12 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param count return number of matching elements
          * @return this
          */
-        public QueryVertices setCount(Boolean count) {
+        public QueryVerticesCommand setCount(Boolean count) {
             return addToBody("count", (count != null ? count.toString() : null));
         }
 
         @Override
-        protected QueryVertices self() {
+        protected QueryVerticesCommand self() {
             return this;
         }
 
@@ -199,7 +208,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getUri(path.append("query", "vertices"), query, fragment),
+                    getUri(path, query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -218,8 +227,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_vertices">API Documentation</a>
      * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/6.2/query-dsl-query-string-query.html#query-string-syntax">ElasticSearch query syntax</a>
      */
-    public QueryVertices queryVertices(String query) {
-        return new QueryVertices(query);
+    public QueryVerticesCommand queryVerticesCommand(String query) {
+        return new QueryVerticesCommand(query);
     }
 
 
@@ -233,19 +242,21 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_gremlin">API Documentation</a>
      * @see <a href="https://github.com/spmallette/GremlinDocs">Gremlin query syntax</a>
      */
-    public class QueryGremlin extends QueryBodyHandler<QueryGremlin, HiroVertexListMessage> {
+    public class QueryGremlinCommand extends QueryBodyConf<QueryGremlinCommand, HiroVertexListMessage> {
+
+        protected final URIPath path = new URIPath("query", "gremlin");
 
         /**
          * @param ogitId The root ogitId to start the query from.
          * @param query  The query string, e.g. ogit\/_type: ogit\/Question.
          */
-        protected QueryGremlin(String ogitId, String query) {
+        protected QueryGremlinCommand(String ogitId, String query) {
             addToBody("root", notBlank(ogitId, "ogitId / root"));
             addToBody("query", notBlank(query, "query"));
         }
 
         @Override
-        protected QueryGremlin self() {
+        protected QueryGremlinCommand self() {
             return this;
         }
 
@@ -258,7 +269,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getUri(path.append("query", "gremlin"), query, fragment),
+                    getUri(path, query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -278,8 +289,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_gremlin">API Documentation</a>
      * @see <a href="https://github.com/spmallette/GremlinDocs">Gremlin query syntax</a>
      */
-    public QueryGremlin queryGremlin(String ogitId, String query) {
-        return new QueryGremlin(ogitId, query);
+    public QueryGremlinCommand queryGremlinCommand(String ogitId, String query) {
+        return new QueryGremlinCommand(ogitId, query);
     }
 
     // ----------------------------------- Query multiple entities by ids -----------------------------------
@@ -291,17 +302,19 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_ids">API Documentation</a>
      */
-    public class QueryByIds extends QueryBodyHandler<QueryByIds, HiroVertexListMessage> {
+    public class QueryByIdsCommand extends QueryBodyConf<QueryByIdsCommand, HiroVertexListMessage> {
+
+        protected final URIPath path = new URIPath("query", "ids");
 
         /**
          * @param ids The comma separated list of ids, e.g. id1,id2,id3
          */
-        protected QueryByIds(String ids) {
+        protected QueryByIdsCommand(String ids) {
             addToBody("query", notBlank(ids, "query (csv list of ids)"));
         }
 
         @Override
-        protected QueryByIds self() {
+        protected QueryByIdsCommand self() {
             return this;
         }
 
@@ -314,7 +327,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getUri(path.append("query", "ids"), query, fragment),
+                    getUri(path, query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -332,8 +345,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @return New instance of the request
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_ids">API Documentation</a>
      */
-    public QueryByIds queryByIds(String ids) {
-        return new QueryByIds(ids);
+    public QueryByIdsCommand queryByIdsCommand(String ids) {
+        return new QueryByIdsCommand(ids);
     }
 
     // ----------------------------------- Query entity by xid -----------------------------------
@@ -345,17 +358,19 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_xid">API Documentation</a>
      */
-    public class QueryByXid extends QueryBodyHandler<QueryByXid, HiroVertexListMessage> {
+    public class QueryByXidCommand extends QueryBodyConf<QueryByXidCommand, HiroVertexListMessage> {
+
+        protected final URIPath path = new URIPath("query", "xid");
 
         /**
          * @param xid The xid
          */
-        protected QueryByXid(String xid) {
+        protected QueryByXidCommand(String xid) {
             addToBody("query", notBlank(xid, "query (ogit/_xid)"));
         }
 
         @Override
-        protected QueryByXid self() {
+        protected QueryByXidCommand self() {
             return this;
         }
 
@@ -368,7 +383,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getUri(path.append("query", "xid"), query, fragment),
+                    getUri(path, query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -386,8 +401,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @return New instance of the request
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_xid">API Documentation</a>
      */
-    public QueryByXid queryByXid(String xid) {
-        return new QueryByXid(xid);
+    public QueryByXidCommand queryByXidCommand(String xid) {
+        return new QueryByXidCommand(xid);
     }
 
     // ----------------------------------- Query timeseries values -----------------------------------
@@ -399,13 +414,15 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_values">API Documentation</a>
      */
-    public class QueryTimeseries extends QueryBodyHandler<QueryTimeseries, HiroVertexListMessage> {
+    public class QueryTimeseriesCommand extends QueryBodyConf<QueryTimeseriesCommand, HiroVertexListMessage> {
+
+        protected final URIPath path = new URIPath("query", "values");
 
         /**
          * @param query The actual query.
          *              e.g. ogit\/name:"my timeseries name" for vertices.
          */
-        protected QueryTimeseries(String query) {
+        protected QueryTimeseriesCommand(String query) {
             addToBody("query", notBlank(query, "query"));
         }
 
@@ -413,7 +430,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param from timestamp in ms where to start returning entries (default: now - 1 hour)
          * @return this
          */
-        public QueryTimeseries setFrom(long from) {
+        public QueryTimeseriesCommand setFrom(long from) {
             query.put("from", String.valueOf(from));
             return this;
         }
@@ -422,7 +439,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param to timestamp in ms where to end returning entries (default: now)
          * @return this
          */
-        public QueryTimeseries setTo(long to) {
+        public QueryTimeseriesCommand setTo(long to) {
             query.put("to", String.valueOf(to));
             return this;
         }
@@ -431,7 +448,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param limit limit of entries to return
          * @return this
          */
-        public QueryTimeseries setLimit(Integer limit) {
+        public QueryTimeseriesCommand setLimit(Integer limit) {
             query.compute("limit", (k, v) -> (limit != null ? limit.toString() : null));
             return this;
         }
@@ -440,7 +457,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param order order by a timestamp asc|desc|none
          * @return this
          */
-        public QueryTimeseries setOrder(String order) {
+        public QueryTimeseriesCommand setOrder(String order) {
             query.compute("order", (k, v) -> order);
             return this;
         }
@@ -449,13 +466,13 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param aggregate aggregate numeric values for multiple timeseries ids with same timestamp: avg|min|max|sum|none
          * @return this
          */
-        public QueryTimeseries setAggregate(String aggregate) {
+        public QueryTimeseriesCommand setAggregate(String aggregate) {
             query.compute("aggregate", (k, v) -> aggregate);
             return this;
         }
 
         @Override
-        protected QueryTimeseries self() {
+        protected QueryTimeseriesCommand self() {
             return this;
         }
 
@@ -468,7 +485,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getUri(path.append("query", "values"), query, fragment),
+                    getUri(path, query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -486,8 +503,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @return New instance of the request
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Search/post_query_values">API Documentation</a>
      */
-    public QueryTimeseries queryTimeseries(String query) {
-        return new QueryTimeseries(query);
+    public QueryTimeseriesCommand queryTimeseriesCommand(String query) {
+        return new QueryTimeseriesCommand(query);
     }
 
     // ----------------------------------- GetEntity (Vertex / Edge) ---------------------------------
@@ -499,20 +516,22 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/get__id_">API Documentation</a>
      */
-    public class GetEntity extends APIRequestConf<GetEntity, HiroVertexMessage> {
+    public class GetEntityCommand extends APIRequestConf<GetEntityCommand, HiroVertexMessage> {
+
+        protected final URIPath path;
 
         /**
          * @param ogitId ogit/_id of the entity. This can be a vertex id or a composed edge id.
          */
-        protected GetEntity(String ogitId) {
-            path.append(notBlank(ogitId, "ogitId"));
+        protected GetEntityCommand(String ogitId) {
+            path = new URIPath(notBlank(ogitId, "ogitId"));
         }
 
         /**
          * @param fields the comma separated list of fields to return
          * @return this
          */
-        public GetEntity setFields(String fields) {
+        public GetEntityCommand setFields(String fields) {
             query.put("fields", fields);
             return this;
         }
@@ -521,7 +540,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param includeDeleted allow getting if ogit/_is-deleted=true
          * @return this
          */
-        public GetEntity setIncludeDeleted(boolean includeDeleted) {
+        public GetEntityCommand setIncludeDeleted(boolean includeDeleted) {
             query.put("includeDeleted", String.valueOf(includeDeleted));
             return this;
         }
@@ -530,7 +549,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param listMeta return list type attributes with metadata
          * @return this
          */
-        public GetEntity setListMeta(boolean listMeta) {
+        public GetEntityCommand setListMeta(boolean listMeta) {
             query.put("listMeta", String.valueOf(listMeta));
             return this;
         }
@@ -539,13 +558,13 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param vid get specific version of Entity matching ogit/_v-id
          * @return this
          */
-        public GetEntity setVid(String vid) {
+        public GetEntityCommand setVid(String vid) {
             query.put("vid", vid);
             return this;
         }
 
         @Override
-        protected GetEntity self() {
+        protected GetEntityCommand self() {
             return this;
         }
 
@@ -575,8 +594,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @return New instance of the request
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/get__id_">API Documentation</a>
      */
-    public GetEntity getVertex(String ogitId) {
-        return new GetEntity(ogitId);
+    public GetEntityCommand getVertexCommand(String ogitId) {
+        return new GetEntityCommand(ogitId);
     }
 
     /**
@@ -590,8 +609,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @return New instance of the request
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/get__id_">API Documentation</a>
      */
-    public GetEntity getEdge(String fromNodeId, String verb, String toNodeId) {
-        return new GetEntity(createEdgeOgitId(fromNodeId, verb, toNodeId));
+    public GetEntityCommand getEdgeCommand(String fromNodeId, String verb, String toNodeId) {
+        return new GetEntityCommand(createEdgeOgitId(fromNodeId, verb, toNodeId));
     }
 
     // ----------------------------------- UpdateEntity (vertex) -----------------------------------
@@ -603,29 +622,31 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/post__id_">API Documentation</a>
      */
-    public class UpdateEntity extends SendJsonAPIRequestConf<UpdateEntity, HiroVertexMessage> {
+    public class UpdateEntityCommand extends SendBodyAPIRequestConf<UpdateEntityCommand, HiroVertexMessage> {
+
+        protected final URIPath path;
 
         /**
          * @param ogitId ogit/_id of the vertex.
          */
-        protected UpdateEntity(String ogitId) {
-            path.append(notBlank(ogitId, "ogitId"));
+        protected UpdateEntityCommand(String ogitId) {
+            path = new URIPath(notBlank(ogitId, "ogitId"));
         }
 
         /**
          * @param attributes The complete entity data. Map 'attributes' needs to contain a key "ogit/_id" with a
          *                   non-blank value.
          */
-        protected UpdateEntity(Map<String, Object> attributes) {
-            path.append(notBlank((String) attributes.get("ogit/_id"), "ogit/_id in attributes"));
-            setBodyFromMap(attributes);
+        protected UpdateEntityCommand(Map<String, Object> attributes) {
+            this((String) attributes.get("ogit/_id"));
+            setJsonBodyFromMap(attributes);
         }
 
         /**
          * @param fullResponse return full Entity after update is applied (default returns only metadata)
          * @return this
          */
-        public UpdateEntity setFullResponse(boolean fullResponse) {
+        public UpdateEntityCommand setFullResponse(boolean fullResponse) {
             query.put("fullResponse", String.valueOf(fullResponse));
             return this;
         }
@@ -634,14 +655,14 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param listMeta return list type attributes with metadata
          * @return this
          */
-        public UpdateEntity setListMeta(boolean listMeta) {
+        public UpdateEntityCommand setListMeta(boolean listMeta) {
             query.put("listMeta", String.valueOf(listMeta));
             return this;
         }
 
 
         @Override
-        protected UpdateEntity self() {
+        protected UpdateEntityCommand self() {
             return this;
         }
 
@@ -672,8 +693,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @return New instance of the request
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/post__id_">API Documentation</a>
      */
-    public UpdateEntity updateVertex(String ogitId) {
-        return new UpdateEntity(ogitId);
+    public UpdateEntityCommand updateVertexCommand(String ogitId) {
+        return new UpdateEntityCommand(ogitId);
     }
 
     /**
@@ -686,8 +707,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @return New instance of the request
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/post__id_">API Documentation</a>
      */
-    public UpdateEntity updateVertex(Map<String, Object> attributes) {
-        return new UpdateEntity(attributes);
+    public UpdateEntityCommand updateVertexCommand(Map<String, Object> attributes) {
+        return new UpdateEntityCommand(attributes);
     }
 
     // ----------------------------------- DeleteEntity (vertex / edge) -----------------------------------
@@ -699,17 +720,19 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/delete__id_">API Documentation</a>
      */
-    public class DeleteEntity extends APIRequestConf<DeleteEntity, HiroVertexMessage> {
+    public class DeleteEntityCommand extends APIRequestConf<DeleteEntityCommand, HiroVertexMessage> {
+
+        protected final URIPath path;
 
         /**
          * @param ogitId ogit/_id of the vertex.
          */
-        protected DeleteEntity(String ogitId) {
-            path.append(notBlank(ogitId, "ogitId"));
+        protected DeleteEntityCommand(String ogitId) {
+            path = new URIPath(notBlank(ogitId, "ogitId"));
         }
 
         @Override
-        protected DeleteEntity self() {
+        protected DeleteEntityCommand self() {
             return this;
         }
 
@@ -739,8 +762,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @return New instance of the request
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/delete__id_">API Documentation</a>
      */
-    public DeleteEntity deleteVertex(String ogitId) {
-        return new DeleteEntity(ogitId);
+    public DeleteEntityCommand deleteVertexCommand(String ogitId) {
+        return new DeleteEntityCommand(ogitId);
     }
 
     /**
@@ -754,8 +777,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @return New instance of the request
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/delete__id_">API Documentation</a>
      */
-    public DeleteEntity disconnectVertices(String fromNodeId, String verb, String toNodeId) {
-        return new DeleteEntity(createEdgeOgitId(fromNodeId, verb, toNodeId));
+    public DeleteEntityCommand disconnectVertices(String fromNodeId, String verb, String toNodeId) {
+        return new DeleteEntityCommand(createEdgeOgitId(fromNodeId, verb, toNodeId));
     }
 
     // ----------------------------------- CreateEntity (vertex) -----------------------------------
@@ -769,26 +792,28 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/post_new__type_">API Documentation</a>
      */
-    public class CreateEntity extends SendJsonAPIRequestConf<CreateEntity, HiroVertexMessage> {
+    public class CreateEntityCommand extends SendBodyAPIRequestConf<CreateEntityCommand, HiroVertexMessage> {
+
+        protected final URIPath path;
 
         /**
          * @param ogitType ogit/_type of the vertex.
          */
-        protected CreateEntity(String ogitType) {
-            path.append(notBlank(ogitType, "ogitType"));
+        protected CreateEntityCommand(String ogitType) {
+            path = new URIPath("new", notBlank(ogitType, "ogitType"));
         }
 
         /**
          * @param attributes The complete entity data. Map 'attributes' needs to contain a key "ogit/_type" with a
          *                   non-blank value.
          */
-        protected CreateEntity(Map<String, Object> attributes) {
-            path.append(notBlank((String) attributes.get("ogit/_type"), "ogit/_type in attributes"));
-            setBodyFromMap(attributes);
+        protected CreateEntityCommand(Map<String, Object> attributes) {
+            this((String) attributes.get("ogit/_type"));
+            setJsonBodyFromMap(attributes);
         }
 
         @Override
-        protected CreateEntity self() {
+        protected CreateEntityCommand self() {
             return this;
         }
 
@@ -801,7 +826,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexMessage.class,
-                    getUri(path.prepend("new"), query, fragment),
+                    getUri(path, query, fragment),
                     notBlank(body, "body with entity (vertex) data"),
                     headers,
                     httpRequestTimeout,
@@ -821,8 +846,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @return New instance of the request
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/post_new__type_">API Documentation</a>
      */
-    public CreateEntity createVertex(String ogitType) {
-        return new CreateEntity(ogitType);
+    public CreateEntityCommand createVertexCommand(String ogitType) {
+        return new CreateEntityCommand(ogitType);
     }
 
     /**
@@ -837,8 +862,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @return New instance of the request
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Entity/post_new__type_">API Documentation</a>
      */
-    public CreateEntity createVertex(Map<String, Object> attributes) {
-        return new CreateEntity(attributes);
+    public CreateEntityCommand createVertexCommand(Map<String, Object> attributes) {
+        return new CreateEntityCommand(attributes);
     }
 
     // ----------------------------------- PostVerb -----------------------------------
@@ -850,23 +875,25 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Verb/post_connect__type_">API Documentation</a>
      */
-    public class PostVerb extends SendJsonAPIRequestConf<PostVerb, HiroVertexMessage> {
+    public class PostVerbCommand extends SendBodyAPIRequestConf<PostVerbCommand, HiroVertexMessage> {
+
+        protected final URIPath path;
 
         /**
          * @param fromNodeId Source vertex of the edge.
          * @param verb       Verb/Name of the edge.
          * @param toNodeId   Destination vertex of the edge.
          */
-        protected PostVerb(String fromNodeId, String verb, String toNodeId) {
-            path.append(notBlank(verb, "verb"));
-            setBodyFromMap(Map.of(
+        protected PostVerbCommand(String fromNodeId, String verb, String toNodeId) {
+            path = new URIPath("connect", notBlank(verb, "verb"));
+            setJsonBodyFromMap(Map.of(
                     "out", notBlank(fromNodeId, "fromNodeId"),
                     "in", notBlank(toNodeId, "toNodeId")
             ));
         }
 
         @Override
-        protected PostVerb self() {
+        protected PostVerbCommand self() {
             return this;
         }
 
@@ -879,7 +906,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexMessage.class,
-                    getUri(path.prepend("connect"), query, fragment),
+                    getUri(path, query, fragment),
                     notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
@@ -899,8 +926,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * @return New instance of the request
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Graph]_Verb/post_connect__type_">API Documentation</a>
      */
-    public PostVerb connectVertices(String fromNodeId, String verb, String toNodeId) {
-        return new PostVerb(fromNodeId, verb, toNodeId);
+    public PostVerbCommand connectVerticesCommand(String fromNodeId, String verb, String toNodeId) {
+        return new PostVerbCommand(fromNodeId, verb, toNodeId);
     }
 
     // ----------------------------------- GetBlob -----------------------------------
@@ -912,20 +939,22 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Blob/get__id__content">API Documentation</a>
      */
-    public class GetBlob extends APIRequestConf<GetBlob, HttpResponseParser> {
+    public class GetBlobCommand extends APIRequestConf<GetBlobCommand, HttpResponseParser> {
+
+        protected final URIPath path;
 
         /**
          * @param ogitId ogit/_id of the vertex.
          */
-        protected GetBlob(String ogitId) {
-            path.append(notBlank(ogitId, "ogitId"));
+        protected GetBlobCommand(String ogitId) {
+            path = new URIPath(notBlank(ogitId, "ogitId"), "content");
         }
 
         /**
          * @param contentId specific version ogit/_c-id of content
          * @return this
          */
-        public GetBlob setContentId(String contentId) {
+        public GetBlobCommand setContentId(String contentId) {
             query.put("contentId", contentId);
             return this;
         }
@@ -934,13 +963,13 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param includeDeleted allow getting if ogit/_is-deleted=true
          * @return this
          */
-        public GetBlob setIncludeDeleted(boolean includeDeleted) {
+        public GetBlobCommand setIncludeDeleted(boolean includeDeleted) {
             query.put("includeDeleted", String.valueOf(includeDeleted));
             return this;
         }
 
         @Override
-        protected GetBlob self() {
+        protected GetBlobCommand self() {
             return this;
         }
 
@@ -953,7 +982,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         public HttpResponseParser execute() throws HiroException, IOException, InterruptedException {
             return getBinary(
-                    getUri(path.append("content"), query, fragment),
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -966,11 +995,11 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * API GET /api/graph/[version]/{ogit/_id}/content
      *
      * @param ogitId ogit/_id of the vertex.
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Blob/get__id__content">API Documentation</a>
      */
-    public GetBlob getAttachment(String ogitId) {
-        return new GetBlob(ogitId);
+    public GetBlobCommand getAttachmentCommand(String ogitId) {
+        return new GetBlobCommand(ogitId);
     }
 
     // ----------------------------------- PostBlob -----------------------------------
@@ -982,28 +1011,30 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Storage]_Blob/post__id__content">API Documentation</a>
      */
-    public class PostBlob extends SendBinaryAPIRequestConf<PostBlob, HiroMessage> {
+    public class PostBlobCommand extends SendStreamAPIRequestConf<PostBlobCommand, HiroMessage> {
+
+        protected final URIPath path;
 
         /**
          * @param ogitId          ogit/_id of the vertex.
          * @param streamContainer Container with the data stream.
          */
-        protected PostBlob(String ogitId, StreamContainer streamContainer) {
+        protected PostBlobCommand(String ogitId, StreamContainer streamContainer) {
             super(streamContainer);
-            path.append(notBlank(ogitId, "ogitId"));
+            path = new URIPath(notBlank(ogitId, "ogitId"), "content");
         }
 
         /**
          * @param ogitId      ogit/_id of the vertex.
          * @param inputStream InputStream for the data.
          */
-        protected PostBlob(String ogitId, InputStream inputStream) {
+        protected PostBlobCommand(String ogitId, InputStream inputStream) {
             super(inputStream);
-            path.append(notBlank(ogitId, "ogitId"));
+            path = new URIPath(notBlank(ogitId, "ogitId"), "content");
         }
 
         @Override
-        protected PostBlob self() {
+        protected PostBlobCommand self() {
             return this;
         }
 
@@ -1017,7 +1048,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             notBlank(streamContainer.getContentType(), "contentType");
             return postBinary(HiroMessage.class,
-                    getUri(path.append("content"), query, fragment),
+                    getUri(path, query, fragment),
                     streamContainer,
                     headers,
                     httpRequestTimeout,
@@ -1032,11 +1063,11 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @param ogitId          ogit/_id of the vertex.
      * @param streamContainer Container with the data stream.
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Storage]_Blob/post__id__content">API Documentation</a>
      */
-    public PostBlob postAttachment(String ogitId, StreamContainer streamContainer) {
-        return new PostBlob(ogitId, streamContainer);
+    public PostBlobCommand postAttachmentCommand(String ogitId, StreamContainer streamContainer) {
+        return new PostBlobCommand(ogitId, streamContainer);
     }
 
     /**
@@ -1046,11 +1077,11 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @param ogitId      ogit/_id of the vertex.
      * @param inputStream InputStream with the data.
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Storage]_Blob/post__id__content">API Documentation</a>
      */
-    public PostBlob postAttachment(String ogitId, InputStream inputStream) {
-        return new PostBlob(ogitId, inputStream);
+    public PostBlobCommand postAttachmentCommand(String ogitId, InputStream inputStream) {
+        return new PostBlobCommand(ogitId, inputStream);
     }
 
     // ----------------------------------- GetHistory -----------------------------------
@@ -1062,20 +1093,22 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_History/get__id__history">API Documentation</a>
      */
-    public class GetHistory extends APIRequestConf<GetHistory, DefaultHiroItemListMessage> {
+    public class GetHistoryCommand extends APIRequestConf<GetHistoryCommand, DefaultHiroItemListMessage> {
+
+        protected final URIPath path;
 
         /**
          * @param ogitId ogit/_id of the vertex.
          */
-        protected GetHistory(String ogitId) {
-            path.append(notBlank(ogitId, "ogitId"));
+        protected GetHistoryCommand(String ogitId) {
+            path = new URIPath(notBlank(ogitId, "ogitId"), "history");
         }
 
         /**
          * @param includeDeleted allow getting if ogit/_is-deleted=true
          * @return this
          */
-        public GetHistory setIncludeDeleted(boolean includeDeleted) {
+        public GetHistoryCommand setIncludeDeleted(boolean includeDeleted) {
             query.put("includeDeleted", String.valueOf(includeDeleted));
             return this;
         }
@@ -1084,7 +1117,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param from timestamp in ms where to start returning entries
          * @return this
          */
-        public GetHistory setFrom(long from) {
+        public GetHistoryCommand setFrom(long from) {
             query.put("from", String.valueOf(from));
             return this;
         }
@@ -1093,7 +1126,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param to timestamp in ms where to end returning entries (default: now)
          * @return this
          */
-        public GetHistory setTo(long to) {
+        public GetHistoryCommand setTo(long to) {
             query.put("to", String.valueOf(to));
             return this;
         }
@@ -1102,7 +1135,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param limit limit of entries to return
          * @return this
          */
-        public GetHistory setLimit(Integer limit) {
+        public GetHistoryCommand setLimit(Integer limit) {
             query.compute("limit", (k, v) -> (limit != null ? limit.toString() : null));
             return this;
         }
@@ -1111,7 +1144,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param offset offset where to start returning entries
          * @return this
          */
-        public GetHistory setOffset(Integer offset) {
+        public GetHistoryCommand setOffset(Integer offset) {
             query.compute("offset", (k, v) -> (offset != null ? offset.toString() : null));
             return this;
         }
@@ -1120,7 +1153,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param listMeta return list type attributes with metadata
          * @return this
          */
-        public GetHistory setListMeta(boolean listMeta) {
+        public GetHistoryCommand setListMeta(boolean listMeta) {
             query.put("listMeta", String.valueOf(listMeta));
             return this;
         }
@@ -1134,7 +1167,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          *             </ul>
          * @return this
          */
-        public GetHistory setType(String type) {
+        public GetHistoryCommand setType(String type) {
             query.compute("type", (k, v) -> type);
             return this;
         }
@@ -1143,7 +1176,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param version get entry with specific ogit/_v value
          * @return this
          */
-        public GetHistory setVersion(Integer version) {
+        public GetHistoryCommand setVersion(Integer version) {
             query.compute("version", (k, v) -> (version != null ? version.toString() : null));
             return this;
         }
@@ -1152,13 +1185,13 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param vid get specific version of Entity matching ogit/_v-id
          * @return this
          */
-        public GetHistory setVid(String vid) {
+        public GetHistoryCommand setVid(String vid) {
             query.compute("vid", (k, v) -> vid);
             return this;
         }
 
         @Override
-        protected GetHistory self() {
+        protected GetHistoryCommand self() {
             return this;
         }
 
@@ -1170,7 +1203,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         public DefaultHiroItemListMessage execute() throws HiroException, IOException, InterruptedException {
             return get(DefaultHiroItemListMessage.class,
-                    getUri(path.append("history"), query, fragment),
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -1183,11 +1216,11 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * API GET /api/graph/[version]/{ogit/_id}/history
      *
      * @param ogitId ogit/_id of the vertex.
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_History/get__id__history">API Documentation</a>
      */
-    public GetHistory getHistory(String ogitId) {
-        return new GetHistory(ogitId);
+    public GetHistoryCommand getHistoryCommand(String ogitId) {
+        return new GetHistoryCommand(ogitId);
     }
 
     // ----------------------------------- GetTimeseries -----------------------------------
@@ -1199,20 +1232,22 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Timeseries/get__id__values">API Documentation</a>
      */
-    public class GetTimeseries extends APIRequestConf<GetTimeseries, HiroTimeseriesListMessage> {
+    public class GetTimeseriesCommand extends APIRequestConf<GetTimeseriesCommand, HiroTimeseriesListMessage> {
+
+        protected final URIPath path;
 
         /**
          * @param ogitId ogit/_id of the vertex.
          */
-        protected GetTimeseries(String ogitId) {
-            path.append(notBlank(ogitId, "ogitId"));
+        protected GetTimeseriesCommand(String ogitId) {
+            path = new URIPath(notBlank(ogitId, "ogitId"), "values");
         }
 
         /**
          * @param includeDeleted allow getting if ogit/_is-deleted=true
          * @return this
          */
-        public GetTimeseries setIncludeDeleted(boolean includeDeleted) {
+        public GetTimeseriesCommand setIncludeDeleted(boolean includeDeleted) {
             query.put("includeDeleted", String.valueOf(includeDeleted));
             return this;
         }
@@ -1221,7 +1256,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param from timestamp in ms where to start returning entries (default: now - 1 hour)
          * @return this
          */
-        public GetTimeseries setFrom(long from) {
+        public GetTimeseriesCommand setFrom(long from) {
             query.put("from", String.valueOf(from));
             return this;
         }
@@ -1230,7 +1265,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param to timestamp in ms where to end returning entries (default: now)
          * @return this
          */
-        public GetTimeseries setTo(long to) {
+        public GetTimeseriesCommand setTo(long to) {
             query.put("to", String.valueOf(to));
             return this;
         }
@@ -1239,7 +1274,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param limit limit of entries to return
          * @return this
          */
-        public GetTimeseries setLimit(Integer limit) {
+        public GetTimeseriesCommand setLimit(Integer limit) {
             query.compute("limit", (k, v) -> (limit != null ? limit.toString() : null));
             return this;
         }
@@ -1248,7 +1283,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param order order by a timestamp asc|desc|none
          * @return this
          */
-        public GetTimeseries setOrder(String order) {
+        public GetTimeseriesCommand setOrder(String order) {
             query.compute("order", (k, v) -> order);
             return this;
         }
@@ -1257,7 +1292,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param with csv list of ids to aggregate in result
          * @return this
          */
-        public GetTimeseries setWith(String with) {
+        public GetTimeseriesCommand setWith(String with) {
             query.compute("with", (k, v) -> with);
             return this;
         }
@@ -1266,13 +1301,13 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param aggregate aggregate numeric values for multiple timeseries ids with same timestamp: avg|min|max|sum|none
          * @return this
          */
-        public GetTimeseries setAggregate(String aggregate) {
+        public GetTimeseriesCommand setAggregate(String aggregate) {
             query.compute("aggregate", (k, v) -> aggregate);
             return this;
         }
 
         @Override
-        protected GetTimeseries self() {
+        protected GetTimeseriesCommand self() {
             return this;
         }
 
@@ -1284,7 +1319,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         public HiroTimeseriesListMessage execute() throws HiroException, IOException, InterruptedException {
             return get(HiroTimeseriesListMessage.class,
-                    getUri(path.append("values"), query, fragment),
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -1297,11 +1332,11 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * API GET /api/graph/[version]/{ogit/_id}/values
      *
      * @param ogitId ogit/_id of the vertex.
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Timeseries/get__id__values">API Documentation</a>
      */
-    public GetTimeseries getTimeseries(String ogitId) {
-        return new GetTimeseries(ogitId);
+    public GetTimeseriesCommand getTimeseriesCommand(String ogitId) {
+        return new GetTimeseriesCommand(ogitId);
     }
 
     // ----------------------------------- GetTimeseriesHistory -----------------------------------
@@ -1313,14 +1348,16 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Timeseries/get__id__values_history">API Documentation</a>
      */
-    public class GetTimeseriesHistory extends APIRequestConf<GetTimeseriesHistory, HiroMessage> {
+    public class GetTimeseriesHistoryCommand extends APIRequestConf<GetTimeseriesHistoryCommand, HiroMessage> {
+
+        protected final URIPath path;
 
         /**
          * @param ogitId    ogit/_id of the vertex.
          * @param timestamp Timestamp in ms.
          */
-        protected GetTimeseriesHistory(String ogitId, long timestamp) {
-            path.append(notBlank(ogitId, "ogitId"));
+        protected GetTimeseriesHistoryCommand(String ogitId, long timestamp) {
+            path = new URIPath(notBlank(ogitId, "ogitId"), "values", "history");
             query.put("timestamp", String.valueOf(timestamp));
         }
 
@@ -1328,13 +1365,13 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param includeDeleted allow getting if ogit/_is-deleted=true
          * @return this
          */
-        public GetTimeseriesHistory setIncludeDeleted(boolean includeDeleted) {
+        public GetTimeseriesHistoryCommand setIncludeDeleted(boolean includeDeleted) {
             query.put("includeDeleted", String.valueOf(includeDeleted));
             return this;
         }
 
         @Override
-        protected GetTimeseriesHistory self() {
+        protected GetTimeseriesHistoryCommand self() {
             return this;
         }
 
@@ -1346,7 +1383,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             return get(HiroMessage.class,
-                    getUri(path.append("values", "history"), query, fragment),
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -1360,11 +1397,11 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @param ogitId    ogit/_id of the vertex.
      * @param timestamp Timestamp in ms.
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Query]_Timeseries/get__id__values">API Documentation</a>
      */
-    public GetTimeseriesHistory getTimeseriesHistory(String ogitId, long timestamp) {
-        return new GetTimeseriesHistory(ogitId, timestamp);
+    public GetTimeseriesHistoryCommand getTimeseriesHistoryCommand(String ogitId, long timestamp) {
+        return new GetTimeseriesHistoryCommand(ogitId, timestamp);
     }
 
     // ----------------------------------- PostTimeseries -----------------------------------
@@ -1376,13 +1413,15 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Storage]_Timeseries/post__id__values">API Documentation</a>
      */
-    public class PostTimeseries extends SendJsonAPIRequestConf<PostTimeseries, HiroMessage> {
+    public class PostTimeseriesCommand extends SendBodyAPIRequestConf<PostTimeseriesCommand, HiroMessage> {
+
+        protected final URIPath path;
 
         /**
          * @param ogitId ogit/_id of the vertex.
          */
-        protected PostTimeseries(String ogitId) {
-            path.append(notBlank(ogitId, "ogitId"));
+        protected PostTimeseriesCommand(String ogitId) {
+            path = new URIPath(notBlank(ogitId, "ogitId"), "values");
         }
 
         /**
@@ -1391,11 +1430,11 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param hiroTimeseriesListMessage The message for the body.
          */
         public void setTimeseries(HiroTimeseriesListMessage hiroTimeseriesListMessage) {
-            setBodyFromMessage(hiroTimeseriesListMessage);
+            setJsonBodyFromMessage(hiroTimeseriesListMessage);
         }
 
         @Override
-        protected PostTimeseries self() {
+        protected PostTimeseriesCommand self() {
             return this;
         }
 
@@ -1408,7 +1447,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroMessage.class,
-                    getUri(path.append("values"), query, fragment),
+                    getUri(path, query, fragment),
                     notBlank(body, "body for timeseries data"),
                     headers,
                     httpRequestTimeout,
@@ -1423,11 +1462,11 @@ public class GraphAPI extends AuthenticatedAPIHandler {
      * API POST /api/graph/[version]/{ogit/_id}/values
      *
      * @param ogitId ogit/_id of the vertex.
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/graph.yaml#/[Storage]_Timeseries/post__id__values">API Documentation</a>
      */
-    public PostTimeseries postTimeseries(String ogitId) {
-        return new PostTimeseries(ogitId);
+    public PostTimeseriesCommand postTimeseriesCommand(String ogitId) {
+        return new PostTimeseriesCommand(ogitId);
     }
 
 }

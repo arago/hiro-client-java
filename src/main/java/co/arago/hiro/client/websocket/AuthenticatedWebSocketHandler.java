@@ -333,7 +333,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable, Re
                 } catch (JsonProcessingException e) {
                     reconnectDelay.set(0);
                     log.warn("Ignoring unknown websocket message: {}", message, e);
-                } catch (HiroException | IOException | InterruptedException e) {
+                } catch (Exception e) {
                     onError(webSocket, e);
                 } finally {
                     // Reset buffer and complete future when message has been fully received.

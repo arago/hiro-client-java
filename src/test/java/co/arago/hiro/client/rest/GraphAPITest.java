@@ -53,15 +53,15 @@ class GraphAPITest {
             return;
 
         // Cleanup remainders from previous runs.
-        HiroVertexListMessage queryA = graphAPI.queryByXid("test:machine:Server").execute();
-        HiroVertexListMessage queryB = graphAPI.queryByXid("test:software:Webserver").execute();
+        HiroVertexListMessage queryA = graphAPI.queryByXidCommand("test:machine:Server").execute();
+        HiroVertexListMessage queryB = graphAPI.queryByXidCommand("test:software:Webserver").execute();
 
         if (!queryA.isEmpty()) {
-            graphAPI.deleteVertex(queryA.getFirst().getAttributeAsString("ogit/_id"));
+            graphAPI.deleteVertexCommand(queryA.getFirst().getAttributeAsString("ogit/_id"));
         }
 
         if (!queryB.isEmpty()) {
-            graphAPI.deleteVertex(queryB.getFirst().getAttributeAsString("ogit/_id"));
+            graphAPI.deleteVertexCommand(queryB.getFirst().getAttributeAsString("ogit/_id"));
         }
 
         Map<String, Object> newVertexA = Map.of(
@@ -79,8 +79,8 @@ class GraphAPITest {
                 "ogit/name", "Standalone Apache Webserver"
         );
 
-        HiroVertexMessage resultA = graphAPI.createVertex(newVertexA).execute();
-        HiroVertexMessage resultB = graphAPI.createVertex(newVertexB).execute();
+        HiroVertexMessage resultA = graphAPI.createVertexCommand(newVertexA).execute();
+        HiroVertexMessage resultB = graphAPI.createVertexCommand(newVertexB).execute();
 
         log.info(resultA.toJsonString());
         log.info(resultB.toJsonString());
@@ -88,10 +88,10 @@ class GraphAPITest {
         String idA = resultA.getAttributeAsString("ogit/_id");
         String idB = resultB.getAttributeAsString("ogit/_id");
 
-        log.info(graphAPI.connectVertices(idB, "ogit/dependsOn", idA).execute().toJsonString());
+        log.info(graphAPI.connectVerticesCommand(idB, "ogit/dependsOn", idA).execute().toJsonString());
 
-        graphAPI.deleteVertex(idA).execute();
-        graphAPI.deleteVertex(idB).execute();
+        graphAPI.deleteVertexCommand(idA).execute();
+        graphAPI.deleteVertexCommand(idB).execute();
     }
 
     @Test

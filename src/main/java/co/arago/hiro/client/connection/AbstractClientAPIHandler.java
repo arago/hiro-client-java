@@ -16,6 +16,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -228,8 +229,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     protected final int maxConnectionPool;
 
     protected final HttpLogger httpLogger;
-
-    private ExecutorService clientExecutorService;
+    protected boolean externalHttpClient;
 
     /**
      * Protected Constructor. Attributes shall be filled via builders.
@@ -246,6 +246,8 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         this.httpClient = builder.getHttpClient();
         this.maxConnectionPool = builder.getMaxConnectionPool();
         this.httpLogger = new HttpLogger(builder.getMaxBinaryLogLength());
+
+        this.externalHttpClient = (this.httpClient != null);
 
         if (acceptAllCerts == null) {
             this.sslContext = builder.getSslContext();
@@ -294,32 +296,37 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         if (sslParameters != null)
             builder.sslParameters(sslParameters);
 
-        clientExecutorService = Executors.newFixedThreadPool(maxConnectionPool);
-        builder.executor(clientExecutorService);
+        builder.executor(Executors.newFixedThreadPool(maxConnectionPool));
 
-        return builder.build();
+        httpClient = builder.build();
+        return httpClient;
     }
 
     /**
-     * Shut the {@link #httpClient} down by shutting down its {@link #clientExecutorService}. If the
+     * Shut the {@link #httpClient} down by shutting down its ExecutorService. If the
      * {@link #httpClient} has been provided externally, this call will be ignored.
      */
     @Override
     public void close() {
-        if (clientExecutorService == null)
+        if (externalHttpClient || httpClient == null || httpClient.executor().isEmpty())
             return;
 
-        clientExecutorService.shutdown();
-        try {
-            if (!clientExecutorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
-                clientExecutorService.shutdownNow();
+        Executor executor = httpClient.executor().orElse(null);
+
+        if (executor instanceof ExecutorService) {
+            ExecutorService executorService = (ExecutorService) httpClient.executor().get();
+
+            executorService.shutdown();
+            try {
+                if (!executorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                    executorService.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executorService.shutdownNow();
             }
-        } catch (InterruptedException e) {
-            clientExecutorService.shutdownNow();
+            httpClient = null;
+            System.gc();
         }
-        clientExecutorService = null;
-        httpClient = null;
-        System.gc();
     }
 
     /**

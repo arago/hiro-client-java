@@ -77,22 +77,24 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity">API Documentation</a>
      */
-    public class GetMeAccount extends APIRequestConf<GetMeAccount, HiroVertexMessage> {
+    public class GetMeAccountCommand extends APIRequestConf<GetMeAccountCommand, HiroVertexMessage> {
 
-        protected GetMeAccount() {
+        protected final URIPath path = new URIPath("me", "account");
+
+        protected GetMeAccountCommand() {
         }
 
         /**
          * @param profile Query parameter "profile=[true|false]".
          * @return {@link #self()}
          */
-        public GetMeAccount setProfile(Boolean profile) {
+        public GetMeAccountCommand setProfile(Boolean profile) {
             query.put("profile", String.valueOf(profile));
             return self();
         }
 
         @Override
-        protected GetMeAccount self() {
+        protected GetMeAccountCommand self() {
             return this;
         }
 
@@ -106,7 +108,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexMessage.class,
-                    getUri(new URIPath("me", "account"), query, fragment),
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -118,11 +120,11 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      * <p>
      * API GET /api/auth/[version]/me/account
      *
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity">API Documentation</a>
      */
-    public GetMeAccount getMeAccount() {
-        return new GetMeAccount();
+    public GetMeAccountCommand getMeAccountCommand() {
+        return new GetMeAccountCommand();
     }
 
     // ----------------------------------- GetMeAvatar -----------------------------------
@@ -134,13 +136,15 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_avatar">API Documentation</a>
      */
-    public class GetMeAvatar extends APIRequestConf<GetMeAvatar, HttpResponseParser> {
+    public class GetMeAvatarCommand extends APIRequestConf<GetMeAvatarCommand, HttpResponseParser> {
 
-        protected GetMeAvatar() {
+        protected final URIPath path = new URIPath("me", "avatar");
+
+        protected GetMeAvatarCommand() {
         }
 
         @Override
-        protected GetMeAvatar self() {
+        protected GetMeAvatarCommand self() {
             return this;
         }
 
@@ -154,7 +158,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         @Override
         public HttpResponseParser execute() throws HiroException, IOException, InterruptedException {
             return getBinary(
-                    getUri(new URIPath("me", "avatar"), query, fragment),
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -166,11 +170,11 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      * <p>
      * API GET /api/auth/[version]/me/avatar
      *
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_avatar">API Documentation</a>
      */
-    public GetMeAvatar getMeAvatar() {
-        return new GetMeAvatar();
+    public GetMeAvatarCommand getMeAvatarCommand() {
+        return new GetMeAvatarCommand();
     }
 
     // ----------------------------------- PutMeAccount -----------------------------------
@@ -182,18 +186,20 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/put_me_avatar">API Documentation</a>
      */
-    public class PutMeAvatar extends SendBinaryAPIRequestConf<PutMeAvatar, String> {
+    public class PutMeAvatarCommand extends SendStreamAPIRequestConf<PutMeAvatarCommand, String> {
 
-        protected PutMeAvatar(StreamContainer streamContainer) {
+        protected final URIPath path = new URIPath("me", "avatar");
+
+        protected PutMeAvatarCommand(StreamContainer streamContainer) {
             super(streamContainer);
         }
 
-        protected PutMeAvatar(InputStream inputStream) {
+        protected PutMeAvatarCommand(InputStream inputStream) {
             super(inputStream);
         }
 
         @Override
-        protected PutMeAvatar self() {
+        protected PutMeAvatarCommand self() {
             return this;
         }
 
@@ -208,7 +214,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public String execute() throws HiroException, IOException, InterruptedException {
             notBlank(streamContainer.getContentType(), "contentType");
             return executeBinary(
-                    getUri(new URIPath("me", "avatar"), query, fragment),
+                    getUri(path, query, fragment),
                     "PUT",
                     streamContainer,
                     headers,
@@ -223,11 +229,11 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      * API PUT /api/auth/[version]/me/avatar
      *
      * @param streamContainer The existing {@link StreamContainer}. Must not be null.
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/put_me_avatar">API Documentation</a>
      */
-    public PutMeAvatar putMeAvatar(StreamContainer streamContainer) {
-        return new PutMeAvatar(streamContainer);
+    public PutMeAvatarCommand putMeAvatarCommand(StreamContainer streamContainer) {
+        return new PutMeAvatarCommand(streamContainer);
     }
 
     /**
@@ -236,11 +242,11 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      * API PUT /api/auth/[version]/me/avatar
      *
      * @param inputStream The inputStream for the request body. Must not be null.
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/put_me_avatar">API Documentation</a>
      */
-    public PutMeAvatar putMeAvatar(InputStream inputStream) {
-        return new PutMeAvatar(inputStream);
+    public PutMeAvatarCommand putMeAvatarCommand(InputStream inputStream) {
+        return new PutMeAvatarCommand(inputStream);
     }
 
     // ----------------------------------- PutMePassword -----------------------------------
@@ -252,12 +258,14 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/put_me_password">API Documentation</a>
      */
-    public class PutMePassword extends SendJsonAPIRequestConf<PutMePassword, HiroVertexMessage> {
+    public class PutMePasswordCommand extends SendBodyAPIRequestConf<PutMePasswordCommand, HiroVertexMessage> {
 
-        protected PutMePassword() {
+        protected final URIPath path = new URIPath("me", "password");
+
+        protected PutMePasswordCommand() {
         }
 
-        public PutMePassword setPasswords(String oldPassword, String newPassword) {
+        public PutMePasswordCommand setPasswords(String oldPassword, String newPassword) {
             try {
                 body = JsonUtil.DEFAULT.toString(
                         Map.of("oldPassword", oldPassword,
@@ -270,7 +278,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         }
 
         @Override
-        protected PutMePassword self() {
+        protected PutMePasswordCommand self() {
             return this;
         }
 
@@ -284,7 +292,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return put(
                     HiroVertexMessage.class,
-                    getUri(new URIPath("me", "password"), query, fragment),
+                    getUri(path, query, fragment),
                     notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
@@ -297,11 +305,11 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      * <p>
      * API PUT /api/auth/[version]/me/password
      *
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/put_me_password">API Documentation</a>
      */
-    public PutMePassword putMePassword() {
-        return new PutMePassword();
+    public PutMePasswordCommand putMePasswordCommand() {
+        return new PutMePasswordCommand();
     }
 
     // ----------------------------------- GetMeProfile -----------------------------------
@@ -313,13 +321,15 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_profile">API Documentation</a>
      */
-    public class GetMeProfile extends APIRequestConf<GetMeProfile, HiroVertexMessage> {
+    public class GetMeProfileCommand extends APIRequestConf<GetMeProfileCommand, HiroVertexMessage> {
 
-        protected GetMeProfile() {
+        protected final URIPath path = new URIPath("me", "profile");
+
+        protected GetMeProfileCommand() {
         }
 
         @Override
-        protected GetMeProfile self() {
+        protected GetMeProfileCommand self() {
             return this;
         }
 
@@ -333,7 +343,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexMessage.class,
-                    getUri(new URIPath("me", "profile"), query, fragment),
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -345,11 +355,11 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      * <p>
      * API GET /api/auth/[version]/me/profile
      *
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_profile">API Documentation</a>
      */
-    public GetMeProfile getMeProfile() {
-        return new GetMeProfile();
+    public GetMeProfileCommand getMeProfileCommand() {
+        return new GetMeProfileCommand();
     }
 
     // ----------------------------------- PostMeProfile -----------------------------------
@@ -361,13 +371,15 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/post_me_profile">API Documentation</a>
      */
-    public class PostMeProfile extends SendJsonAPIRequestConf<PostMeProfile, HiroVertexMessage> {
+    public class PostMeProfileCommand extends SendBodyAPIRequestConf<PostMeProfileCommand, HiroVertexMessage> {
 
-        protected PostMeProfile() {
+        protected final URIPath path = new URIPath("me", "profile");
+
+        protected PostMeProfileCommand() {
         }
 
         @Override
-        protected PostMeProfile self() {
+        protected PostMeProfileCommand self() {
             return this;
         }
 
@@ -381,7 +393,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return post(
                     HiroVertexMessage.class,
-                    getUri(new URIPath("me", "profile"), query, fragment),
+                    getUri(path, query, fragment),
                     notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
@@ -394,11 +406,11 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      * <p>
      * API POST /api/auth/[version]/me/profile
      *
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/post_me_profile">API Documentation</a>
      */
-    public PostMeProfile postMeProfile() {
-        return new PostMeProfile();
+    public PostMeProfileCommand postMeProfileCommand() {
+        return new PostMeProfileCommand();
     }
 
     // ----------------------------------- GetMeRoles -----------------------------------
@@ -410,13 +422,15 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_roles">API Documentation</a>
      */
-    public class GetMeRoles extends APIRequestConf<GetMeRoles, HiroMessage> {
+    public class GetMeRolesCommand extends APIRequestConf<GetMeRolesCommand, HiroMessage> {
 
-        protected GetMeRoles() {
+        protected final URIPath path = new URIPath("me", "roles");
+
+        protected GetMeRolesCommand() {
         }
 
         @Override
-        protected GetMeRoles self() {
+        protected GetMeRolesCommand self() {
             return this;
         }
 
@@ -430,7 +444,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroMessage.class,
-                    getUri(new URIPath("me", "roles"), query, fragment),
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -442,11 +456,11 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      * <p>
      * API GET /api/auth/[version]/me/roles
      *
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_roles">API Documentation</a>
      */
-    public GetMeRoles getMeRoles() {
-        return new GetMeRoles();
+    public GetMeRolesCommand getMeRolesCommand() {
+        return new GetMeRolesCommand();
     }
 
     // ----------------------------------- GetMeTeams -----------------------------------
@@ -458,23 +472,25 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      *
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_teams">API Documentation</a>
      */
-    public class GetMeTeams extends APIRequestConf<GetMeTeams, HiroVertexListMessage> {
+    public class GetMeTeamsCommand extends APIRequestConf<GetMeTeamsCommand, HiroVertexListMessage> {
 
-        protected GetMeTeams() {
+        protected final URIPath path = new URIPath("me", "teams");
+
+        protected GetMeTeamsCommand() {
         }
 
         /**
          * @param includeVirtual Query parameter "include-virtual=[true|false]".
          * @return {@link #self()}
          */
-        public GetMeTeams setIncludeVirtual(Boolean includeVirtual) {
+        public GetMeTeamsCommand setIncludeVirtual(Boolean includeVirtual) {
             query.put("include-virtual", String.valueOf(includeVirtual));
             return self();
         }
 
 
         @Override
-        protected GetMeTeams self() {
+        protected GetMeTeamsCommand self() {
             return this;
         }
 
@@ -488,7 +504,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexListMessage.class,
-                    getUri(new URIPath("me", "teams"), query, fragment),
+                    getUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -500,10 +516,10 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      * <p>
      * API GET /api/auth/[version]/me/teams
      *
-     * @return New instance of the request.
+     * @return New instance of the command. Use method "execute()" after all parameters have been set to run the command.
      * @see <a href="https://core.arago.co/help/specs/?url=definitions/auth.yaml#/[Me]_Identity/get_me_teams">API Documentation</a>
      */
-    public GetMeTeams getMeTeams() {
-        return new GetMeTeams();
+    public GetMeTeamsCommand getMeTeamsCommand() {
+        return new GetMeTeamsCommand();
     }
 }

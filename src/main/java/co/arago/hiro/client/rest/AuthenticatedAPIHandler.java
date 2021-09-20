@@ -5,8 +5,10 @@ import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
+import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.JsonMessage;
 import co.arago.hiro.client.util.HttpLogger;
+import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import co.arago.hiro.client.util.httpclient.URIPath;
 import co.arago.util.json.JsonUtil;
@@ -132,31 +134,12 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      */
     public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> {
 
-        protected URIPath path = new URIPath();
         protected Map<String, String> query = new HashMap<>();
         protected Map<String, String> headers = new HashMap<>();
         protected String fragment;
 
         protected Long httpRequestTimeout;
         protected Integer maxRetries;
-
-        /**
-         * @param pathParts Path fragments to add to the path of the URL.
-         * @return {@link #self()}
-         */
-        public T appendToPath(String... pathParts) {
-            this.path.append(pathParts);
-            return self();
-        }
-
-        /**
-         * @param pathParts Path fragments to prepend to the path of the URL.
-         * @return {@link #self()}
-         */
-        public T prependPath(String... pathParts) {
-            this.path.prepend(pathParts);
-            return self();
-        }
 
         /**
          * @param query Set query parameters.
@@ -206,10 +189,10 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param <T> The Builder type
      * @param <R> The type of the result expected from {@link #execute()}
      */
-    public static abstract class SendJsonAPIRequestConf<T extends SendJsonAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> {
+    public static abstract class SendBodyAPIRequestConf<T extends SendBodyAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> {
         protected String body;
 
-        public SendJsonAPIRequestConf() {
+        public SendBodyAPIRequestConf() {
             headers.put("Content-Type", "application/json;encoding=UTF-8");
         }
 
@@ -220,7 +203,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @return {@link #self()}.
          * @throws IllegalArgumentException When the map cannot be transformed to a Json String.
          */
-        public T setBodyFromMap(Map<String, ?> map) {
+        public T setJsonBodyFromMap(Map<String, ?> map) {
             try {
                 return setBody(JsonUtil.DEFAULT.toString(map));
             } catch (JsonProcessingException e) {
@@ -235,32 +218,13 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @return {@link #self()}.
          * @throws IllegalArgumentException When the jsonMessage cannot be transformed to a Json String.
          */
-        public T setBodyFromMessage(JsonMessage jsonMessage) {
+        public T setJsonBodyFromMessage(JsonMessage jsonMessage) {
             try {
                 return setBody(jsonMessage.toJsonString());
             } catch (JsonProcessingException e) {
                 throw new IllegalArgumentException("Cannot construct body.", e);
             }
         }
-
-        /**
-         * @param body the body to set.
-         * @return {@link #self()}
-         */
-        public T setBody(String body) {
-            this.body = body;
-            return self();
-        }
-    }
-
-    /**
-     * The basic configuration for all requests that are sending pure string data. Handle queries, headers and fragments.
-     *
-     * @param <T> The Builder type
-     * @param <R> The type of the result expected from {@link #execute()}
-     */
-    public static abstract class SendStringAPIRequestConf<T extends SendStringAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> {
-        protected String body;
 
         /**
          * Set the body as plain String.
@@ -272,7 +236,6 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
             this.body = body;
             return self();
         }
-
     }
 
     /**
@@ -282,7 +245,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param <T> The Builder type
      * @param <R> The type of the result expected from {@link #execute()}
      */
-    public static abstract class SendBinaryAPIRequestConf<T extends SendBinaryAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> implements RequiredFieldChecks {
+    public static abstract class SendStreamAPIRequestConf<T extends SendStreamAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> implements RequiredFieldChecks {
         protected StreamContainer streamContainer;
 
         /**
@@ -290,7 +253,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          *
          * @param streamContainer The existing {@link StreamContainer}. Must not be null.
          */
-        public SendBinaryAPIRequestConf(StreamContainer streamContainer) {
+        public SendStreamAPIRequestConf(StreamContainer streamContainer) {
             this.streamContainer = notNull(streamContainer, "streamContainer");
         }
 
@@ -299,7 +262,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          *
          * @param inputStream The inputStream for the request body. Must not be null.
          */
-        public SendBinaryAPIRequestConf(InputStream inputStream) {
+        public SendStreamAPIRequestConf(InputStream inputStream) {
             this.streamContainer = new StreamContainer(notNull(inputStream, "inputStream"), null, null, null);
         }
 
@@ -351,6 +314,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         }
 
     }
+
 
     // ###############################################################################################
     // ## Main part ##

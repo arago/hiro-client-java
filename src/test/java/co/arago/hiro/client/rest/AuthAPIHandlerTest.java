@@ -57,7 +57,7 @@ class AuthAPIHandlerTest {
 
         log.info(
                 JsonUtil.DEFAULT.toString(
-                        authAPI.getMeAccount()
+                        authAPI.getMeAccountCommand()
                                 .setProfile(true)
                                 .execute()
                 )
@@ -70,7 +70,7 @@ class AuthAPIHandlerTest {
             return;
 
         HttpResponseParser responseParser = authAPI
-                .getMeAvatar()
+                .getMeAvatarCommand()
                 .execute();
         log.info(responseParser.getMediaType());
         log.info(String.valueOf(responseParser.getContentLength()));
@@ -83,7 +83,7 @@ class AuthAPIHandlerTest {
             log.info(base64.length() > 1000 ? base64.substring(0, 1000) + "..." : base64);
         }
 
-        String imageSize = authAPI.putMeAvatar(new ByteArrayInputStream(imageBytes))
+        String imageSize = authAPI.putMeAvatarCommand(new ByteArrayInputStream(imageBytes))
                 .setContentType(responseParser.getContentType())
                 .execute();
 
@@ -97,7 +97,7 @@ class AuthAPIHandlerTest {
 
         log.info(
                 JsonUtil.DEFAULT.toString(
-                        authAPI.getMeProfile()
+                        authAPI.getMeProfileCommand()
                                 .execute()
                 )
         );
@@ -110,7 +110,7 @@ class AuthAPIHandlerTest {
 
         log.info(
                 JsonUtil.DEFAULT.toString(
-                        authAPI.getMeRoles()
+                        authAPI.getMeRolesCommand()
                                 .execute().getMap().get("items")
                 )
         );
@@ -123,7 +123,7 @@ class AuthAPIHandlerTest {
 
         log.info(
                 JsonUtil.DEFAULT.toString(
-                        authAPI.getMeTeams()
+                        authAPI.getMeTeamsCommand()
                                 .setIncludeVirtual(true)
                                 .execute().getItems()
                 )

@@ -1,6 +1,5 @@
 package co.arago.hiro.client.websocket;
 
-import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.WebSocketException;
 import co.arago.hiro.client.model.HiroMessage;
 
@@ -31,11 +30,9 @@ public interface SpecificWebSocketListener {
      *
      * @param webSocket Reference to the websocket.
      * @param message   The incoming {@link HiroMessage}.
-     * @throws HiroException        Thrown when handling the message results in an error.
-     * @throws IOException          On underlying IO or Json parse error.
-     * @throws InterruptedException When process gets interrupted.
+     * @throws Exception Any Exception
      */
-    void onMessage(WebSocket webSocket, HiroMessage message) throws HiroException, IOException, InterruptedException;
+    void onMessage(WebSocket webSocket, HiroMessage message) throws Exception;
 
     /**
      * Called right before the websocket is about to close.

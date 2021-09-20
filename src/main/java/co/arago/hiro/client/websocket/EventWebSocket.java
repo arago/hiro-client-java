@@ -243,7 +243,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
         }
 
         @Override
-        public void onMessage(WebSocket webSocket, HiroMessage message) {
+        public void onMessage(WebSocket webSocket, HiroMessage message) throws Exception {
             eventWebSocketListener.onEvent(JsonUtil.DEFAULT.toObject(message, EventsMessage.class));
         }
 
