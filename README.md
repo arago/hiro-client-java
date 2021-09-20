@@ -330,7 +330,7 @@ class Example {
                     .addScope(defaultScope)
                     .addEventsFilter(
                             "default",
-                            "(element.ogit/_type = ogit/Automation/AutomationIssue"
+                            "(element.ogit/_type = ogit/Automation/AutomationIssue)"
                     )
                     .build()) {
 
