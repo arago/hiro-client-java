@@ -49,6 +49,9 @@ class GraphAPITest {
 
     @Test
     void batchTest() throws HiroException, IOException, InterruptedException {
+        if (graphAPI == null)
+            return;
+
         // Cleanup remainders from previous runs.
         HiroVertexListMessage queryA = graphAPI.queryByXid("test:machine:Server").execute();
         HiroVertexListMessage queryB = graphAPI.queryByXid("test:software:Webserver").execute();

@@ -8,6 +8,7 @@ import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.model.JsonMessage;
 import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
+import co.arago.hiro.client.util.httpclient.URIPath;
 import co.arago.util.json.JsonUtil;
 import co.arago.util.validation.RequiredFieldChecks;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -20,16 +21,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * This class is the basis of all authenticated API handlers that make use of the different sections of the HIRO API.
@@ -136,7 +132,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      */
     public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> {
 
-        protected LinkedList<String> path = new LinkedList<>();
+        protected URIPath path = new URIPath();
         protected Map<String, String> query = new HashMap<>();
         protected Map<String, String> headers = new HashMap<>();
         protected String fragment;
@@ -145,20 +141,20 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         protected Integer maxRetries;
 
         /**
-         * @param path Path fragments to add to the path of the URL.
+         * @param pathParts Path fragments to add to the path of the URL.
          * @return {@link #self()}
          */
-        public T appendToPath(String path) {
-            this.path.add(path);
+        public T appendToPath(String... pathParts) {
+            this.path.append(pathParts);
             return self();
         }
 
         /**
-         * @param path Path fragments to add to the path of the URL.
+         * @param pathParts Path fragments to prepend to the path of the URL.
          * @return {@link #self()}
          */
-        public T prependPath(String path) {
-            this.path.addFirst(path);
+        public T prependPath(String... pathParts) {
+            this.path.prepend(pathParts);
             return self();
         }
 
@@ -431,42 +427,13 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @throws InterruptedException Call got interrupted
      * @throws HiroException        When calling /api/version responds with an error
      */
-    public URI getUri(String path, Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
+    public URI getUri(URIPath path, Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
         if (apiUri == null)
             apiUri = (endpoint != null ? buildApiURI(endpoint) : tokenAPIHandler.getApiUriOf(apiName));
 
-        URI pathUri = apiUri.resolve(RegExUtils.removePattern(path, "^/+"));
+        URI pathUri = apiUri.resolve(RegExUtils.removePattern(path.build(), "^/+"));
 
         return addQueryAndFragment(pathUri, query, fragment);
-    }
-
-    /**
-     * Construct my URI with query parameters and fragment.
-     * This method will query /api/version once to construct the URI unless {@link #endpoint} is set.
-     *
-     * @param pathPart The pathParts to append to the API path.
-     * @param query    Map of query parameters for this URI. Can be null for no query parameters.
-     * @param fragment The fragment to add to the URI.
-     * @return The URI with query parameters and fragment.
-     * @throws IOException          On a failed call to /api/version
-     * @throws InterruptedException Call got interrupted
-     * @throws HiroException        When calling /api/version responds with an error
-     */
-    public URI getUri(List<String> pathPart, Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
-        return getUri(getRequestPath(pathPart), query, fragment);
-    }
-
-
-    /**
-     * Create a valid path to append to a URI path.
-     *
-     * @param path List of path parts.
-     * @return The encoded path with a leading '/'.
-     */
-    public String getRequestPath(List<String> path) {
-        return "/" + path.stream()
-                .map(part -> URLEncoder.encode(part, StandardCharsets.UTF_8))
-                .collect(Collectors.joining("/"));
     }
 
     /**

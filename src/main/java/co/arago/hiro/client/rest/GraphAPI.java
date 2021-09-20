@@ -199,7 +199,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getUri("query/vertices", query, fragment),
+                    getUri(path.append("query", "vertices"), query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -258,7 +258,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getUri("query/gremlin", query, fragment),
+                    getUri(path.append("query", "gremlin"), query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -314,7 +314,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getUri("query/ids", query, fragment),
+                    getUri(path.append("query", "ids"), query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -368,7 +368,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getUri("query/xid", query, fragment),
+                    getUri(path.append("query", "xid"), query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -468,7 +468,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getUri("query/values", query, fragment),
+                    getUri(path.append("query", "values"), query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -505,7 +505,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param ogitId ogit/_id of the entity. This can be a vertex id or a composed edge id.
          */
         protected GetEntity(String ogitId) {
-            appendToPath(notBlank(ogitId, "ogitId"));
+            path.append(notBlank(ogitId, "ogitId"));
         }
 
         /**
@@ -609,7 +609,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param ogitId ogit/_id of the vertex.
          */
         protected UpdateEntity(String ogitId) {
-            appendToPath(notBlank(ogitId, "ogitId"));
+            path.append(notBlank(ogitId, "ogitId"));
         }
 
         /**
@@ -617,7 +617,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          *                   non-blank value.
          */
         protected UpdateEntity(Map<String, Object> attributes) {
-            appendToPath(notBlank((String) attributes.get("ogit/_id"), "ogit/_id in attributes"));
+            path.append(notBlank((String) attributes.get("ogit/_id"), "ogit/_id in attributes"));
             setBodyFromMap(attributes);
         }
 
@@ -705,7 +705,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param ogitId ogit/_id of the vertex.
          */
         protected DeleteEntity(String ogitId) {
-            appendToPath(notBlank(ogitId, "ogitId"));
+            path.append(notBlank(ogitId, "ogitId"));
         }
 
         @Override
@@ -775,7 +775,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param ogitType ogit/_type of the vertex.
          */
         protected CreateEntity(String ogitType) {
-            appendToPath(notBlank(ogitType, "ogitType"));
+            path.append(notBlank(ogitType, "ogitType"));
         }
 
         /**
@@ -783,7 +783,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          *                   non-blank value.
          */
         protected CreateEntity(Map<String, Object> attributes) {
-            appendToPath(notBlank((String) attributes.get("ogit/_type"), "ogit/_type in attributes"));
+            path.append(notBlank((String) attributes.get("ogit/_type"), "ogit/_type in attributes"));
             setBodyFromMap(attributes);
         }
 
@@ -800,9 +800,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         @Override
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
-            prependPath("new");
             return post(HiroVertexMessage.class,
-                    getUri(path, query, fragment),
+                    getUri(path.prepend("new"), query, fragment),
                     notBlank(body, "body with entity (vertex) data"),
                     headers,
                     httpRequestTimeout,
@@ -859,7 +858,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param toNodeId   Destination vertex of the edge.
          */
         protected PostVerb(String fromNodeId, String verb, String toNodeId) {
-            appendToPath(notBlank(verb, "verb"));
+            path.append(notBlank(verb, "verb"));
             setBodyFromMap(Map.of(
                     "out", notBlank(fromNodeId, "fromNodeId"),
                     "in", notBlank(toNodeId, "toNodeId")
@@ -879,9 +878,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         @Override
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
-            prependPath("connect");
             return post(HiroVertexMessage.class,
-                    getUri(path, query, fragment),
+                    getUri(path.prepend("connect"), query, fragment),
                     notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
@@ -920,7 +918,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param ogitId ogit/_id of the vertex.
          */
         protected GetBlob(String ogitId) {
-            appendToPath(notBlank(ogitId, "ogitId"));
+            path.append(notBlank(ogitId, "ogitId"));
         }
 
         /**
@@ -954,9 +952,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HttpResponseParser execute() throws HiroException, IOException, InterruptedException {
-            appendToPath("content");
             return getBinary(
-                    getUri(path, query, fragment),
+                    getUri(path.append("content"), query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -993,7 +990,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         protected PostBlob(String ogitId, StreamContainer streamContainer) {
             super(streamContainer);
-            appendToPath(notBlank(ogitId, "ogitId"));
+            path.append(notBlank(ogitId, "ogitId"));
         }
 
         /**
@@ -1002,7 +999,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         protected PostBlob(String ogitId, InputStream inputStream) {
             super(inputStream);
-            appendToPath(notBlank(ogitId, "ogitId"));
+            path.append(notBlank(ogitId, "ogitId"));
         }
 
         @Override
@@ -1019,9 +1016,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             notBlank(streamContainer.getContentType(), "contentType");
-            appendToPath("content");
             return postBinary(HiroMessage.class,
-                    getUri(path, query, fragment),
+                    getUri(path.append("content"), query, fragment),
                     streamContainer,
                     headers,
                     httpRequestTimeout,
@@ -1072,7 +1068,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param ogitId ogit/_id of the vertex.
          */
         protected GetHistory(String ogitId) {
-            appendToPath(notBlank(ogitId, "ogitId"));
+            path.append(notBlank(ogitId, "ogitId"));
         }
 
         /**
@@ -1173,9 +1169,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public DefaultHiroItemListMessage execute() throws HiroException, IOException, InterruptedException {
-            appendToPath("history");
             return get(DefaultHiroItemListMessage.class,
-                    getUri(path, query, fragment),
+                    getUri(path.append("history"), query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -1210,7 +1205,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param ogitId ogit/_id of the vertex.
          */
         protected GetTimeseries(String ogitId) {
-            appendToPath(notBlank(ogitId, "ogitId"));
+            path.append(notBlank(ogitId, "ogitId"));
         }
 
         /**
@@ -1288,9 +1283,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HiroTimeseriesListMessage execute() throws HiroException, IOException, InterruptedException {
-            appendToPath("values");
             return get(HiroTimeseriesListMessage.class,
-                    getUri(path, query, fragment),
+                    getUri(path.append("values"), query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -1326,7 +1320,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param timestamp Timestamp in ms.
          */
         protected GetTimeseriesHistory(String ogitId, long timestamp) {
-            appendToPath(notBlank(ogitId, "ogitId"));
+            path.append(notBlank(ogitId, "ogitId"));
             query.put("timestamp", String.valueOf(timestamp));
         }
 
@@ -1351,10 +1345,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @throws InterruptedException When the call gets interrupted.
          */
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
-            appendToPath("values");
-            appendToPath("history");
             return get(HiroMessage.class,
-                    getUri(path, query, fragment),
+                    getUri(path.append("values", "history"), query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -1390,7 +1382,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @param ogitId ogit/_id of the vertex.
          */
         protected PostTimeseries(String ogitId) {
-            appendToPath(notBlank(ogitId, "ogitId"));
+            path.append(notBlank(ogitId, "ogitId"));
         }
 
         /**
@@ -1415,9 +1407,8 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         @Override
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
-            appendToPath("values");
             return post(HiroMessage.class,
-                    getUri(path, query, fragment),
+                    getUri(path.append("values"), query, fragment),
                     notBlank(body, "body for timeseries data"),
                     headers,
                     httpRequestTimeout,

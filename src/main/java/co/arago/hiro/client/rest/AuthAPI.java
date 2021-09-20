@@ -7,6 +7,7 @@ import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
 import co.arago.hiro.client.model.vertex.HiroVertexMessage;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
+import co.arago.hiro.client.util.httpclient.URIPath;
 import co.arago.util.json.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -105,7 +106,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexMessage.class,
-                    getUri("me/account", query, fragment),
+                    getUri(new URIPath("me", "account"), query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -153,7 +154,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         @Override
         public HttpResponseParser execute() throws HiroException, IOException, InterruptedException {
             return getBinary(
-                    getUri("me/avatar", query, fragment),
+                    getUri(new URIPath("me", "avatar"), query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -207,7 +208,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public String execute() throws HiroException, IOException, InterruptedException {
             notBlank(streamContainer.getContentType(), "contentType");
             return executeBinary(
-                    getUri("me/avatar", query, fragment),
+                    getUri(new URIPath("me", "avatar"), query, fragment),
                     "PUT",
                     streamContainer,
                     headers,
@@ -283,7 +284,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return put(
                     HiroVertexMessage.class,
-                    getUri("me/password", query, fragment),
+                    getUri(new URIPath("me", "password"), query, fragment),
                     notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
@@ -332,7 +333,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexMessage.class,
-                    getUri("me/profile", query, fragment),
+                    getUri(new URIPath("me", "profile"), query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -380,7 +381,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return post(
                     HiroVertexMessage.class,
-                    getUri("me/profile", query, fragment),
+                    getUri(new URIPath("me", "profile"), query, fragment),
                     notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
@@ -429,7 +430,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroMessage.class,
-                    getUri("me/roles", query, fragment),
+                    getUri(new URIPath("me", "roles"), query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -487,7 +488,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexListMessage.class,
-                    getUri("me/teams", query, fragment),
+                    getUri(new URIPath("me", "teams"), query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
