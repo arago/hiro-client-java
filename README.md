@@ -245,7 +245,7 @@ class Example {
 }
 ```
 
-## The API Clients
+# The API Clients
 
 The API Clients are mostly straightforward to use, since all public methods of these classes represent an API call.
 Documentation is available in source code as well.
@@ -258,7 +258,7 @@ Currently, supported are
 
 For usage, see the examples above.
 
-## The WebSocket Clients
+# The WebSocket Clients
 
 There are two websocket clients supported:
 
@@ -267,11 +267,11 @@ There are two websocket clients supported:
 
 Both of them have special client classes in this library.
 
-When messages from the websockets are received, they are handled in sequential order. This can prove to be a problem
-when you need to react to those messages swiftly. Isolating each handling of an incoming message in its own thread is
-not subject of this library and has to be done by the project using it.
+When messages from the websockets are received, they are handled in sequential order in their own thread. This can prove
+to be a problem when you need to react to those messages swiftly. Isolating each handling of an incoming message in its
+own thread is not subject of this library and has to be done by the project using it.
 
-### Event Websocket
+## Event Websocket
 
 * [event-ws](https://core.arago.co/help/specs/?url=definitions/events-ws.yaml)
 
@@ -346,7 +346,7 @@ class Example {
 
 I contrast to the other API Client objects the websockets need to be closed explicitly after usage.
 
-### Action Websocket
+## Action Websocket
 
 * [action-ws](https://core.arago.co/help/specs/?url=definitions/action-ws.yaml)
 
