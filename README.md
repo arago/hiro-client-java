@@ -309,25 +309,28 @@ class Example {
                     .execute()
                     .getAttributeAsString("ogit/Auth/Account/defaultScope");
 
-            try (EventWebSocket eventWebSocket = EventWebSocket.newBuilder(handler, new EventWebSocketListener() {
-                        @Override
-                        public void onCreate(EventsMessage eventsMessage) {
-                            // React when a vertex has been created
-                        }
+            try (EventWebSocket eventWebSocket = EventWebSocket.newBuilder(
+                            handler,
+                            new EventWebSocketListener() {
+                                @Override
+                                public void onCreate(EventsMessage eventsMessage) {
+                                    // React when a vertex has been created
+                                }
 
-                        @Override
-                        public void onUpdate(EventsMessage eventsMessage) {
-                            // React when a vertex has been updated
-                        }
+                                @Override
+                                public void onUpdate(EventsMessage eventsMessage) {
+                                    // React when a vertex has been updated
+                                }
 
-                        @Override
-                        public void onDelete(EventsMessage eventsMessage) {
-                            // React when a vertex has been deleted
-                        }
-                    })
+                                @Override
+                                public void onDelete(EventsMessage eventsMessage) {
+                                    // React when a vertex has been deleted
+                                }
+                            })
                     .addScope(defaultScope)
                     .addEventsFilter("default", "(element.ogit/_type = ogit/Automation/AutomationIssue")
                     .build()) {
+                
                 eventWebSocket.start();
 
                 // Listen for 1 second for incoming events.
@@ -373,24 +376,34 @@ class Example {
                 .setAcceptAllCerts(config.accept_all_certs)
                 .build()) {
 
-            try (ActionWebSocket actionWebSocket = ActionWebSocket.newBuilder(handler, new ActionWebSocketListener() {
-                        @Override
-                        public void onActionSubmit(ActionWebSocket actionWebSocket, ActionHandlerSubmit submit) throws Exception {
+            try (ActionWebSocket actionWebSocket = ActionWebSocket.newBuilder(
+                            handler,
+                            new ActionWebSocketListener() {
 
-                            // Handle message
+                                @Override
+                                public void onActionSubmit(
+                                        ActionWebSocket actionWebSocket,
+                                        ActionHandlerSubmit submit
+                                ) throws Exception {
 
-                            actionWebSocket.sendActionResult(
-                                    submit.getId(),
-                                    ActionWebSocket.newResultParams().setMessage("All is fine")
-                            );
-                        }
+                                    // Handle message
 
-                        @Override
-                        public void onConfigChanged(ActionWebSocket actionWebSocket) {
-                            // Handle reload of configuration if necessary.
-                        }
-                    })
+                                    actionWebSocket.sendActionResult(
+                                            submit.getId(),
+                                            ActionWebSocket.newResultParams()
+                                                    .setMessage("All is fine")
+                                    );
+                                }
+
+                                @Override
+                                public void onConfigChanged(
+                                        ActionWebSocket actionWebSocket
+                                ) {
+                                    // Handle reload of configuration if necessary.
+                                }
+                            })
                     .build()) {
+                
                 actionWebSocket.start();
 
                 // Listen for 1 second for incoming actions.
