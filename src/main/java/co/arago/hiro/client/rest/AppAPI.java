@@ -6,7 +6,6 @@ import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
 import co.arago.hiro.client.model.vertex.HiroVertexMessage;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
-import co.arago.hiro.client.util.httpclient.URIPath;
 
 import java.io.IOException;
 
@@ -74,13 +73,11 @@ public class AppAPI extends AuthenticatedAPIHandler {
      */
     public class GetApplicationCommand extends APIRequestConf<GetApplicationCommand, HiroVertexMessage> {
 
-        protected final URIPath path;
-
         /**
          * @param ogitId ogit/_id of the app.
          */
         protected GetApplicationCommand(String ogitId) {
-            path = new URIPath(notBlank(ogitId, "ogitId"));
+            super(notBlank(ogitId, "ogitId"));
         }
 
         @Override
@@ -98,7 +95,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexMessage.class,
-                    getUri(path, query, fragment),
+                    getEndpointUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -129,9 +126,8 @@ public class AppAPI extends AuthenticatedAPIHandler {
      */
     public class GetConfigCommand extends APIRequestConf<GetConfigCommand, HiroMessage> {
 
-        protected final URIPath path = new URIPath("config");
-
         protected GetConfigCommand() {
+            super("config");
         }
 
         @Override
@@ -149,7 +145,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroMessage.class,
-                    getUri(path, query, fragment),
+                    getEndpointUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -179,14 +175,12 @@ public class AppAPI extends AuthenticatedAPIHandler {
      */
     public class GetContentCommand extends APIRequestConf<GetContentCommand, HttpResponseParser> {
 
-        protected final URIPath path;
-
         /**
          * @param ogitId ogit/_id of the app.
          * @param path   Path parts for the subcontent.
          */
         protected GetContentCommand(String ogitId, String... path) {
-            this.path = new URIPath(notBlank(ogitId, "ogitId"), "content");
+            super(notBlank(ogitId, "ogitId"), "content");
             this.path.append(notEmpty("path", path));
         }
 
@@ -204,7 +198,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
         @Override
         public HttpResponseParser execute() throws HiroException, IOException, InterruptedException {
             return getBinary(
-                    getUri(path, query, fragment),
+                    getEndpointUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -236,13 +230,11 @@ public class AppAPI extends AuthenticatedAPIHandler {
      */
     public class GetManifestCommand extends APIRequestConf<GetManifestCommand, HiroMessage> {
 
-        protected final URIPath path;
-
         /**
          * @param ogitId ogit/_id of the app.
          */
         protected GetManifestCommand(String ogitId) {
-            this.path = new URIPath(notBlank(ogitId, "ogitId"), "manifest");
+            super(notBlank(ogitId, "ogitId"), "manifest");
         }
 
         @Override
@@ -260,7 +252,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroMessage.class,
-                    getUri(path, query, fragment),
+                    getEndpointUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -291,9 +283,8 @@ public class AppAPI extends AuthenticatedAPIHandler {
      */
     public class GetDesktopApplicationsCommand extends APIRequestConf<GetDesktopApplicationsCommand, HiroVertexListMessage> {
 
-        protected final URIPath path = new URIPath("desktop");
-
         protected GetDesktopApplicationsCommand() {
+            super("desktop");
         }
 
         @Override
@@ -311,7 +302,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexListMessage.class,
-                    getUri(path, query, fragment),
+                    getEndpointUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);

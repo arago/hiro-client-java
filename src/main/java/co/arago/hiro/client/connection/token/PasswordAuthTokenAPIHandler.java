@@ -36,7 +36,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         private Long refreshOffset = 5000L;
         private Long refreshPause = 0L;
         private boolean forceLogging = false;
-        private String endpoint;
+        private String apiPath;
 
         public String getUsername() {
             return username;
@@ -154,16 +154,16 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
             return self();
         }
 
-        public String getEndpoint() {
-            return endpoint;
+        public String getApiPath() {
+            return apiPath;
         }
 
         /**
-         * @param endpoint The endpoint set externally. Overrides the fetching of the endpoint via /api/version.
+         * @param apiPath The apiPath set externally. Overrides the fetching of the endpoint via /api/version.
          * @return {@link #self()}
          */
-        public T setEndpoint(String endpoint) {
-            this.endpoint = endpoint;
+        public T setApiPath(String apiPath) {
+            this.apiPath = apiPath;
             return self();
         }
     }
@@ -263,7 +263,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     protected final String password;
     protected final String clientId;
     protected final String clientSecret;
-    protected final String endpoint;
+    protected final String apiPath;
 
     protected final TokenInfo tokenInfo = new TokenInfo();
 
@@ -276,7 +276,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         this.password = notBlank(builder.getPassword(), "password");
         this.clientId = notBlank(builder.getClientId(), "clientId");
         this.clientSecret = notBlank(builder.getClientSecret(), "clientSecret");
-        this.endpoint = builder.getEndpoint();
+        this.apiPath = builder.getApiPath();
 
         this.tokenInfo.refreshOffset = builder.getRefreshOffset();
         this.tokenInfo.refreshPause = builder.getRefreshPause();
@@ -287,7 +287,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                 httpLogger.addFilter(getUri("refresh"));
                 httpLogger.addFilter(getUri("revoke"));
             } catch (IOException | InterruptedException | HiroException e) {
-                log.error("Cannot get endpoint URI. Disable logging of http bodies.", e);
+                log.error("Cannot get apiPath URI. Disable logging of http bodies.", e);
                 httpLogger.setLogBody(false);
             }
         }
@@ -321,7 +321,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
     /**
      * Construct my URI.
-     * This method will query /api/version once to construct the URI unless {@link #endpoint} is set.
+     * This method will query /api/version once to construct the URI unless {@link #apiPath} is set.
      *
      * @param path The path to append to the API path.
      * @return The URI without query or fragment.
@@ -331,7 +331,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
      */
     public URI getUri(String path) throws IOException, InterruptedException, HiroException {
         if (apiUri == null)
-            apiUri = (endpoint != null ? buildApiURI(endpoint) : getApiUriOf(apiName));
+            apiUri = (apiPath != null ? buildApiURI(apiPath) : getApiUriOf(apiName));
 
         return apiUri.resolve(RegExUtils.removePattern(path, "^/+"));
     }

@@ -55,12 +55,10 @@ class AuthAPIHandlerTest {
         if (authAPI == null)
             return;
 
-        log.info(
-                JsonUtil.DEFAULT.toString(
-                        authAPI.getMeAccountCommand()
-                                .setProfile(true)
-                                .execute()
-                )
+        log.info(authAPI.getMeAccountCommand()
+                .setProfile(true)
+                .execute()
+                .toPrettyJsonString()
         );
     }
 

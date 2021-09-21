@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Handles websockets. Tries to renew any aborted connection until the websocket gets closed from this side.
  */
-public abstract class AuthenticatedWebSocketHandler implements AutoCloseable, RequiredFieldChecks {
+public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks implements AutoCloseable {
 
     final static Logger log = LoggerFactory.getLogger(AuthenticatedWebSocketHandler.class);
 
@@ -71,7 +71,8 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable, Re
         }
 
         /**
-         * @param apiName Set the name of the api. This name will be used to determine the API endpoint.
+         * @param apiName Set the name of the api. This name will be used to determine the API endpoint entry in the
+         *                data obtained via a call to /api/version.
          * @return {@link #self()}
          */
         public T setApiName(String apiName) {

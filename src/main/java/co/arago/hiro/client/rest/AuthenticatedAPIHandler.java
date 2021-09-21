@@ -5,16 +5,13 @@ import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
-import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.JsonMessage;
 import co.arago.hiro.client.util.HttpLogger;
-import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import co.arago.hiro.client.util.httpclient.URIPath;
 import co.arago.util.json.JsonUtil;
 import co.arago.util.validation.RequiredFieldChecks;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +43,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      */
     public static abstract class Conf<T extends Conf<T>> {
         private String apiName;
-        private String endpoint;
+        private String apiPath;
         private Long httpRequestTimeout;
         private AbstractTokenAPIHandler tokenAPIHandler;
         private int maxRetries;
@@ -56,7 +53,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         }
 
         /**
-         * @param apiName Set the name of the api. This name will be used to determine the API endpoint.
+         * @param apiName Set the name of the api. This name will be used to determine the API endpoint entry via
+         *                /api/version.
          * @return {@link #self()}
          */
         public T setApiName(String apiName) {
@@ -64,16 +62,16 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
             return self();
         }
 
-        public String getEndpoint() {
-            return endpoint;
+        public String getApiPath() {
+            return apiPath;
         }
 
         /**
-         * @param endpoint Set a custom endpoint directly, omitting automatic endpoint detection via apiName.
+         * @param apiPath Set a custom API path directly, omitting automatic endpoint detection via apiName.
          * @return {@link #self()}
          */
-        public T setEndpoint(String endpoint) {
-            this.endpoint = endpoint;
+        public T setApiPath(String apiPath) {
+            this.apiPath = apiPath;
             return self();
         }
 
@@ -132,14 +130,22 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param <T> The Builder type
      * @param <R> The type of the result expected from {@link #execute()}
      */
-    public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> {
+    public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> extends RequiredFieldChecks {
 
+        protected final URIPath path;
         protected Map<String, String> query = new HashMap<>();
         protected Map<String, String> headers = new HashMap<>();
         protected String fragment;
 
         protected Long httpRequestTimeout;
         protected Integer maxRetries;
+
+        /**
+         * @param pathParts Array for the path appended to the API path.
+         */
+        public APIRequestConf(String... pathParts) {
+            this.path = new URIPath(pathParts);
+        }
 
         /**
          * @param query Set query parameters.
@@ -192,7 +198,11 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     public static abstract class SendBodyAPIRequestConf<T extends SendBodyAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> {
         protected String body;
 
-        public SendBodyAPIRequestConf() {
+        /**
+         * @param pathParts Array for the path appended to the API path.
+         */
+        public SendBodyAPIRequestConf(String... pathParts) {
+            super(pathParts);
             headers.put("Content-Type", "application/json;encoding=UTF-8");
         }
 
@@ -245,15 +255,17 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param <T> The Builder type
      * @param <R> The type of the result expected from {@link #execute()}
      */
-    public static abstract class SendStreamAPIRequestConf<T extends SendStreamAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> implements RequiredFieldChecks {
+    public static abstract class SendStreamAPIRequestConf<T extends SendStreamAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> {
         protected StreamContainer streamContainer;
 
         /**
          * Use an existing {@link StreamContainer}
          *
          * @param streamContainer The existing {@link StreamContainer}. Must not be null.
+         * @param pathParts       Array for the path appended to the API path.
          */
-        public SendStreamAPIRequestConf(StreamContainer streamContainer) {
+        public SendStreamAPIRequestConf(StreamContainer streamContainer, String... pathParts) {
+            super(pathParts);
             this.streamContainer = notNull(streamContainer, "streamContainer");
         }
 
@@ -261,8 +273,10 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * Use an inputStream for data and nothing else.
          *
          * @param inputStream The inputStream for the request body. Must not be null.
+         * @param pathParts   Array for the path appended to the API path.
          */
-        public SendStreamAPIRequestConf(InputStream inputStream) {
+        public SendStreamAPIRequestConf(InputStream inputStream, String... pathParts) {
+            super(pathParts);
             this.streamContainer = new StreamContainer(notNull(inputStream, "inputStream"), null, null, null);
         }
 
@@ -321,7 +335,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     // ###############################################################################################
 
     protected final String apiName;
-    protected final String endpoint;
+    protected final String apiPath;
     protected final AbstractTokenAPIHandler tokenAPIHandler;
     protected URI apiUri;
 
@@ -333,11 +347,11 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     protected AuthenticatedAPIHandler(Conf<?> builder) {
         super(makeHandlerConf(builder, builder.getTokenApiHandler()));
         this.apiName = builder.getApiName();
-        this.endpoint = builder.getEndpoint();
+        this.apiPath = builder.getApiPath();
         this.tokenAPIHandler = notNull(builder.getTokenApiHandler(), "tokenApiHandler");
 
-        if (StringUtils.isBlank(this.apiName) && StringUtils.isBlank(this.endpoint))
-            anyError("Either 'apiName' or 'endpoint' have to be set.");
+        if (StringUtils.isBlank(this.apiName) && StringUtils.isBlank(this.apiPath))
+            anyError("Either 'apiName' or 'apiPath' have to be set.");
     }
 
     /**
@@ -381,7 +395,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
     /**
      * Construct my URI with query parameters and fragment.
-     * This method will query /api/version once to construct the URI unless {@link #endpoint} is set.
+     * This method will query /api/version once to construct the URI unless {@link #apiPath} is set.
      *
      * @param path     The path to append to the API path.
      * @param query    Map of query parameters for this URI. Can be null for no query parameters.
@@ -391,11 +405,11 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @throws InterruptedException Call got interrupted
      * @throws HiroException        When calling /api/version responds with an error
      */
-    public URI getUri(URIPath path, Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
+    public URI getEndpointUri(URIPath path, Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
         if (apiUri == null)
-            apiUri = (endpoint != null ? buildApiURI(endpoint) : tokenAPIHandler.getApiUriOf(apiName));
+            apiUri = (apiPath != null ? buildApiURI(apiPath) : tokenAPIHandler.getApiUriOf(apiName));
 
-        URI pathUri = apiUri.resolve(RegExUtils.removePattern(path.build(), "^/+"));
+        URI pathUri = buildURI(apiUri, path.build(), false);
 
         return addQueryAndFragment(pathUri, query, fragment);
     }

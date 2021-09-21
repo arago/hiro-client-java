@@ -37,7 +37,7 @@ import java.io.IOException;
 class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
 
-        // Build an API handler which takes care of API version endpoints and security tokens.
+        // Build an API handler which takes care of API paths via /api/versions and security tokens.
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setApiUrl(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
@@ -64,10 +64,6 @@ class Example {
 Authorization against the HIRO Graph is done via tokens. These tokens are handled by classes of
 type `AbstractTokenAPIHandler` in this library. Each of the Hiro-Client-Objects (`GraphAPI`, `AuthAPI`, etc.) need to
 have some kind of TokenApiHandler in their builder for construction.
-
-This TokenApiHandler is also responsible to determine the most up-to-date endpoints for the API calls. If you want to
-have a specific endpoint for your API, you have to set it up via ```setEndpoint(String endpoint)``` with the Builder of
-that API object.
 
 This library supplies the following TokenApiHandlers:
 
@@ -96,7 +92,7 @@ TokenApiHandler (so far) that automatically tries to renew a token from the back
 All code examples in this documentation can use these TokenApiHandlers interchangeably, depending on how such a token is
 provided.
 
-The HiroGraph example from above with another customized TokenApiHandler:
+The GraphAPI example from above with another customized TokenApiHandler:
 
 ```java
 import co.arago.hiro.client.connection.token.EnvironmentTokenAPIHandler;
@@ -109,7 +105,7 @@ import java.io.IOException;
 class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
 
-        // Build an API handler which takes care of API version endpoints and security tokens.
+        // Build an API handler which takes care of API paths via /api/versions and security tokens.
         try (EnvironmentTokenAPIHandler handler = EnvironmentTokenAPIHandler.newBuilder()
                 .setApiUrl(API_URL)
                 .build()) {
@@ -130,11 +126,23 @@ class Example {
 }
 ```
 
-Releasing all resources assigned to a connection is done by closing the `TokenAPIHandler`. You cannot close the API
-objects (i.e. `GraphAPI`), because the handler carries the information about a connection to HIRO, and it can be shared
-between multiple API objects.
+### Specific API paths
 
-## Handler sharing
+This TokenApiHandler is also responsible to determine the most up-to-date paths for the API calls. If you want to
+have a specific path for your API, you have to set it up with the Builder of that API Client, like
+
+```java
+authAPI=AuthAPI.newBuilder(handler).setApiPath("/api/auth/6.1").build();
+```
+
+### Cleanup
+
+Releasing all resources assigned to a connection is done by closing the `TokenAPIHandler` (unless the `httpClient` is
+provided externally, see [External HTTP Client](#external-http-client)). You cannot close the API Clients (
+i.e. `GraphAPI`), because the handler carries the information about a connection to HIRO, and it can be shared between
+multiple API Clients.
+
+### Handler sharing
 
 When you need to access multiple APIs, it is a good idea to share the TokenApiHandler between them. This avoids
 unnecessary API version requests and unnecessary token requests with the PasswordAuthTokenAPIHandler for instance.
@@ -151,7 +159,7 @@ import java.io.IOException;
 class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
 
-        // Build an API handler which takes care of API version endpoints and security tokens.
+        // Build an API handler which takes care of API paths via /api/versions and security tokens.
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setApiUrl(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
@@ -170,13 +178,10 @@ class Example {
 }
 ```
 
-To release all resources assigned to the connection, you need to close the `handler`.
-
-## External http client
+### External HTTP Client
 
 An external httpClient can be provided to the TokenAPIHandlers via their Builders using `setClient(HttpClient client)`.
-If this is the case, a call to `close()` of such a handler will have no effect. Such a httpClient has to be closed
-externally.
+If this is the case, a call to `close()` of such a handler will have no effect. It has to be closed externally.
 
 Example with an external httpClient:
 
@@ -205,7 +210,7 @@ class Example {
                 .build();
 
         try {
-            // Build an API handler which takes care of API version endpoints and security tokens.
+            // Build an API handler which takes care of API paths via /api/versions and security tokens.
             // Use an external httpClient.
             PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                     .setHttpClient(httpClient)
@@ -295,7 +300,7 @@ import java.nio.file.Paths;
 class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
 
-        // Build an API handler which takes care of API version endpoints and security tokens.
+        // Build an API handler which takes care of API paths via /api/versions and security tokens.
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setApiUrl(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
@@ -372,7 +377,7 @@ class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
 
 
-        // Build an API handler which takes care of API version endpoints and security tokens.
+        // Build an API handler which takes care of API paths via /api/versions and security tokens.
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setApiUrl(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)

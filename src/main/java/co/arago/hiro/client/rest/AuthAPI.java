@@ -7,7 +7,6 @@ import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
 import co.arago.hiro.client.model.vertex.HiroVertexMessage;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
-import co.arago.hiro.client.util.httpclient.URIPath;
 import co.arago.util.json.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -79,9 +78,8 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      */
     public class GetMeAccountCommand extends APIRequestConf<GetMeAccountCommand, HiroVertexMessage> {
 
-        protected final URIPath path = new URIPath("me", "account");
-
         protected GetMeAccountCommand() {
+            super("me", "account");
         }
 
         /**
@@ -108,7 +106,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexMessage.class,
-                    getUri(path, query, fragment),
+                    getEndpointUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -138,9 +136,8 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      */
     public class GetMeAvatarCommand extends APIRequestConf<GetMeAvatarCommand, HttpResponseParser> {
 
-        protected final URIPath path = new URIPath("me", "avatar");
-
         protected GetMeAvatarCommand() {
+            super("me", "avatar");
         }
 
         @Override
@@ -158,7 +155,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         @Override
         public HttpResponseParser execute() throws HiroException, IOException, InterruptedException {
             return getBinary(
-                    getUri(path, query, fragment),
+                    getEndpointUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -188,14 +185,12 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      */
     public class PutMeAvatarCommand extends SendStreamAPIRequestConf<PutMeAvatarCommand, String> {
 
-        protected final URIPath path = new URIPath("me", "avatar");
-
         protected PutMeAvatarCommand(StreamContainer streamContainer) {
-            super(streamContainer);
+            super(streamContainer, "me", "avatar");
         }
 
         protected PutMeAvatarCommand(InputStream inputStream) {
-            super(inputStream);
+            super(inputStream, "me", "avatar");
         }
 
         @Override
@@ -214,7 +209,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public String execute() throws HiroException, IOException, InterruptedException {
             notBlank(streamContainer.getContentType(), "contentType");
             return executeBinary(
-                    getUri(path, query, fragment),
+                    getEndpointUri(path, query, fragment),
                     "PUT",
                     streamContainer,
                     headers,
@@ -260,9 +255,8 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      */
     public class PutMePasswordCommand extends SendBodyAPIRequestConf<PutMePasswordCommand, HiroVertexMessage> {
 
-        protected final URIPath path = new URIPath("me", "password");
-
         protected PutMePasswordCommand() {
+            super("me", "password");
         }
 
         public PutMePasswordCommand setPasswords(String oldPassword, String newPassword) {
@@ -292,7 +286,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return put(
                     HiroVertexMessage.class,
-                    getUri(path, query, fragment),
+                    getEndpointUri(path, query, fragment),
                     notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
@@ -323,9 +317,8 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      */
     public class GetMeProfileCommand extends APIRequestConf<GetMeProfileCommand, HiroVertexMessage> {
 
-        protected final URIPath path = new URIPath("me", "profile");
-
         protected GetMeProfileCommand() {
+            super("me", "profile");
         }
 
         @Override
@@ -343,7 +336,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexMessage.class,
-                    getUri(path, query, fragment),
+                    getEndpointUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -373,9 +366,8 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      */
     public class PostMeProfileCommand extends SendBodyAPIRequestConf<PostMeProfileCommand, HiroVertexMessage> {
 
-        protected final URIPath path = new URIPath("me", "profile");
-
         protected PostMeProfileCommand() {
+            super("me", "profile");
         }
 
         @Override
@@ -393,7 +385,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return post(
                     HiroVertexMessage.class,
-                    getUri(path, query, fragment),
+                    getEndpointUri(path, query, fragment),
                     notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
@@ -424,9 +416,8 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      */
     public class GetMeRolesCommand extends APIRequestConf<GetMeRolesCommand, HiroMessage> {
 
-        protected final URIPath path = new URIPath("me", "roles");
-
         protected GetMeRolesCommand() {
+            super("me", "roles");
         }
 
         @Override
@@ -444,7 +435,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroMessage.class,
-                    getUri(path, query, fragment),
+                    getEndpointUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -474,9 +465,8 @@ public class AuthAPI extends AuthenticatedAPIHandler {
      */
     public class GetMeTeamsCommand extends APIRequestConf<GetMeTeamsCommand, HiroVertexListMessage> {
 
-        protected final URIPath path = new URIPath("me", "teams");
-
         protected GetMeTeamsCommand() {
+            super("me", "teams");
         }
 
         /**
@@ -504,7 +494,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexListMessage.class,
-                    getUri(path, query, fragment),
+                    getEndpointUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);

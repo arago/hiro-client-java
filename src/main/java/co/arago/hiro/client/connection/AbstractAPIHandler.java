@@ -32,7 +32,7 @@ import java.util.concurrent.CompletionException;
 /**
  * Root class with fields and tool methods for all API Handlers
  */
-public abstract class AbstractAPIHandler implements RequiredFieldChecks {
+public abstract class AbstractAPIHandler extends RequiredFieldChecks {
 
     final static Logger log = LoggerFactory.getLogger(AbstractAPIHandler.class);
 
@@ -225,38 +225,53 @@ public abstract class AbstractAPIHandler implements RequiredFieldChecks {
     }
 
     /**
-     * Build a complete uri from the apiUrl and endpoint.
+     * Build a complete uri from the apiUrl and path. Appends a '/'.
      *
-     * @param endpoint The endpoint to append to {@link #apiUrl}.
+     * @param path The path to append to {@link #apiUrl}.
      * @return The constructed URI
      */
-    public URI buildApiURI(String endpoint) {
+    public URI buildApiURI(String path) {
         try {
-            return buildURI(getApiUrl().toURI(), endpoint);
+            return buildURI(getApiUrl().toURI(), path, true);
         } catch (URISyntaxException e) {
-            throw new IllegalArgumentException("Cannot create URI using endpoint '" + endpoint + "'", e);
+            throw new IllegalArgumentException("Cannot create URI using path '" + path + "'", e);
         }
     }
 
     /**
-     * Build a complete uri from the webSocketApi and endpoint.
+     * Build a complete uri from the apiUrl and path. Does not append a '/'
      *
-     * @param endpoint The endpoint to append to {@link #webSocketUri}.
+     * @param path The path to append to {@link #apiUrl}.
      * @return The constructed URI
      */
-    public URI buildWebSocketURI(String endpoint) {
-        return buildURI(getWebSocketUri(), endpoint);
+    public URI buildEndpointURI(String path) {
+        try {
+            return buildURI(getApiUrl().toURI(), path, false);
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Cannot create URI using path '" + path + "'", e);
+        }
     }
 
     /**
-     * Build a complete uri from the url and endpoint.
+     * Build a complete uri from the webSocketApi and path.
      *
-     * @param uri      The uri to use as root.
-     * @param endpoint The endpoint to append to the url.
+     * @param path The path to append to {@link #webSocketUri}.
      * @return The constructed URI
      */
-    protected static URI buildURI(URI uri, String endpoint) {
-        return uri.resolve(RegExUtils.removePattern(endpoint, "^/+"));
+    public URI buildWebSocketURI(String path) {
+        return buildURI(getWebSocketUri(), path, false);
+    }
+
+    /**
+     * Build a complete uri from the url and path.
+     *
+     * @param uri        The uri to use as root.
+     * @param path       The path to append to the url.
+     * @param finalSlash Append a final slash?
+     * @return The constructed URI
+     */
+    protected static URI buildURI(URI uri, String path, boolean finalSlash) {
+        return uri.resolve(RegExUtils.removePattern(path, "^/+") + (finalSlash ? "/" : ""));
     }
 
     /**
