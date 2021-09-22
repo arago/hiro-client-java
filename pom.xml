@@ -7,7 +7,7 @@
     <groupId>co.arago.hiro.client</groupId>
     <artifactId>java-hiro-clients</artifactId>
     <name>${project.artifactId}</name>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
 
     <organization>
         <name>arago GmbH</name>
@@ -20,7 +20,8 @@
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
 
-        <arago-java-project-version>0.0.20-SNAPSHOT</arago-java-project-version>
+        <arago-java-project-version>0.1.0</arago-java-project-version>
+        <plugin-gpg-version>3.0.1</plugin-gpg-version>
     </properties>
 
     <distributionManagement>
@@ -125,6 +126,24 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>2.22.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>${plugin-gpg-version}</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <keyname>${gpg.keyname}</keyname>
+                            <passphraseServerId>${gpg.keyname}</passphraseServerId>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
