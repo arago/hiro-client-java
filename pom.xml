@@ -6,13 +6,30 @@
 
     <groupId>co.arago.hiro.client</groupId>
     <artifactId>java-hiro-clients</artifactId>
-    <name>${project.artifactId}</name>
     <version>0.1.0</version>
 
     <organization>
         <name>arago GmbH</name>
         <url>https://www.arago.co</url>
     </organization>
+
+    <name>${project.artifactId}</name>
+    <description>
+        This project is a library to access the Graph API of HIRO
+    </description>
+    <url>https://github.com/arago/java-hiro-clients</url>
+
+    <scm>
+        <url>scm:git:https://github.com/arago/java-hiro-clients.git</url>
+    </scm>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/licenses/MIT</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -23,6 +40,17 @@
         <arago-java-project-version>0.1.0</arago-java-project-version>
         <plugin-gpg-version>3.0.1</plugin-gpg-version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>github</id>
+            <name>arago GitHub Maven Repository</name>
+            <url>https://maven.pkg.github.com/arago/repository-public</url>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
 
     <distributionManagement>
         <repository>
