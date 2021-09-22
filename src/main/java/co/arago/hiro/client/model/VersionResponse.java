@@ -1,36 +1,72 @@
 package co.arago.hiro.client.model;
 
-import co.arago.hiro.client.util.JsonTools;
-import org.apache.commons.lang3.StringUtils;
+import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.util.json.JsonUtil;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class VersionResponse extends LinkedHashMap<String, Map<String, String>> {
+/**
+ * The response to a version GET request against "/api/version".
+ *
+ *
+ * <pre>
+ * {
+ *     "[name of first api]": {
+ *         "endpoint": "...",
+ *         "version": "...",
+ *         ...
+ *     },
+ *     "[name of second api]": {
+ *         ...
+ *     },
+ *     ...
+ * }
+ *
+ * </pre>
+ */
+public class VersionResponse extends HiroMessage {
+
+    public static class VersionEntry extends HiroJsonMap {
+        public String endpoint;
+        public String version;
+        public String docs;
+        public String support;
+        public String specs;
+        public String protocols;
+        public String lifecycle;
+    }
+
+    protected final Map<String, VersionEntry> versionEntryMap = new LinkedHashMap<>();
 
     /**
-     * Get a value from an API version map.
+     * Jackson Setter that transforms incoming maps into VersionEntries.
      *
-     * @param apiName The API to use.
-     * @param key The key of the value to get.
-     * @return The value found
-     * @throws RuntimeException When no value has been found for the key under apiName.
+     * @param key   Incoming JSON key
+     * @param value Incoming JSON value
      */
-    public String getValueOf(String apiName, String key) {
-        String result = null;
-        Map<String, String> targetMap = get(apiName);
-        if (targetMap != null)
-            result = targetMap.get(key);
+    @Override
+    public void setField(String key, Object value) {
+        if (catchError(key, value))
+            return;
 
-        if (StringUtils.isBlank(result))
-            throw new RuntimeException("Cannot determine '" + key + "' for API named '" + apiName + "'");
-
-        return result;
+        if (value instanceof Map) {
+            versionEntryMap.put(key, JsonUtil.DEFAULT.toObject(value, VersionEntry.class));
+        } else {
+            super.setField(key, value);
+        }
     }
 
-    public static VersionResponse fromInputStream(InputStream inputStream) throws IOException {
-        return JsonTools.DEFAULT.toObject(inputStream, VersionResponse.class);
+    /**
+     * @param apiName Name of the API
+     * @return The {@link VersionEntry} of that API.
+     * @throws HiroException If no API with this name can be found.
+     */
+    public VersionEntry getVersionEntryOf(String apiName) throws HiroException {
+        VersionEntry versionEntry = versionEntryMap.get(apiName);
+        if (versionEntry == null)
+            throw new HiroException("No API named '" + apiName + "' found in versions.");
+        return versionEntry;
     }
+
 }

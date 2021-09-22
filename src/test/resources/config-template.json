@@ -1,0 +1,9 @@
+{
+  "api_url": "https://core.arago.co",
+  "username": "",
+  "password": "",
+  "client_id": "",
+  "client_secret": "",
+  "accept_all_certs": false,
+  "force_logging": false
+}
