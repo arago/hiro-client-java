@@ -58,8 +58,7 @@ class AuthAPIHandlerTest {
         log.info(authAPI.getMeAccountCommand()
                 .setProfile(true)
                 .execute()
-                .toPrettyJsonString()
-        );
+                .toJsonString());
     }
 
     @Test
@@ -93,12 +92,9 @@ class AuthAPIHandlerTest {
         if (authAPI == null)
             return;
 
-        log.info(
-                JsonUtil.DEFAULT.toString(
-                        authAPI.getMeProfileCommand()
-                                .execute()
-                )
-        );
+        log.info(authAPI.getMeProfileCommand()
+                .execute()
+                .toJsonString());
     }
 
     @Test
@@ -106,12 +102,10 @@ class AuthAPIHandlerTest {
         if (authAPI == null)
             return;
 
-        log.info(
-                JsonUtil.DEFAULT.toString(
-                        authAPI.getMeRolesCommand()
-                                .execute().getMap().get("items")
-                )
-        );
+        log.info(JsonUtil.DEFAULT.toString(
+                authAPI.getMeRolesCommand()
+                        .execute().getMap().get("items")
+        ));
     }
 
     @Test
@@ -119,13 +113,11 @@ class AuthAPIHandlerTest {
         if (authAPI == null)
             return;
 
-        log.info(
-                JsonUtil.DEFAULT.toString(
-                        authAPI.getMeTeamsCommand()
-                                .setIncludeVirtual(true)
-                                .execute().getItems()
-                )
-        );
+        log.info(JsonUtil.DEFAULT.toString(
+                authAPI.getMeTeamsCommand()
+                        .setIncludeVirtual(true)
+                        .execute().getItems()
+        ));
     }
 }
 
