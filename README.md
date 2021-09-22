@@ -13,9 +13,11 @@ For more information about HIRO Automation, look at https://www.arago.co/
 For more information about the APIs this library covers, see https://developer.hiro.arago.co/7.0/api/ (Currently
 implemented are `app`, `auth`, `graph`, `event-ws` and `action-ws` )
 
-## Prerequisites
+## Prerequisites and dependencies
 
 You need at least Java 11.
+
+https://github.com/arago/java-project and the respective packages under https://github.com/orgs/arago/packages.
 
 ## Quickstart
 
@@ -41,7 +43,8 @@ class Example {
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setApiUrl(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
-                .build()) {
+                .build()
+        ) {
 
             // Use the actual API you want with the handler
             GraphAPI graphAPI = GraphAPI.newBuilder(handler)
@@ -108,7 +111,8 @@ class Example {
         // Build an API handler which takes care of API paths via /api/versions and security tokens.
         try (EnvironmentTokenAPIHandler handler = EnvironmentTokenAPIHandler.newBuilder()
                 .setApiUrl(API_URL)
-                .build()) {
+                .build()
+        ) {
 
             // Use the actual API you want with the handler
             GraphAPI graphAPI = GraphAPI.newBuilder(handler)
@@ -128,11 +132,11 @@ class Example {
 
 ### Specific API paths
 
-This TokenApiHandler is also responsible to determine the most up-to-date paths for the API calls. If you want to
-have a specific path for your API, you have to set it up with the Builder of that API Client, like
+This TokenApiHandler is also responsible to determine the most up-to-date paths for the API calls. If you want to have a
+specific path for your API, you have to set it up with the Builder of that API Client, like
 
 ```java
-authAPI=AuthAPI.newBuilder(handler).setApiPath("/api/auth/6.1").build();
+AuthAPI.newBuilder(handler).setApiPath("/api/auth/6.1").build();
 ```
 
 ### Cleanup
@@ -163,7 +167,8 @@ class Example {
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setApiUrl(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
-                .build()) {
+                .build()
+        ) {
 
             // Use the actual APIs you want with the handler
 
@@ -304,7 +309,8 @@ class Example {
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setApiUrl(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
-                .build()) {
+                .build()
+        ) {
 
 
             // Obtain my default scope. THIS WILL MOST LIKELY CHANGE IN THE FUTURE.
@@ -337,7 +343,8 @@ class Example {
                             "default",
                             "(element.ogit/_type = ogit/Automation/AutomationIssue)"
                     )
-                    .build()) {
+                    .build()
+            ) {
 
                 eventWebSocket.start();
 
@@ -356,7 +363,12 @@ I contrast to the other API Client objects the websockets need to be closed expl
 * [action-ws](https://core.arago.co/help/specs/?url=definitions/action-ws.yaml)
 
 The action websocket receives messages from HIRO KIs. The project then has to handle those messages and send a response
-back. Receiving and sending of action messages and results should be done asynchronously - which is NOT subject of this
+back.
+
+This library handles the protocol overhead like ACK and NACK messages and persistent storage of messages for consistent
+communication in the background.
+
+Receiving and sending of action messages and results should be done asynchronously - which is NOT subject of this
 library.
 
 Example skeleton code:
@@ -382,7 +394,8 @@ class Example {
                 .setApiUrl(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
                 .setAcceptAllCerts(config.accept_all_certs)
-                .build()) {
+                .build()
+        ) {
 
             try (ActionWebSocket actionWebSocket = ActionWebSocket.newBuilder(
                             handler,
@@ -410,7 +423,8 @@ class Example {
                                     // Handle reload of configuration if necessary.
                                 }
                             })
-                    .build()) {
+                    .build()
+            ) {
 
                 actionWebSocket.start();
 
