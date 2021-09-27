@@ -17,7 +17,8 @@ implemented are `app`, `auth`, `graph`, `event-ws` and `action-ws` )
 
 You need at least Java 11.
 
-https://github.com/arago/java-project and the respective packages under https://github.com/orgs/arago/packages.
+https://github.com/arago/java-project and the respective packages under https://github.com/orgs/arago/packages or
+the Maven Central Library.
 
 ## Quickstart
 
