@@ -16,6 +16,8 @@ public class AppAPI extends AuthenticatedAPIHandler {
     // ###############################################################################################
 
     public static abstract class Conf<T extends Conf<T>> extends AuthenticatedAPIHandler.Conf<T> {
+
+        public abstract AppAPI build();
     }
 
     public static final class Builder extends Conf<Builder> {
@@ -54,7 +56,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
      * @param tokenAPIHandler The API handler for this websocket.
      * @return The {@link Builder} for {@link AppAPI}.
      */
-    public static Builder newBuilder(AbstractTokenAPIHandler tokenAPIHandler) {
+    public static Conf<?> newBuilder(AbstractTokenAPIHandler tokenAPIHandler) {
         return new Builder("app", tokenAPIHandler);
     }
 

@@ -4,8 +4,6 @@
 name: Maven CI
 
 on:
-  release:
-    types: [ created ]
   push:
     tags:
       - t*

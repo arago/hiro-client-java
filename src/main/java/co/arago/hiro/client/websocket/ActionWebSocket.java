@@ -66,6 +66,8 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
             this.actionWebSocketListener = actionWebSocketListener;
             return self();
         }
+
+        public abstract ActionWebSocket build();
     }
 
     public static final class Builder extends Conf<Builder> {
@@ -396,7 +398,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
      * @param actionWebSocketListener The listener for this websocket.
      * @return The {@link ActionWebSocket.Builder} for {@link ActionWebSocket}.
      */
-    public static Builder newBuilder(
+    public static Conf<?> newBuilder(
             AbstractTokenAPIHandler tokenAPIHandler,
             ActionWebSocketListener actionWebSocketListener
     ) {
