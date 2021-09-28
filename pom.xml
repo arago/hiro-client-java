@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>co.arago.hiro.client</groupId>
-    <artifactId>java-hiro-clients</artifactId>
+    <artifactId>hiro-client-java</artifactId>
     <version>0.1.2</version>
 
     <organization>
@@ -17,7 +17,7 @@
     <description>
         This project is a library to access the Graph API of HIRO
     </description>
-    <url>https://github.com/arago/java-hiro-clients</url>
+    <url>https://github.com/arago/hiro-client-java</url>
 
     <developers>
         <developer>
@@ -34,7 +34,7 @@
     </developers>
 
     <scm>
-        <url>scm:git:https://github.com/arago/java-hiro-clients.git</url>
+        <url>scm:git:https://github.com/arago/hiro-client-java.git</url>
     </scm>
 
     <licenses>
