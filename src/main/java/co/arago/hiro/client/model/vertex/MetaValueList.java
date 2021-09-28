@@ -48,13 +48,13 @@ public class MetaValueList extends ArrayList<MetaValueList.MetaValueField> imple
         }
 
         public static MetaValueField create(Object object) {
-            return JsonUtil.DEFAULT.toObject(object, MetaValueField.class);
+            return JsonUtil.DEFAULT.transformObject(object, MetaValueField.class);
         }
 
     }
 
     public static MetaValueList create(Object object) {
-        return JsonUtil.DEFAULT.toObject(object, MetaValueList.class);
+        return JsonUtil.DEFAULT.transformObject(object, MetaValueList.class);
     }
 
     public String createSingleValue() {

@@ -57,7 +57,7 @@ public class HiroError extends HiroJsonMap {
             @JsonProperty("error") Object errorObj
     ) {
         if (errorObj instanceof Map)
-            this.error = JsonUtil.DEFAULT.toObject(errorObj, HiroErrorEntry.class);
+            this.error = JsonUtil.DEFAULT.transformObject(errorObj, HiroErrorEntry.class);
         if (errorObj instanceof String)
             this.error = new HiroErrorEntry((String) errorObj, null);
     }

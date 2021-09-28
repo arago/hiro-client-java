@@ -22,11 +22,11 @@ public class HiroTimeseriesListMessage extends HiroItemListMessage<HiroTimeserie
         }
 
         public static TimeseriesEntry create(Object object) {
-            return JsonUtil.DEFAULT.toObject(object, TimeseriesEntry.class);
+            return JsonUtil.DEFAULT.transformObject(object, TimeseriesEntry.class);
         }
     }
 
     public static HiroTimeseriesListMessage create(Object object) {
-        return JsonUtil.DEFAULT.toObject(object, HiroTimeseriesListMessage.class);
+        return JsonUtil.DEFAULT.transformObject(object, HiroTimeseriesListMessage.class);
     }
 }

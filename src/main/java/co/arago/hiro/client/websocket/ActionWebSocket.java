@@ -130,7 +130,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
                 switch (actionMessageType) {
                     case SUBMIT_ACTION: {
 
-                        ActionHandlerSubmit actionHandlerSubmit = JsonUtil.DEFAULT.toObject(message, ActionHandlerSubmit.class);
+                        ActionHandlerSubmit actionHandlerSubmit = JsonUtil.DEFAULT.transformObject(message, ActionHandlerSubmit.class);
                         log.info("Handling \"{}\" (id: {})", actionHandlerSubmit.getType(), actionHandlerSubmit.getId());
 
                         send(new ActionHandlerAck(actionHandlerSubmit.getId()).toJsonString());
@@ -164,7 +164,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
                     }
                     case SEND_ACTION_RESULT: {
 
-                        ActionHandlerResult actionHandlerResult = JsonUtil.DEFAULT.toObject(message, ActionHandlerResult.class);
+                        ActionHandlerResult actionHandlerResult = JsonUtil.DEFAULT.transformObject(message, ActionHandlerResult.class);
                         log.info("Handling \"{}\" (id: {})", actionHandlerResult.getType(), actionHandlerResult.getId());
 
                         send(new ActionHandlerNack(actionHandlerResult.getId(), 400, "sendActionResult rejected").toJsonString());
@@ -173,7 +173,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
                     }
                     case ACKNOWLEDGED: {
 
-                        ActionHandlerAck actionHandlerAck = JsonUtil.DEFAULT.toObject(message, ActionHandlerAck.class);
+                        ActionHandlerAck actionHandlerAck = JsonUtil.DEFAULT.transformObject(message, ActionHandlerAck.class);
                         log.info("Handling \"{}\" (id: {})", actionHandlerAck.getType(), actionHandlerAck.getId());
 
                         actionResultStore.remove(actionHandlerAck.getId());
@@ -182,7 +182,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
                     }
                     case NEGATIVE_ACKNOWLEDGED: {
 
-                        ActionHandlerNack actionHandlerNack = JsonUtil.DEFAULT.toObject(message, ActionHandlerNack.class);
+                        ActionHandlerNack actionHandlerNack = JsonUtil.DEFAULT.transformObject(message, ActionHandlerNack.class);
                         log.info("Handling \"{}\" (id: {})", actionHandlerNack.getType(), actionHandlerNack.getId());
 
                         ActionHandlerResult actionHandlerResult = actionResultStore.get(actionHandlerNack.getId());
@@ -195,7 +195,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
                     }
                     case ERROR: {
 
-                        ActionHandlerError actionHandlerError = JsonUtil.DEFAULT.toObject(message, ActionHandlerError.class);
+                        ActionHandlerError actionHandlerError = JsonUtil.DEFAULT.transformObject(message, ActionHandlerError.class);
                         log.info("Received error message (code {}): {}", actionHandlerError.getCode(), actionHandlerError.getMessage());
 
                         break;

@@ -82,7 +82,7 @@ public class HiroJsonMap implements JsonMessage {
      */
     @JsonIgnore
     public Map<String, Object> toMap() {
-        return JsonUtil.DEFAULT.toObject(this, new TypeReference<>() {
+        return JsonUtil.DEFAULT.transformObject(this, new TypeReference<>() {
         });
     }
 }

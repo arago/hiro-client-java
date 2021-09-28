@@ -51,7 +51,7 @@ public class VersionResponse extends HiroMessage {
             return;
 
         if (value instanceof Map) {
-            versionEntryMap.put(key, JsonUtil.DEFAULT.toObject(value, VersionEntry.class));
+            versionEntryMap.put(key, JsonUtil.DEFAULT.transformObject(value, VersionEntry.class));
         } else {
             super.setField(key, value);
         }
