@@ -32,6 +32,8 @@ import java.util.Map;
  */
 public class HiroVertexMessage extends HiroMessage {
 
+    private static final long serialVersionUID = 4841532740228140969L;
+
     /**
      * Default constructor for Jackson
      */

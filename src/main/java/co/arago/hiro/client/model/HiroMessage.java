@@ -20,6 +20,8 @@ import java.util.Map;
  */
 public class HiroMessage extends HiroJsonMap {
 
+    private static final long serialVersionUID = -2845539725139203681L;
+
     protected HiroError hiroError;
 
     /**

@@ -20,6 +20,8 @@ public class TokenRequest implements JsonMessage {
 
     // Match the JSON structure for the request.
 
+    private static final long serialVersionUID = -7893814135720193310L;
+
     @JsonProperty("username")
     public String username;
 

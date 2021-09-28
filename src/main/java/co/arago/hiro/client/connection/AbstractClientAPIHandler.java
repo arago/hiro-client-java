@@ -204,7 +204,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     /**
      * A TrustManager trusting all certificates
      */
-    private final static TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+    private final static TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
         public java.security.cert.X509Certificate[] getAcceptedIssuers() {
             return null;
         }
@@ -214,7 +214,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
 
         public void checkServerTrusted(X509Certificate[] certs, String authType) {
         }
-    }};
+    } };
 
     // ###############################################################################################
     // ## Main part ##

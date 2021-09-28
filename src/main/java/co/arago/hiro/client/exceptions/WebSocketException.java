@@ -1,6 +1,8 @@
 package co.arago.hiro.client.exceptions;
 
 public class WebSocketException extends HiroException {
+    private static final long serialVersionUID = 4116077569200887434L;
+
     public WebSocketException(String message) {
         super(message);
     }

@@ -4,6 +4,9 @@ import co.arago.hiro.client.model.JsonMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class EventsFilter implements JsonMessage {
+
+    private static final long serialVersionUID = -584044349044973038L;
+
     @JsonProperty("filter-id")
     public final String id;
     @JsonProperty("filter-type")

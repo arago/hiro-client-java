@@ -1,271 +1,271 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+	xmlns="http://maven.apache.org/POM/4.0.0"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
 
-    <groupId>co.arago.hiro.client</groupId>
-    <artifactId>hiro-client-java</artifactId>
-    <version>0.2.0-SNAPSHOT</version>
+	<groupId>co.arago.hiro.client</groupId>
+	<artifactId>hiro-client-java</artifactId>
+	<version>0.2.0-SNAPSHOT</version>
 
-    <organization>
-        <name>arago GmbH</name>
-        <url>https://www.arago.co</url>
-    </organization>
+	<organization>
+		<name>arago GmbH</name>
+		<url>https://www.arago.co</url>
+	</organization>
 
-    <name>${project.artifactId}</name>
-    <description>
+	<name>${project.artifactId}</name>
+	<description>
         This project is a library to access the Graph API of HIRO
     </description>
-    <url>https://github.com/arago/hiro-client-java</url>
+	<url>https://github.com/arago/hiro-client-java</url>
 
-    <developers>
-        <developer>
-            <id>whuebner</id>
-            <name>Wolfgang Hübner</name>
-            <email>whuebner@arago.co</email>
-            <organization>arago GmbH</organization>
-            <organizationUrl>https://www.arago.co</organizationUrl>
-            <roles>
-                <role>Developer</role>
-            </roles>
-            <timezone>Europe/Berlin</timezone>
-        </developer>
-    </developers>
+	<developers>
+		<developer>
+			<id>whuebner</id>
+			<name>Wolfgang Hübner</name>
+			<email>whuebner@arago.co</email>
+			<organization>arago GmbH</organization>
+			<organizationUrl>https://www.arago.co</organizationUrl>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>Europe/Berlin</timezone>
+		</developer>
+	</developers>
 
-    <scm>
-        <url>scm:git:https://github.com/arago/hiro-client-java.git</url>
-    </scm>
+	<scm>
+		<url>scm:git:https://github.com/arago/hiro-client-java.git</url>
+	</scm>
 
-    <licenses>
-        <license>
-            <name>MIT License</name>
-            <url>https://opensource.org/licenses/MIT</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/licenses/MIT</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>11</maven.compiler.source>
+		<maven.compiler.target>11</maven.compiler.target>
 
-        <arago-java-project-version>0.2.0-SNAPSHOT</arago-java-project-version>
-        <plugin-gpg-version>3.0.1</plugin-gpg-version>
-    </properties>
+		<arago-java-project-version>0.2.0-SNAPSHOT</arago-java-project-version>
+		<plugin-gpg-version>3.0.1</plugin-gpg-version>
+	</properties>
 
-    <repositories>
-        <repository>
-            <id>github</id>
-            <name>arago GitHub Maven Repository</name>
-            <url>https://maven.pkg.github.com/arago/repository-public</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
+	<repositories>
+		<repository>
+			<id>github</id>
+			<name>arago GitHub Maven Repository</name>
+			<url>https://maven.pkg.github.com/arago/repository-public</url>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 
-    <profiles>
-        <profile>
-            <id>github-repositories</id>
-            <activation>
-                <property>
-                    <name>!useRepo</name>
-                </property>
-            </activation>
-            <distributionManagement>
-                <repository>
-                    <id>github</id>
-                    <uniqueVersion>false</uniqueVersion>
-                    <name>arago GitHub Maven Repository</name>
-                    <url>https://maven.pkg.github.com/arago/repository-public</url>
-                </repository>
-                <snapshotRepository>
-                    <id>github</id>
-                    <uniqueVersion>false</uniqueVersion>
-                    <name>arago GitHub Maven Repository</name>
-                    <url>https://maven.pkg.github.com/arago/repository-public</url>
-                </snapshotRepository>
-            </distributionManagement>
-        </profile>
-        <profile>
-            <id>global-repository</id>
-            <activation>
-                <property>
-                    <name>useRepo</name>
-                    <value>global</value>
-                </property>
-            </activation>
-            <distributionManagement>
-                <snapshotRepository>
-                    <id>ossrh</id>
-                    <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
-                </snapshotRepository>
-                <repository>
-                    <id>ossrh</id>
-                    <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-                </repository>
-            </distributionManagement>
-        </profile>
-        <profile>
-            <id>arago-private</id>
-            <activation>
-                <property>
-                    <name>useRepo</name>
-                    <value>aragoPrivate</value>
-                </property>
-            </activation>
-            <distributionManagement>
-                <repository>
-                    <id>arago-private</id>
-                    <uniqueVersion>false</uniqueVersion>
-                </repository>
-                <snapshotRepository>
-                    <id>arago-private</id>
-                    <uniqueVersion>false</uniqueVersion>
-                </snapshotRepository>
-            </distributionManagement>
-        </profile>
-    </profiles>
+	<profiles>
+		<profile>
+			<id>github-repositories</id>
+			<activation>
+				<property>
+					<name>!useRepo</name>
+				</property>
+			</activation>
+			<distributionManagement>
+				<repository>
+					<id>github</id>
+					<uniqueVersion>false</uniqueVersion>
+					<name>arago GitHub Maven Repository</name>
+					<url>https://maven.pkg.github.com/arago/repository-public</url>
+				</repository>
+				<snapshotRepository>
+					<id>github</id>
+					<uniqueVersion>false</uniqueVersion>
+					<name>arago GitHub Maven Repository</name>
+					<url>https://maven.pkg.github.com/arago/repository-public</url>
+				</snapshotRepository>
+			</distributionManagement>
+		</profile>
+		<profile>
+			<id>global-repository</id>
+			<activation>
+				<property>
+					<name>useRepo</name>
+					<value>global</value>
+				</property>
+			</activation>
+			<distributionManagement>
+				<snapshotRepository>
+					<id>ossrh</id>
+					<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+				</snapshotRepository>
+				<repository>
+					<id>ossrh</id>
+					<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+				</repository>
+			</distributionManagement>
+		</profile>
+		<profile>
+			<id>arago-private</id>
+			<activation>
+				<property>
+					<name>useRepo</name>
+					<value>aragoPrivate</value>
+				</property>
+			</activation>
+			<distributionManagement>
+				<repository>
+					<id>arago-private</id>
+					<uniqueVersion>false</uniqueVersion>
+				</repository>
+				<snapshotRepository>
+					<id>arago-private</id>
+					<uniqueVersion>false</uniqueVersion>
+				</snapshotRepository>
+			</distributionManagement>
+		</profile>
+	</profiles>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.7.0</version>
-                <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.2.0</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addDefaultEntries>true</addDefaultEntries>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                            <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                        </manifest>
-                    </archive>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.0.2</version>
-                <configuration>
-                    <encoding>${project.build.sourceEncoding}</encoding>
-                </configuration>
-            </plugin>
-            <!--            <plugin>-->
-            <!--                <groupId>net.revelc.code.formatter</groupId>-->
-            <!--                <artifactId>formatter-maven-plugin</artifactId>-->
-            <!--                <version>2.16.0</version>-->
-            <!--                <executions>-->
-            <!--                    <execution>-->
-            <!--                        <goals>-->
-            <!--                            <goal>format</goal>-->
-            <!--                        </goals>-->
-            <!--                    </execution>-->
-            <!--                </executions>-->
-            <!--                <configuration>-->
-            <!--                    <compilerSource>11</compilerSource>-->
-            <!--                    <compilerCompliance>11</compilerCompliance>-->
-            <!--                    <compilerTargetPlatform>11</compilerTargetPlatform>-->
-            <!--                    <lineEnding>LF</lineEnding>-->
-            <!--                    <encoding>UTF-8</encoding>-->
-            <!--                    &lt;!&ndash;                    <overrideConfigCompilerVersion>true</overrideConfigCompilerVersion>&ndash;&gt;-->
-            <!--                </configuration>-->
-            <!--            </plugin>-->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.0.1</version>
-                <configuration>
-                    <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
-                    <quiet>true</quiet>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>attach-javadoc</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.0</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-gpg-plugin</artifactId>
-                <version>${plugin-gpg-version}</version>
-                <executions>
-                    <execution>
-                        <id>sign-artifacts</id>
-                        <phase>verify</phase>
-                        <goals>
-                            <goal>sign</goal>
-                        </goals>
-                        <configuration>
-                            <keyname>${gpg.keyname}</keyname>
-                            <passphraseServerId>${gpg.keyname}</passphraseServerId>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.7.0</version>
+				<configuration>
+					<source>${maven.compiler.source}</source>
+					<target>${maven.compiler.target}</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.2.0</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultEntries>true</addDefaultEntries>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>3.0.2</version>
+				<configuration>
+					<encoding>${project.build.sourceEncoding}</encoding>
+				</configuration>
+			</plugin>
+			<!-- <plugin> -->
+			<!-- <groupId>net.revelc.code.formatter</groupId> -->
+			<!-- <artifactId>formatter-maven-plugin</artifactId> -->
+			<!-- <version>2.16.0</version> -->
+			<!-- <executions> -->
+			<!-- <execution> -->
+			<!-- <goals> -->
+			<!-- <goal>format</goal> -->
+			<!-- </goals> -->
+			<!-- </execution> -->
+			<!-- </executions> -->
+			<!-- <configuration> -->
+			<!-- <compilerSource>11</compilerSource> -->
+			<!-- <compilerCompliance>11</compilerCompliance> -->
+			<!-- <compilerTargetPlatform>11</compilerTargetPlatform> -->
+			<!-- <lineEnding>LF</lineEnding> -->
+			<!-- <encoding>UTF-8</encoding> -->
+			<!-- &lt;!&ndash; <overrideConfigCompilerVersion>true</overrideConfigCompilerVersion>&ndash;&gt; -->
+			<!-- </configuration> -->
+			<!-- </plugin> -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.0.1</version>
+				<configuration>
+					<javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
+					<quiet>true</quiet>
+				</configuration>
+				<executions>
+					<execution>
+						<id>attach-javadoc</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.22.0</version>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>${plugin-gpg-version}</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+						<configuration>
+							<keyname>${gpg.keyname}</keyname>
+							<passphraseServerId>${gpg.keyname}</passphraseServerId>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 
-    <dependencies>
-        <dependency>
-            <groupId>co.arago.util</groupId>
-            <artifactId>json</artifactId>
-            <version>${arago-java-project-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>co.arago.util</groupId>
-            <artifactId>common</artifactId>
-            <version>${arago-java-project-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>co.arago.util</groupId>
-            <artifactId>collections</artifactId>
-            <version>${arago-java-project-version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>5.8.0-M1</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.7.32</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>co.arago.util</groupId>
+			<artifactId>json</artifactId>
+			<version>${arago-java-project-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>co.arago.util</groupId>
+			<artifactId>common</artifactId>
+			<version>${arago-java-project-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>co.arago.util</groupId>
+			<artifactId>collections</artifactId>
+			<version>${arago-java-project-version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<version>5.8.0-M1</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-simple</artifactId>
+			<version>1.7.32</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
 
 </project>

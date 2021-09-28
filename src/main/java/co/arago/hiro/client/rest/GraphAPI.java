@@ -216,8 +216,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
                     createBody(),
                     headers,
                     httpRequestTimeout,
-                    maxRetries
-            );
+                    maxRetries);
         }
     }
 
@@ -234,7 +233,6 @@ public class GraphAPI extends AuthenticatedAPIHandler {
     public QueryVerticesCommand queryVerticesCommand(String query) {
         return new QueryVerticesCommand(query);
     }
-
 
     // ----------------------------------- Query gremlin -----------------------------------
 
@@ -276,8 +274,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
                     createBody(),
                     headers,
                     httpRequestTimeout,
-                    maxRetries
-            );
+                    maxRetries);
         }
     }
 
@@ -333,8 +330,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
                     createBody(),
                     headers,
                     httpRequestTimeout,
-                    maxRetries
-            );
+                    maxRetries);
         }
     }
 
@@ -388,8 +384,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
                     createBody(),
                     headers,
                     httpRequestTimeout,
-                    maxRetries
-            );
+                    maxRetries);
         }
     }
 
@@ -489,8 +484,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
                     createBody(),
                     headers,
                     httpRequestTimeout,
-                    maxRetries
-            );
+                    maxRetries);
         }
     }
 
@@ -578,8 +572,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
                     getEndpointUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
-                    maxRetries
-            );
+                    maxRetries);
         }
     }
 
@@ -656,7 +649,6 @@ public class GraphAPI extends AuthenticatedAPIHandler {
             return this;
         }
 
-
         @Override
         protected UpdateEntityCommand self() {
             return this;
@@ -675,8 +667,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
                     notBlank(body, "body with entity (vertex) data"),
                     headers,
                     httpRequestTimeout,
-                    maxRetries
-            );
+                    maxRetries);
         }
     }
 
@@ -742,8 +733,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
                     getEndpointUri(path, query, fragment),
                     headers,
                     httpRequestTimeout,
-                    maxRetries
-            );
+                    maxRetries);
         }
     }
 
@@ -822,8 +812,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
                     notBlank(body, "body with entity (vertex) data"),
                     headers,
                     httpRequestTimeout,
-                    maxRetries
-            );
+                    maxRetries);
         }
     }
 
@@ -878,8 +867,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
             super("connect", notBlank(verb, "verb"));
             setJsonBodyFromMap(Map.of(
                     "out", notBlank(fromNodeId, "fromNodeId"),
-                    "in", notBlank(toNodeId, "toNodeId")
-            ));
+                    "in", notBlank(toNodeId, "toNodeId")));
         }
 
         @Override
@@ -900,8 +888,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
                     notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
-                    maxRetries
-            );
+                    maxRetries);
         }
     }
 
@@ -963,7 +950,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
 
         /**
          * @return A {@link HttpResponseParser} containing the InputStream of the content, the mediaType and the size
-         * (if available).
+         *         (if available).
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
@@ -1427,8 +1414,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
                     notBlank(body, "body for timeseries data"),
                     headers,
                     httpRequestTimeout,
-                    maxRetries
-            );
+                    maxRetries);
         }
     }
 

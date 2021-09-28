@@ -27,7 +27,13 @@ import java.util.Map;
  */
 public class VersionResponse extends HiroMessage {
 
+    private static final long serialVersionUID = 2903834856447071619L;
+
     public static class VersionEntry extends HiroJsonMap {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = -5055749186188400575L;
         public String endpoint;
         public String version;
         public String docs;

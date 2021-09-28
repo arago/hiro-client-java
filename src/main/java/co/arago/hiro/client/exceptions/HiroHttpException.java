@@ -5,6 +5,8 @@ package co.arago.hiro.client.exceptions;
  */
 public class HiroHttpException extends HiroException {
 
+    private static final long serialVersionUID = 2495564788491998326L;
+
     private final int code;
     private final String body;
 

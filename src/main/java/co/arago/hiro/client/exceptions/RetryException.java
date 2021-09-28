@@ -2,6 +2,8 @@ package co.arago.hiro.client.exceptions;
 
 public class RetryException extends HiroException {
 
+    private static final long serialVersionUID = -3735450990076650136L;
+
     /**
      * Constructs a new exception with the specified detail message.  The
      * cause is not initialized, and may subsequently be initialized by
