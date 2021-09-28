@@ -29,6 +29,8 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
             this.token = token;
             return self();
         }
+
+        public abstract FixedTokenAPIHandler build();
     }
 
     public static final class Builder extends Conf<Builder> {
@@ -59,7 +61,7 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
         this.token = notNull(builder.getToken(), "token");
     }
 
-    public static Builder newBuilder() {
+    public static Conf<?> newBuilder() {
         return new Builder();
     }
 

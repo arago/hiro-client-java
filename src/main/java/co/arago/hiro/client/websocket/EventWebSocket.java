@@ -171,6 +171,8 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
             this.eventWebSocketListener = eventWebSocketListener;
             return self();
         }
+
+        public abstract EventWebSocket build();
     }
 
     public static final class Builder extends Conf<Builder> {
@@ -364,7 +366,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
      * @param eventWebSocketListener The listener for this websocket.
      * @return The {@link Builder} for {@link EventWebSocket}.
      */
-    public static Builder newBuilder(
+    public static Conf<?> newBuilder(
             AbstractTokenAPIHandler tokenAPIHandler,
             EventWebSocketListener eventWebSocketListener
     ) {

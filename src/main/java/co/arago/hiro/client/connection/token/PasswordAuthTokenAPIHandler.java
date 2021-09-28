@@ -166,6 +166,8 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
             this.apiPath = apiPath;
             return self();
         }
+
+        public abstract PasswordAuthTokenAPIHandler build();
     }
 
     public static final class Builder extends Conf<Builder> {
@@ -293,7 +295,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         }
     }
 
-    public static Builder newBuilder() {
+    public static Conf<?> newBuilder() {
         return new Builder();
     }
 

@@ -27,6 +27,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
             this.tokenEnv = tokenEnv;
             return self();
         }
+
+        public abstract EnvironmentTokenAPIHandler build();
     }
 
     public static final class Builder extends Conf<Builder> {
@@ -58,7 +60,7 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         this.tokenEnv = builder.getTokenEnv();
     }
 
-    public static Builder newBuilder() {
+    public static Conf<?> newBuilder() {
         return new Builder();
     }
 

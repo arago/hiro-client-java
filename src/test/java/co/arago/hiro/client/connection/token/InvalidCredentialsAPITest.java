@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class InvalidCredentialsAPITest {
-    public PasswordAuthTokenAPIHandler.Builder handlerBuilder;
+    public PasswordAuthTokenAPIHandler.Conf<?> handlerBuilder;
 
     final static Logger log = LoggerFactory.getLogger(InvalidCredentialsAPITest.class);
 

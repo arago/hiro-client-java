@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>co.arago.hiro.client</groupId>
-    <artifactId>java-hiro-clients</artifactId>
-    <version>0.1.0</version>
+    <artifactId>hiro-client-java</artifactId>
+    <version>0.1.2</version>
 
     <organization>
         <name>arago GmbH</name>
@@ -17,10 +17,24 @@
     <description>
         This project is a library to access the Graph API of HIRO
     </description>
-    <url>https://github.com/arago/java-hiro-clients</url>
+    <url>https://github.com/arago/hiro-client-java</url>
+
+    <developers>
+        <developer>
+            <id>whuebner</id>
+            <name>Wolfgang Hübner</name>
+            <email>whuebner@arago.co</email>
+            <organization>arago GmbH</organization>
+            <organizationUrl>https://www.arago.co</organizationUrl>
+            <roles>
+                <role>Developer</role>
+            </roles>
+            <timezone>Europe/Berlin</timezone>
+        </developer>
+    </developers>
 
     <scm>
-        <url>scm:git:https://github.com/arago/java-hiro-clients.git</url>
+        <url>scm:git:https://github.com/arago/hiro-client-java.git</url>
     </scm>
 
     <licenses>
@@ -52,20 +66,68 @@
         </repository>
     </repositories>
 
-    <distributionManagement>
-        <repository>
-            <id>github</id>
-            <uniqueVersion>false</uniqueVersion>
-            <name>arago GitHub Maven Repository</name>
-            <url>https://maven.pkg.github.com/arago/repository-public</url>
-        </repository>
-        <snapshotRepository>
-            <id>github</id>
-            <uniqueVersion>false</uniqueVersion>
-            <name>arago GitHub Maven Repository</name>
-            <url>https://maven.pkg.github.com/arago/repository-public</url>
-        </snapshotRepository>
-    </distributionManagement>
+    <profiles>
+        <profile>
+            <id>github-repositories</id>
+            <activation>
+                <property>
+                    <name>!useRepo</name>
+                </property>
+            </activation>
+            <distributionManagement>
+                <repository>
+                    <id>github</id>
+                    <uniqueVersion>false</uniqueVersion>
+                    <name>arago GitHub Maven Repository</name>
+                    <url>https://maven.pkg.github.com/arago/repository-public</url>
+                </repository>
+                <snapshotRepository>
+                    <id>github</id>
+                    <uniqueVersion>false</uniqueVersion>
+                    <name>arago GitHub Maven Repository</name>
+                    <url>https://maven.pkg.github.com/arago/repository-public</url>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+        <profile>
+            <id>global-repository</id>
+            <activation>
+                <property>
+                    <name>useRepo</name>
+                    <value>global</value>
+                </property>
+            </activation>
+            <distributionManagement>
+                <snapshotRepository>
+                    <id>ossrh</id>
+                    <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+                </snapshotRepository>
+                <repository>
+                    <id>ossrh</id>
+                    <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+                </repository>
+            </distributionManagement>
+        </profile>
+        <profile>
+            <id>arago-private</id>
+            <activation>
+                <property>
+                    <name>useRepo</name>
+                    <value>aragoPrivate</value>
+                </property>
+            </activation>
+            <distributionManagement>
+                <repository>
+                    <id>arago-private</id>
+                    <uniqueVersion>false</uniqueVersion>
+                </repository>
+                <snapshotRepository>
+                    <id>arago-private</id>
+                    <uniqueVersion>false</uniqueVersion>
+                </snapshotRepository>
+            </distributionManagement>
+        </profile>
+    </profiles>
 
     <build>
         <plugins>
