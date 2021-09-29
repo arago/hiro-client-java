@@ -69,12 +69,12 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
     public DecodedToken decodeToken() throws HiroException, IOException, InterruptedException {
         String token = getToken();
 
-        if (!StringUtils.contains(token, "."))
+        String[] data = token.split("\\.");
+
+        if (data.length == 1)
             throw new AuthenticationTokenException("Token is missing base64 encoded data.", 500, token);
 
-        String data = token.split("\\.")[1];
-
-        String json = new String(Base64.getUrlDecoder().decode(data), StandardCharsets.UTF_8);
+        String json = new String(Base64.getUrlDecoder().decode(data[1]), StandardCharsets.UTF_8);
 
         return JsonUtil.DEFAULT.toObject(json, DecodedToken.class);
     }

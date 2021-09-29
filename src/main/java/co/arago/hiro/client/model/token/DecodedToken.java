@@ -6,6 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Data structure of the encoded JSON payload of a HIRO token
+ */
 public class DecodedToken extends HiroJsonMap {
 
     public String sub;
