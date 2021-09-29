@@ -1,7 +1,7 @@
 package co.arago.hiro.client.exceptions;
 
 /**
- * a base exception for HIRO, contains an error code
+ * A base exception for WebSockets. Contains an error code.
  */
 public class WebSocketMessageException extends HiroException {
 
