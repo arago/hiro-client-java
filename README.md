@@ -17,8 +17,8 @@ implemented are `app`, `auth`, `graph`, `event-ws` and `action-ws` )
 
 You need at least Java 11.
 
-https://github.com/arago/java-project and the respective packages under https://github.com/orgs/arago/packages or
-the Maven Central Library.
+https://github.com/arago/java-project and the respective packages under https://github.com/orgs/arago/packages or the
+Maven Central Library.
 
 ## Quickstart
 
@@ -299,6 +299,7 @@ import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.websocket.EventWebSocket;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
 import co.arago.util.json.JsonUtil;
+import co.arago.hiro.client.model.token.DecodedToken;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -313,13 +314,7 @@ class Example {
                 .build()
         ) {
 
-
-            // Obtain my default scope. THIS WILL MOST LIKELY CHANGE IN THE FUTURE.
-            AuthAPI authAPI = AuthAPI.newBuilder(handler).build();
-            String defaultScope = authAPI
-                    .getMeProfileCommand()
-                    .execute()
-                    .getAttributeAsString("ogit/Auth/Account/defaultScope");
+            DecodedToken decodedToken = handler.decodeToken();
 
             try (EventWebSocket eventWebSocket = EventWebSocket.newBuilder(
                             handler,
@@ -339,7 +334,7 @@ class Example {
                                     // React when a vertex has been deleted
                                 }
                             })
-                    .addScope(defaultScope)
+                    .addScope(decodedToken.data.defaultScope)
                     .addEventsFilter(
                             "default",
                             "(element.ogit/_type = ogit/Automation/AutomationIssue)"

@@ -5,9 +5,8 @@ import co.arago.hiro.client.connection.token.FixedTokenAPIHandler;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.UnauthorizedWebSocketException;
-import co.arago.hiro.client.model.websocket.events.EventsFilter;
+import co.arago.hiro.client.model.token.DecodedToken;
 import co.arago.hiro.client.model.websocket.events.impl.EventsMessage;
-import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
 import co.arago.util.json.JsonUtil;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,7 +18,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.nio.file.Paths;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -75,13 +73,10 @@ public class EventWebSocketTest {
                 .setForceLogging(config.force_logging)
                 .build()) {
 
-
-            AuthAPI authAPI = AuthAPI.newBuilder(handler).build();
-
-            String defaultScope = authAPI.getMeProfileCommand().execute().getAttributeAsString("ogit/Auth/Account/defaultScope");
+            DecodedToken decodedToken = handler.decodeToken();
 
             try (EventWebSocket eventWebSocket = EventWebSocket.newBuilder(handler, new EventListener())
-                    .addScope(defaultScope)
+                    .addScope(decodedToken.data.defaultScope)
                     .build()) {
                 eventWebSocket.start();
                 Thread.sleep(1000);
