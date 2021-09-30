@@ -1,3 +1,8 @@
+# v0.2.0
+
+* Add method to decode HIRO token data.
+* Documentation, fixes and refactorings.
+
 # v0.1.2
 
 Make API classes extendable
