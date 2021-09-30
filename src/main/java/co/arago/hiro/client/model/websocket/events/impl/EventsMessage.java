@@ -25,6 +25,7 @@ import org.apache.commons.lang3.StringUtils;
  * </pre>
  */
 public class EventsMessage extends HiroJsonMap {
+    private static final long serialVersionUID = 4059559087109882138L;
     public final String id;
     public final Long timestamp;
     public final Long nanotime;

@@ -191,6 +191,8 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
      */
     protected static class TokenInfo extends TokenResponse {
 
+        private static final long serialVersionUID = 8659946445124247439L;
+
         /**
          * ms of time, where no refresh calls are sent to the backend to avoid request flooding
          */

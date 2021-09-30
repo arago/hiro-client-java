@@ -17,7 +17,12 @@ import java.io.Serializable;
  */
 public class TokenRefreshMessage implements JsonMessage {
 
+    private static final long serialVersionUID = -1345807437979508716L;
+
     public static class Token implements Serializable {
+
+        private static final long serialVersionUID = 2335533223814817461L;
+        
         @JsonProperty("_TOKEN")
         public String token;
 

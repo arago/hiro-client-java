@@ -15,6 +15,7 @@ import java.util.Map;
  * </pre>
  */
 public class ClearEventsMessage implements JsonMessage {
+    private static final long serialVersionUID = 1195559607767891454L;
     public final String type = "clear";
     public final Map<String, Object> args = new HashMap<>();
 }

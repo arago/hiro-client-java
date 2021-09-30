@@ -17,7 +17,12 @@ import java.io.Serializable;
  */
 public class EventUnregisterMessage implements JsonMessage {
 
+    private static final long serialVersionUID = -6429322952122966911L;
+
     public static class FilterId implements Serializable {
+
+        private static final long serialVersionUID = -8248097749104501643L;
+
         @JsonProperty("filter-id")
         public final String id;
 
