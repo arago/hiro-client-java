@@ -28,7 +28,8 @@ class AuthAPIHandlerTest {
     @BeforeAll
     static void init() throws IOException {
         try {
-            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(),
+                    Config.class);
 
             handler = PasswordAuthTokenAPIHandler.newBuilder()
                     .setApiUrl(config.api_url)
@@ -104,8 +105,7 @@ class AuthAPIHandlerTest {
 
         log.info(JsonUtil.DEFAULT.toString(
                 authAPI.getMeRolesCommand()
-                        .execute().getMap().get("items")
-        ));
+                        .execute().getMap().get("items")));
     }
 
     @Test
@@ -116,8 +116,6 @@ class AuthAPIHandlerTest {
         log.info(JsonUtil.DEFAULT.toString(
                 authAPI.getMeTeamsCommand()
                         .setIncludeVirtual(true)
-                        .execute().getItems()
-        ));
+                        .execute().getItems()));
     }
 }
-

@@ -9,4 +9,3 @@ public class Config {
     public Boolean accept_all_certs;
     public Boolean force_logging;
 }
-

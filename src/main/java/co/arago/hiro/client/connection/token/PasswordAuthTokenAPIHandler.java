@@ -273,7 +273,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
     protected URI apiUri;
 
-
     protected PasswordAuthTokenAPIHandler(Conf<?> builder) {
         super(builder);
         this.username = notBlank(builder.getUsername(), "username");
@@ -379,7 +378,8 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
      * @throws IOException                  When reading the inputStream fails.
      */
     @Override
-    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException, InterruptedException {
+    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount)
+            throws HiroException, IOException, InterruptedException {
         try {
             super.checkResponse(httpResponse, retryCount);
         } catch (TokenUnauthorizedException e) {
@@ -428,9 +428,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                         tokenRequest.toJsonString(),
                         Map.of("Content-Type", "application/json"),
                         httpRequestTimeout,
-                        maxRetries
-                )
-        );
+                        maxRetries));
     }
 
     /**
@@ -457,9 +455,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                         tokenRequest.toJsonString(),
                         Map.of("Content-Type", "application/json"),
                         httpRequestTimeout,
-                        maxRetries
-                )
-        );
+                        maxRetries));
     }
 
     /**
@@ -480,12 +476,9 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                         tokenRequest.toJsonString(),
                         Map.of(
                                 "Content-Type", "application/json",
-                                "Authorization", "Bearer " + getToken()
-                        ),
+                                "Authorization", "Bearer " + getToken()),
                         httpRequestTimeout,
-                        maxRetries
-                )
-        );
+                        maxRetries));
     }
 
     /**

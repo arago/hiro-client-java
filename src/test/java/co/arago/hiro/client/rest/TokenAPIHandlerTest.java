@@ -25,7 +25,8 @@ class TokenAPIHandlerTest {
     @BeforeAll
     static void init() throws IOException {
         try {
-            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(),
+                    Config.class);
 
             handler = PasswordAuthTokenAPIHandler.newBuilder()
                     .setApiUrl(config.api_url)

@@ -17,13 +17,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ActionHandlerResult extends AbstractActionHandlerIdMessage {
 
     private static final long serialVersionUID = -2411698529744598524L;
-    
+
     public String result;
 
     @JsonCreator
     public ActionHandlerResult(
-            @JsonProperty(value = "id", required = true) String id
-    ) {
+            @JsonProperty(value = "id", required = true) String id) {
         super(id);
     }
 

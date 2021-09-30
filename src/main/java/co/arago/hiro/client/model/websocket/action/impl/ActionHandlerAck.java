@@ -25,8 +25,7 @@ public class ActionHandlerAck extends AbstractActionHandlerIdMessage implements 
 
     @JsonCreator
     public ActionHandlerAck(
-            @JsonProperty(value = "id", required = true) String id
-    ) {
+            @JsonProperty(value = "id", required = true) String id) {
         super(id);
     }
 

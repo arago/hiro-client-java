@@ -22,7 +22,7 @@ public class TokenRefreshMessage implements JsonMessage {
     public static class Token implements Serializable {
 
         private static final long serialVersionUID = 2335533223814817461L;
-        
+
         @JsonProperty("_TOKEN")
         public String token;
 

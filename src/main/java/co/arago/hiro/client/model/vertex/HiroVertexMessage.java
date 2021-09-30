@@ -110,7 +110,7 @@ public class HiroVertexMessage extends HiroMessage {
      *
      * @param key The key of the field.
      * @return A MetaValueList. If the value is a String, a list with only one entry with the field 'value' will be
-     * returned.
+     *         returned.
      * @see #getAttribute(String)
      */
     @JsonIgnore

@@ -237,7 +237,8 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
                 futures.add(webSocket.sendText(new EventRegisterMessage(filterEntry.getValue()).toJsonString(), true));
             }
 
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get(webSocketRequestTimeout, TimeUnit.MILLISECONDS);
+            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get(webSocketRequestTimeout,
+                    TimeUnit.MILLISECONDS);
 
             eventWebSocketListener.onOpen();
 
@@ -354,9 +355,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
         this.internalListener = new InternalListener(
                 name + "-listener",
                 new InternalEventListener(
-                        notNull(builder.getEventWebSocketListener(), "eventWebSocketListener")
-                )
-        );
+                        notNull(builder.getEventWebSocketListener(), "eventWebSocketListener")));
     }
 
     /**
@@ -368,8 +367,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
      */
     public static Conf<?> newBuilder(
             AbstractTokenAPIHandler tokenAPIHandler,
-            EventWebSocketListener eventWebSocketListener
-    ) {
+            EventWebSocketListener eventWebSocketListener) {
         return new EventWebSocket.Builder(tokenAPIHandler, eventWebSocketListener);
     }
 

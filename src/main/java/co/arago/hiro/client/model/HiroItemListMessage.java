@@ -50,7 +50,6 @@ public class HiroItemListMessage<T extends HiroJsonMap> extends HiroMessage {
         return items.isEmpty();
     }
 
-
     /**
      * @return Number of items in {@link #items}.
      */

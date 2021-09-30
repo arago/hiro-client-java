@@ -88,7 +88,6 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
             return self();
         }
 
-
         public int getMaxRetries() {
             return maxRetries;
         }
@@ -195,7 +194,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param <T> The Builder type
      * @param <R> The type of the result expected from {@link #execute()}
      */
-    public static abstract class SendBodyAPIRequestConf<T extends SendBodyAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> {
+    public static abstract class SendBodyAPIRequestConf<T extends SendBodyAPIRequestConf<T, R>, R>
+            extends APIRequestConf<T, R> {
         protected String body;
 
         /**
@@ -255,7 +255,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param <T> The Builder type
      * @param <R> The type of the result expected from {@link #execute()}
      */
-    public static abstract class SendStreamAPIRequestConf<T extends SendStreamAPIRequestConf<T, R>, R> extends APIRequestConf<T, R> {
+    public static abstract class SendStreamAPIRequestConf<T extends SendStreamAPIRequestConf<T, R>, R>
+            extends APIRequestConf<T, R> {
         protected StreamContainer streamContainer;
 
         /**
@@ -329,7 +330,6 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
     }
 
-
     // ###############################################################################################
     // ## Main part ##
     // ###############################################################################################
@@ -378,7 +378,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
             @Override
             public Long getHttpRequestTimeout() {
-                return builder.getHttpRequestTimeout() != null ? builder.getHttpRequestTimeout() : tokenAPIHandler.getHttpRequestTimeout();
+                return builder.getHttpRequestTimeout() != null ? builder.getHttpRequestTimeout()
+                        : tokenAPIHandler.getHttpRequestTimeout();
             }
 
             @Override
@@ -405,7 +406,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @throws InterruptedException Call got interrupted
      * @throws HiroException        When calling /api/version responds with an error
      */
-    public URI getEndpointUri(URIPath path, Map<String, String> query, String fragment) throws IOException, InterruptedException, HiroException {
+    public URI getEndpointUri(URIPath path, Map<String, String> query, String fragment)
+            throws IOException, InterruptedException, HiroException {
         if (apiUri == null)
             apiUri = (apiPath != null ? buildApiURI(apiPath) : tokenAPIHandler.getApiUriOf(apiName));
 
@@ -438,7 +440,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @throws InterruptedException Call got interrupted.
      */
     @Override
-    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException, InterruptedException {
+    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount)
+            throws HiroException, IOException, InterruptedException {
         try {
             return super.checkResponse(httpResponse, retryCount);
         } catch (TokenUnauthorizedException e) {

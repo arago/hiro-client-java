@@ -35,14 +35,16 @@ public class HttpLogger {
         return StringUtils.endsWith(uri.getPath(), "/") ? uri.getPath() : uri.getPath() + "/";
     }
 
-    /*+
+    /*
+     * +
      * Add an uri path to the filter
      */
     public synchronized void addFilter(URI uri) {
         filter.add(parsePath(uri));
     }
 
-    /*+
+    /*
+     * +
      * Remove an uri path from the filter
      */
     public synchronized void removeFilter(URI uri) {
@@ -93,7 +95,8 @@ public class HttpLogger {
         if (StringUtils.equalsAnyIgnoreCase(key, "Authorization", "Cookie", "Set-Cookie")) {
             String result = value.get(0);
             if (result.length() > 20) {
-                return result.substring(0, 10) + "...--- FIELD OBSCURED INTENTIONALLY ---..." + result.substring(result.length() - 10) + " (len: " + result.length() + ")";
+                return result.substring(0, 10) + "...--- FIELD OBSCURED INTENTIONALLY ---..."
+                        + result.substring(result.length() - 10) + " (len: " + result.length() + ")";
             } else {
                 return "<hidden>";
             }

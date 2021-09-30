@@ -8,7 +8,7 @@ public class FixedTokenException extends HiroException {
     private static final long serialVersionUID = -2975260718069366281L;
 
     /**
-     * Constructs a new exception with the specified detail message.  The
+     * Constructs a new exception with the specified detail message. The
      * cause is not initialized, and may subsequently be initialized by
      * a call to {@link #initCause}.
      *

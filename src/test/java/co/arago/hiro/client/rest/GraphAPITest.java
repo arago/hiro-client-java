@@ -26,7 +26,8 @@ class GraphAPITest {
     @BeforeAll
     static void init() throws IOException {
         try {
-            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(),
+                    Config.class);
 
             handler = PasswordAuthTokenAPIHandler.newBuilder()
                     .setApiUrl(config.api_url)
@@ -68,16 +69,14 @@ class GraphAPITest {
                 "ogit/_xid", "test:machine:Server",
                 "ogit/_type", "ogit/MARS/Machine",
                 "ogit/MARS/Machine/class", "Linux",
-                "ogit/name", "Machine Alpha"
-        );
+                "ogit/name", "Machine Alpha");
 
         Map<String, Object> newVertexB = Map.of(
                 "ogit/_xid", "test:software:Webserver",
                 "ogit/_type", "ogit/MARS/Software",
                 "ogit/MARS/Software/class", "Webserver",
                 "ogit/MARS/Software/subClass", "Apache",
-                "ogit/name", "Standalone Apache Webserver"
-        );
+                "ogit/name", "Standalone Apache Webserver");
 
         HiroVertexMessage resultA = graphAPI.createVertexCommand(newVertexA).execute();
         HiroVertexMessage resultB = graphAPI.createVertexCommand(newVertexB).execute();

@@ -19,14 +19,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class ActionHandlerNack extends AbstractActionHandlerIdMessage implements ActionHandlerCodeMessage {
 
     private static final long serialVersionUID = -3319292361271625459L;
-    
+
     public Integer code;
     public String message;
 
     @JsonCreator
     public ActionHandlerNack(
-            @JsonProperty(value = "id", required = true) String id
-    ) {
+            @JsonProperty(value = "id", required = true) String id) {
         super(id);
     }
 
