@@ -51,7 +51,7 @@
 		<maven.compiler.source>11</maven.compiler.source>
 		<maven.compiler.target>11</maven.compiler.target>
 
-		<arago-java-project-version>0.2.1-SNAPSHOT</arago-java-project-version>
+		<arago-java-project-version>0.2.1</arago-java-project-version>
 		<plugin-gpg-version>3.0.1</plugin-gpg-version>
 	</properties>
 
