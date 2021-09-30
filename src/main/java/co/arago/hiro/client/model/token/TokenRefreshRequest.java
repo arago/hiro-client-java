@@ -19,6 +19,8 @@ public class TokenRefreshRequest implements JsonMessage {
 
     // Match the JSON structure for the request.
 
+    private static final long serialVersionUID = -4492202824089449055L;
+
     @JsonProperty("client_id")
     public String clientId;
 

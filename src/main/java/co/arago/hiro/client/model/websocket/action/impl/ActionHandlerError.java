@@ -14,6 +14,9 @@ import co.arago.hiro.client.model.websocket.action.ActionMessageType;
  * </pre>
  */
 public class ActionHandlerError extends HiroJsonMap implements ActionHandlerCodeMessage {
+
+    private static final long serialVersionUID = 6594400162088874765L;
+    
     public Integer code;
     public String message;
 

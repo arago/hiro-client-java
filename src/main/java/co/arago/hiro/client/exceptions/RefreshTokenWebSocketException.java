@@ -5,6 +5,8 @@ package co.arago.hiro.client.exceptions;
  */
 public class RefreshTokenWebSocketException extends WebSocketException {
 
+    private static final long serialVersionUID = -1339343734517969528L;
+
     public RefreshTokenWebSocketException(final String message) {
         super(message);
     }

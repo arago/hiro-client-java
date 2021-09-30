@@ -5,6 +5,8 @@ package co.arago.hiro.client.exceptions;
  */
 public class UnauthorizedWebSocketException extends WebSocketMessageException {
 
+    private static final long serialVersionUID = -1637351596069365162L;
+
     public UnauthorizedWebSocketException(final String message, final int code) {
         super(message, code);
     }

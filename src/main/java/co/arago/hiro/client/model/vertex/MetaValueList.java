@@ -28,6 +28,9 @@ public class MetaValueList extends ArrayList<MetaValueList.MetaValueField> imple
     private static final long serialVersionUID = 8233445177105381442L;
 
     public static class MetaValueField extends HiroJsonMap {
+
+        private static final long serialVersionUID = 2556453479411926780L;
+
         public String value;
         public Long created;
         public String key;
@@ -40,21 +43,20 @@ public class MetaValueList extends ArrayList<MetaValueList.MetaValueField> imple
         public MetaValueField(
                 @JsonProperty("value") String value,
                 @JsonProperty("created") Long created,
-                @JsonProperty("key") String key
-        ) {
+                @JsonProperty("key") String key) {
             this.value = value;
             this.created = created;
             this.key = key;
         }
 
         public static MetaValueField create(Object object) {
-            return JsonUtil.DEFAULT.toObject(object, MetaValueField.class);
+            return JsonUtil.DEFAULT.transformObject(object, MetaValueField.class);
         }
 
     }
 
     public static MetaValueList create(Object object) {
-        return JsonUtil.DEFAULT.toObject(object, MetaValueList.class);
+        return JsonUtil.DEFAULT.transformObject(object, MetaValueList.class);
     }
 
     public String createSingleValue() {

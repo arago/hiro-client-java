@@ -29,7 +29,13 @@ import java.util.Map;
  */
 public class HiroError extends HiroJsonMap {
 
+    private static final long serialVersionUID = -8947894966816686991L;
+
     public static class HiroErrorEntry extends HiroJsonMap {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = -7369549314100124499L;
         public String message;
         public Integer code;
 
@@ -57,7 +63,7 @@ public class HiroError extends HiroJsonMap {
             @JsonProperty("error") Object errorObj
     ) {
         if (errorObj instanceof Map)
-            this.error = JsonUtil.DEFAULT.toObject(errorObj, HiroErrorEntry.class);
+            this.error = JsonUtil.DEFAULT.transformObject(errorObj, HiroErrorEntry.class);
         if (errorObj instanceof String)
             this.error = new HiroErrorEntry((String) errorObj, null);
     }

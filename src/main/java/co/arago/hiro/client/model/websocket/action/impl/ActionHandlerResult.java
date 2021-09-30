@@ -15,6 +15,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * </pre>
  */
 public class ActionHandlerResult extends AbstractActionHandlerIdMessage {
+
+    private static final long serialVersionUID = -2411698529744598524L;
+    
     public String result;
 
     @JsonCreator

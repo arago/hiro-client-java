@@ -14,4 +14,6 @@ package co.arago.hiro.client.model;
  * </pre>
  */
 public class DefaultHiroItemListMessage extends HiroItemListMessage<HiroJsonMap> {
+
+    private static final long serialVersionUID = -2314085561734584523L;
 }

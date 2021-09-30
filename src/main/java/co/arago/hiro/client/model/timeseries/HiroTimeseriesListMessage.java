@@ -8,7 +8,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class HiroTimeseriesListMessage extends HiroItemListMessage<HiroTimeseriesListMessage.TimeseriesEntry> {
 
+    private static final long serialVersionUID = 5549447662955430498L;
+
     public static class TimeseriesEntry extends HiroMessage {
+        /**
+         * 
+         */
+        private static final long serialVersionUID = 9194337636660014261L;
         public String value;
         public Long timestamp;
 
@@ -22,11 +28,11 @@ public class HiroTimeseriesListMessage extends HiroItemListMessage<HiroTimeserie
         }
 
         public static TimeseriesEntry create(Object object) {
-            return JsonUtil.DEFAULT.toObject(object, TimeseriesEntry.class);
+            return JsonUtil.DEFAULT.transformObject(object, TimeseriesEntry.class);
         }
     }
 
     public static HiroTimeseriesListMessage create(Object object) {
-        return JsonUtil.DEFAULT.toObject(object, HiroTimeseriesListMessage.class);
+        return JsonUtil.DEFAULT.transformObject(object, HiroTimeseriesListMessage.class);
     }
 }

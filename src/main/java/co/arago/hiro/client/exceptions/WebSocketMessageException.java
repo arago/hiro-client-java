@@ -1,9 +1,11 @@
 package co.arago.hiro.client.exceptions;
 
 /**
- * a base exception for HIRO, contains an error code
+ * A base exception for WebSockets. Contains an error code.
  */
 public class WebSocketMessageException extends HiroException {
+
+    private static final long serialVersionUID = -4933538297607290220L;
 
     private final int code;
 

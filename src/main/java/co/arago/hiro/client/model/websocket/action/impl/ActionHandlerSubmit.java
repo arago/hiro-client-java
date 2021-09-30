@@ -23,6 +23,8 @@ import java.util.Map;
  */
 public class ActionHandlerSubmit extends AbstractActionHandlerIdMessage {
 
+    private static final long serialVersionUID = 9174246058907777607L;
+
     public String handler;
     public String capability;
     public Map<String, Object> parameters;

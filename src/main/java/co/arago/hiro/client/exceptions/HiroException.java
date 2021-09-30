@@ -5,6 +5,8 @@ package co.arago.hiro.client.exceptions;
  */
 public class HiroException extends Exception {
 
+    private static final long serialVersionUID = 6380386566011481642L;
+
     /**
      * Constructs a new exception with the specified detail message.  The
      * cause is not initialized, and may subsequently be initialized by

@@ -17,8 +17,8 @@ implemented are `app`, `auth`, `graph`, `event-ws` and `action-ws` )
 
 You need at least Java 11.
 
-https://github.com/arago/java-project and the respective packages under https://github.com/orgs/arago/packages or
-the Maven Central Library.
+https://github.com/arago/java-project and the respective packages under https://github.com/orgs/arago/packages or the
+Maven Central Library.
 
 ## Quickstart
 
@@ -299,6 +299,7 @@ import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.websocket.EventWebSocket;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
 import co.arago.util.json.JsonUtil;
+import co.arago.hiro.client.model.token.DecodedToken;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -312,14 +313,6 @@ class Example {
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
                 .build()
         ) {
-
-
-            // Obtain my default scope. THIS WILL MOST LIKELY CHANGE IN THE FUTURE.
-            AuthAPI authAPI = AuthAPI.newBuilder(handler).build();
-            String defaultScope = authAPI
-                    .getMeProfileCommand()
-                    .execute()
-                    .getAttributeAsString("ogit/Auth/Account/defaultScope");
 
             try (EventWebSocket eventWebSocket = EventWebSocket.newBuilder(
                             handler,
@@ -339,7 +332,73 @@ class Example {
                                     // React when a vertex has been deleted
                                 }
                             })
-                    .addScope(defaultScope)
+                    .addEventsFilter(
+                            "default",
+                            "(element.ogit/_type = ogit/Automation/AutomationIssue)"
+                    )
+                    .build()
+            ) {
+
+                eventWebSocket.start();
+
+                // Listen for 1 second for incoming events.
+                Thread.sleep(1000);
+            }
+        }
+    }
+}
+```
+
+If you do not set a scope via `.addScope(...)`, the default scope of your account will be used unless
+`setAllScopes(true)` is used. If you need to set a scope by hand, you can use the following:
+
+```java
+import co.arago.hiro.client.Config;
+import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
+import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.hiro.client.model.websocket.events.impl.EventsMessage;
+import co.arago.hiro.client.rest.AuthAPI;
+import co.arago.hiro.client.websocket.EventWebSocket;
+import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
+import co.arago.util.json.JsonUtil;
+import co.arago.hiro.client.model.token.DecodedToken;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+
+class Example {
+    public static void main(String[] args) throws HiroException, IOException, InterruptedException {
+
+        // Build an API handler which takes care of API paths via /api/versions and security tokens.
+        try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+                .setApiUrl(API_URL)
+                .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
+                .build()
+        ) {
+
+            // Obtain information from decoded token
+            DecodedToken decodedToken = handler.decodeToken();
+
+            try (EventWebSocket eventWebSocket = EventWebSocket.newBuilder(
+                            handler,
+                            new EventWebSocketListener() {
+                                @Override
+                                public void onCreate(EventsMessage eventsMessage) {
+                                    // React when a vertex has been created
+                                }
+
+                                @Override
+                                public void onUpdate(EventsMessage eventsMessage) {
+                                    // React when a vertex has been updated
+                                }
+
+                                @Override
+                                public void onDelete(EventsMessage eventsMessage) {
+                                    // React when a vertex has been deleted
+                                }
+                            })
+                    // Set defaultScope by hand
+                    .addScope(decodedToken.data.defaultScope)
                     .addEventsFilter(
                             "default",
                             "(element.ogit/_type = ogit/Automation/AutomationIssue)"
