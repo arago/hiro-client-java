@@ -1,0 +1,22 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+# profile = "lambda"
+region = "eu-west-1"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-wfvxebsdi253"
+s3_prefix = "lambda-layers"
+stack_name = "lambda-layers"
+
+[stage]
+[stage.deploy]
+[stage.deploy.parameters]
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = false
+# profile = "lambda-stage"
+region = "eu-west-1"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-1vd5m28a020o3"
+s3_prefix = "lambda-layers"
+stack_name = "lambda-layers"

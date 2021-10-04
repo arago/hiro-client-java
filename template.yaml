@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Shared python lib for working with HIRO
+
+Resources:
+  HiroJava:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: hiro-java
+      ContentUri: ./
+      CompatibleRuntimes:
+        - java11
+    Metadata:
+      BuildMethod: java11
+    
+Outputs:
+  HiroJavaARN:
+    Value: !Ref HiroJava
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}-HiroJava'
