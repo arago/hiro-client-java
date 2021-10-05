@@ -1,7 +1,6 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Transform: AWS::Serverless-2016-10-31
-Description: >
-  Shared python lib for working with HIRO
+Description: "Shared python lib for working with HIRO"
 
 Resources:
   HiroJava:
@@ -12,7 +11,7 @@ Resources:
       CompatibleRuntimes:
         - java11
     Metadata:
-      BuildMethod: java11
+      BuildMethod: makefile
     
 Outputs:
   HiroJavaARN:

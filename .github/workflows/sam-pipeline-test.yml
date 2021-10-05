@@ -26,7 +26,7 @@ jobs:
       - uses: aws-actions/setup-sam@v1
       - run: make aws
         env:
-          SAM_BUILD_OPTIONS: --use-container --container-env-var MVN_OPTIONS="--batch-mode --no-transfer-progress -Dgpg.skip"
+          SAM_BUILD_OPTIONS: --use-container
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_TEST_ACCESS_KEY_ID }}

@@ -9,6 +9,9 @@ compile: .version
 install: .version
 	$(MVN) $(MVN_OPTIONS) install
 
+package: .version
+	$(MVN) $(MVN_OPTIONS) package
+
 deploy: .version
 	$(MVN) $(MVN_OPTIONS) deploy
 
@@ -16,6 +19,12 @@ aws: .aws-sam
 
 aws-deploy: aws
 	 "$(SAM)" deploy $(SAM_DEPLOY_OPTIONS)
+
+build-HiroJava:
+	$(MVN) --batch-mode --no-transfer-progress $(MVN_OPTIONS) package dependency:copy-dependencies@copy-dependencies-config
+	mkdir -p $(ARTIFACTS_DIR)/java/lib
+	mv ./target/lib/* $(ARTIFACTS_DIR)/java/lib
+	mv ./target/hiro-client-java-$(PROJECT_VERSION).jar $(ARTIFACTS_DIR)/java/lib
 
 .version: VERSION
 	$(MVN) $(MVN_OPTIONS) versions:set -DallowSnapshots=true -DnewVersion="$(PROJECT_VERSION)" || true
