@@ -23,6 +23,5 @@ jobs:
           cache: maven
       - uses: aws-actions/setup-sam@v1
       - run: make aws
-#      - run: make aws-deploy
 
 
