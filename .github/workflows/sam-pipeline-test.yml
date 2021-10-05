@@ -22,14 +22,6 @@ jobs:
           distribution: 'adopt'
           cache: maven
       - uses: aws-actions/setup-sam@v1
-      - name: Install gpg secret key
-        run: |
-          mkdir ~/.aws
-          echo "[default]" > ~/.aws/config
-          echo "aws_access_key_id=${{ secrets.AWS_TEST_ACCESS_KEY_ID }}" >> ~/.aws/config
-          echo "aws_secret_access_key_id=${{ secrets.AWS_TEST_SECRET_ACCESS_KEY }}" >> ~/.aws/config
-          chmod 600 ~/.aws/config
-          chmod 700 ~/.aws
       - run: make aws
 #      - run: make aws-deploy
 
