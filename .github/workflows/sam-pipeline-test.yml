@@ -30,14 +30,7 @@ jobs:
           echo "aws_secret_access_key_id=${{ secrets.AWS_TEST_SECRET_ACCESS_KEY }}" >> ~/.aws/config
           chmod 600 ~/.aws/config
           chmod 700 ~/.aws
-#      - uses: aws-actions/configure-aws-credentials@v1
-#        with:
-#          aws-access-key-id: ${{ secrets.AWS_TEST_ACCESS_KEY_ID }}
-#          aws-secret-access-key: ${{ secrets.AWS_TEST_SECRET_ACCESS_KEY }}
-#          aws-region: eu-west-1
       - run: make aws
-#        env:
-#          SAM_BUILD_OPTIONS: --use-container
 #      - run: make aws-deploy
 
 
