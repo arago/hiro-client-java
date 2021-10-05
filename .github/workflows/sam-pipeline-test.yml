@@ -22,14 +22,12 @@ jobs:
           distribution: 'adopt'
           cache: maven
       - uses: aws-actions/setup-sam@v1
-      - name: Install AWS credentials
-        run: |
-          mkdir ~/.aws
-          echo "[default]" > ~/.aws/config
-          echo "aws_access_key_id=${{ secrets.AWS_TEST_ACCESS_KEY_ID }}" >> ~/.aws/config
-          echo "aws_secret_access_key_id=${{ secrets.AWS_TEST_SECRET_ACCESS_KEY }}" >> ~/.aws/config
-          chmod 600 ~/.aws/config
-          chmod 700 ~/.aws
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-1
       - run: make aws
+      - run: make aws-deploy
 
 
