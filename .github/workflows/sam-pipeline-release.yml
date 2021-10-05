@@ -24,14 +24,14 @@ jobs:
           distribution: 'adopt'
           cache: maven
       - uses: aws-actions/setup-sam@v1
-      - run: make aws
-        env:
-          SAM_BUILD_OPTIONS: --use-container
       - uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-1
+      - run: make aws
+#        env:
+#          SAM_BUILD_OPTIONS: --use-container
       - run: make aws-deploy
 
 
