@@ -13,6 +13,8 @@ jobs:
       packages: write
     env:
       MVN_OPTIONS: --batch-mode --no-transfer-progress -Dgpg.skip
+      SAM_BUILD_OPTIONS: --config-env prod
+      SAM_DEPLOY_OPTIONS: --config-env prod
 
     steps:
       - uses: actions/checkout@v2

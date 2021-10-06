@@ -14,6 +14,8 @@ jobs:
       packages: write
     env:
       MVN_OPTIONS: --batch-mode --no-transfer-progress -Dgpg.skip
+      SAM_BUILD_OPTIONS: --config-env stage
+      SAM_DEPLOY_OPTIONS: --config-env stage
 
     steps:
       - uses: actions/checkout@v2
