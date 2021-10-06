@@ -12,6 +12,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      MVN_OPTIONS: --batch-mode --no-transfer-progress -Dgpg.skip
 
     steps:
       - uses: actions/checkout@v2
