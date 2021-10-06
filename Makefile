@@ -1,5 +1,10 @@
+#
+# This Makefile does also work on Windows if you have Cygwin installed.
+# WSL should work as well, although this is not tested.
+#
+
 PROJECT_VERSION := $(shell cat ./VERSION)
-# You might need cygwin on Windows for this:
+# Little hack to discover sam on Windows.
 SAM ?= $(shell which sam 2>/dev/null || which sam.cmd 2>/dev/null)
 MVN ?= mvn
 
