@@ -25,6 +25,6 @@ stack_name = "lambda-layers"
 capabilities = "CAPABILITY_IAM"
 confirm_changeset = false
 region = "eu-west-1"
-s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-???????????"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-pedcr8nv5g7k"
 s3_prefix = "lambda-layers"
 stack_name = "lambda-layers"
