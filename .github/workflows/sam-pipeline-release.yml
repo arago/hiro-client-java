@@ -1,9 +1,8 @@
 name: AWS Lambda Layer Deployment
 
 on:
-  push:
-    tags:
-      - v*
+  release:
+    types: [ created ]
 
 jobs:
   build:
@@ -29,6 +28,8 @@ jobs:
           aws-region: eu-west-1
       - run: make aws
       - run: make aws-deploy
+        env:
+          SAM_DEPLOY_OPTIONS: --profile prod
 
 
 
