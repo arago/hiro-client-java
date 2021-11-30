@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.Map;
 
-
 /**
  * Handles error responses from HIRO of the format.
  *
@@ -21,6 +20,7 @@ import java.util.Map;
  * </pre>
  * <p>
  * or
+ * 
  * <pre>
  * {
  *     "error": "error message"
@@ -42,8 +42,7 @@ public class HiroError extends HiroJsonMap {
         @JsonCreator
         public HiroErrorEntry(
                 @JsonProperty("message") String message,
-                @JsonProperty("code") Integer code
-        ) {
+                @JsonProperty("code") Integer code) {
             this.message = message;
             this.code = code;
         }
@@ -60,8 +59,7 @@ public class HiroError extends HiroJsonMap {
      */
     @JsonCreator
     public HiroError(
-            @JsonProperty("error") Object errorObj
-    ) {
+            @JsonProperty("error") Object errorObj) {
         if (errorObj instanceof Map)
             this.error = JsonUtil.DEFAULT.transformObject(errorObj, HiroErrorEntry.class);
         if (errorObj instanceof String)

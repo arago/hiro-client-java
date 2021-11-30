@@ -12,15 +12,15 @@ public interface EventWebSocketListener extends HiroStandardListener {
      */
     default void onEvent(EventsMessage eventsMessage) throws Exception {
         switch (eventsMessage.type) {
-            case "CREATE":
-                onCreate(eventsMessage);
-                break;
-            case "UPDATE":
-                onUpdate(eventsMessage);
-                break;
-            case "DELETE":
-                onDelete(eventsMessage);
-                break;
+        case "CREATE":
+            onCreate(eventsMessage);
+            break;
+        case "UPDATE":
+            onUpdate(eventsMessage);
+            break;
+        case "DELETE":
+            onDelete(eventsMessage);
+            break;
         }
     }
 

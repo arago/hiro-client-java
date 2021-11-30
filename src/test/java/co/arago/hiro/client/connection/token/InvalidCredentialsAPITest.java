@@ -26,7 +26,8 @@ public class InvalidCredentialsAPITest {
     @BeforeEach
     void init() throws IOException {
         try {
-            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(),
+                    Config.class);
 
             handlerBuilder = PasswordAuthTokenAPIHandler.newBuilder()
                     .setApiUrl(config.api_url)
@@ -49,8 +50,7 @@ public class InvalidCredentialsAPITest {
 
             TokenUnauthorizedException tokenUnauthorizedException = assertThrows(
                     TokenUnauthorizedException.class,
-                    () -> apiHandler.getMeAccountCommand().execute()
-            );
+                    () -> apiHandler.getMeAccountCommand().execute());
 
             log.info(tokenUnauthorizedException.toString());
 
@@ -69,8 +69,7 @@ public class InvalidCredentialsAPITest {
 
             TokenUnauthorizedException tokenUnauthorizedException = assertThrows(
                     TokenUnauthorizedException.class,
-                    () -> apiHandler.getMeAccountCommand().execute()
-            );
+                    () -> apiHandler.getMeAccountCommand().execute());
 
             log.info(tokenUnauthorizedException.toString());
 
@@ -89,8 +88,7 @@ public class InvalidCredentialsAPITest {
 
             ConnectException exception = assertThrows(
                     ConnectException.class,
-                    () -> apiHandler.getMeAccountCommand().execute()
-            );
+                    () -> apiHandler.getMeAccountCommand().execute());
 
             log.info(exception.toString());
         }

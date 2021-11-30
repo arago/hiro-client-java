@@ -191,6 +191,8 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
      */
     protected static class TokenInfo extends TokenResponse {
 
+        private static final long serialVersionUID = 8659946445124247439L;
+
         /**
          * ms of time, where no refresh calls are sent to the backend to avoid request flooding
          */
@@ -270,7 +272,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     protected final TokenInfo tokenInfo = new TokenInfo();
 
     protected URI apiUri;
-
 
     protected PasswordAuthTokenAPIHandler(Conf<?> builder) {
         super(builder);
@@ -377,7 +378,8 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
      * @throws IOException                  When reading the inputStream fails.
      */
     @Override
-    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException, InterruptedException {
+    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount)
+            throws HiroException, IOException, InterruptedException {
         try {
             super.checkResponse(httpResponse, retryCount);
         } catch (TokenUnauthorizedException e) {
@@ -419,16 +421,15 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
         TokenRequest tokenRequest = new TokenRequest(username, password, clientId, clientSecret);
 
-        this.tokenInfo.parse(
-                post(
-                        TokenResponse.class,
-                        getUri("app"),
-                        tokenRequest.toJsonString(),
-                        Map.of("Content-Type", "application/json"),
-                        httpRequestTimeout,
-                        maxRetries
-                )
-        );
+        TokenResponse tokenResponse = post(
+                TokenResponse.class,
+                getUri("app"),
+                tokenRequest.toJsonString(),
+                Map.of("Content-Type", "application/json"),
+                httpRequestTimeout,
+                maxRetries);
+
+        this.tokenInfo.parse(tokenResponse);
     }
 
     /**
@@ -437,27 +438,32 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
     @Override
     public synchronized void refreshToken() throws IOException, InterruptedException, HiroException {
 
-        if (!hasRefreshToken()) {
+        try {
+
+            if (!hasRefreshToken()) {
+                requestToken();
+                return;
+            }
+
+            if (tokenFresh()) {
+                return;
+            }
+
+            TokenRefreshRequest tokenRequest = new TokenRefreshRequest(clientId, clientSecret, tokenInfo.refreshToken);
+
+            TokenResponse tokenResponse = post(
+                    TokenResponse.class,
+                    getUri("refresh"),
+                    tokenRequest.toJsonString(),
+                    Map.of("Content-Type", "application/json"),
+                    httpRequestTimeout,
+                    maxRetries);
+
+            this.tokenInfo.parse(tokenResponse);
+        } catch (TokenUnauthorizedException e) {
+            log.warn("Error using refresh token: {}", e.getMessage());
             requestToken();
-            return;
         }
-
-        if (tokenFresh()) {
-            return;
-        }
-
-        TokenRefreshRequest tokenRequest = new TokenRefreshRequest(clientId, clientSecret, tokenInfo.refreshToken);
-
-        this.tokenInfo.parse(
-                post(
-                        TokenResponse.class,
-                        getUri("refresh"),
-                        tokenRequest.toJsonString(),
-                        Map.of("Content-Type", "application/json"),
-                        httpRequestTimeout,
-                        maxRetries
-                )
-        );
     }
 
     /**
@@ -471,19 +477,17 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
         TokenRefreshRequest tokenRequest = new TokenRefreshRequest(clientId, clientSecret, tokenInfo.refreshToken);
 
-        this.tokenInfo.parse(
-                post(
-                        TokenResponse.class,
-                        getUri("revoke"),
-                        tokenRequest.toJsonString(),
-                        Map.of(
-                                "Content-Type", "application/json",
-                                "Authorization", "Bearer " + getToken()
-                        ),
-                        httpRequestTimeout,
-                        maxRetries
-                )
-        );
+        TokenResponse tokenResponse = post(
+                TokenResponse.class,
+                getUri("revoke"),
+                tokenRequest.toJsonString(),
+                Map.of(
+                        "Content-Type", "application/json",
+                        "Authorization", "Bearer " + getToken()),
+                httpRequestTimeout,
+                maxRetries);
+
+        this.tokenInfo.parse(tokenResponse);
     }
 
     /**

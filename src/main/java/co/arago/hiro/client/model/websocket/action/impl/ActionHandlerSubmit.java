@@ -38,8 +38,7 @@ public class ActionHandlerSubmit extends AbstractActionHandlerIdMessage {
 
     @JsonCreator
     public ActionHandlerSubmit(
-            @JsonProperty(value = "id", required = true) String id
-    ) {
+            @JsonProperty(value = "id", required = true) String id) {
         super(id);
         this.timestamp = Instant.now();
         this.expiresAt = timestamp.plus(timeout, ChronoUnit.MILLIS);

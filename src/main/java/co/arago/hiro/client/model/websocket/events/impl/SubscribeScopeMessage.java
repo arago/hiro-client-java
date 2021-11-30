@@ -11,6 +11,9 @@ import co.arago.hiro.client.model.JsonMessage;
  * </pre>
  */
 public class SubscribeScopeMessage implements JsonMessage {
+
+    private static final long serialVersionUID = 4519228709071726324L;
+
     public final String type = "subscribe";
     public final String id;
 

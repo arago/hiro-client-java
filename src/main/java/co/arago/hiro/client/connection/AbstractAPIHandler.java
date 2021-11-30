@@ -175,7 +175,6 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
         title = (t != null ? t : "java-hiro-client");
     }
 
-
     protected final URL apiUrl;
     protected final URI webSocketUri;
     protected final String userAgent;
@@ -187,9 +186,8 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
         this.webSocketUri = builder.getWebSocketUri();
         this.maxRetries = builder.getMaxRetries();
         this.httpRequestTimeout = builder.getHttpRequestTimeout();
-        this.userAgent = builder.getUserAgent() != null ?
-                builder.getUserAgent() :
-                (version != null ? title + " " + version : title);
+        this.userAgent = builder.getUserAgent() != null ? builder.getUserAgent()
+                : (version != null ? title + " " + version : title);
     }
 
     public URL getApiUrl() {
@@ -203,10 +201,8 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      */
     public URI getWebSocketUri() {
         try {
-            return (webSocketUri != null ?
-                    webSocketUri :
-                    new URI(RegExUtils.replaceFirst(getApiUrl().toString(), "^http", "ws"))
-            );
+            return (webSocketUri != null ? webSocketUri
+                    : new URI(RegExUtils.replaceFirst(getApiUrl().toString(), "^http", "ws")));
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Cannot create webSocketUri from apiUrl.", e);
         }
@@ -312,8 +308,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
                     uri.getPort(),
                     null,
                     queryString,
-                    fragment
-            ).resolve(uri.getRawPath());
+                    fragment).resolve(uri.getRawPath());
         } catch (URISyntaxException e) {
             return uri;
         }
@@ -334,8 +329,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
     public HttpRequest.Builder getRequestBuilder(
             URI uri,
             Map<String, String> headers,
-            Long httpRequestTimeout
-    ) throws InterruptedException, IOException, HiroException {
+            Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri);
         addToHeaders(headers);
 
@@ -368,20 +362,19 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * @return The constructed HttpRequest.
      */
     private HttpRequest createStreamRequest(URI uri,
-                                            String method,
-                                            StreamContainer body,
-                                            Map<String, String> headers,
-                                            Long httpRequestTimeout
-    ) throws InterruptedException, IOException, HiroException {
+            String method,
+            StreamContainer body,
+            Map<String, String> headers,
+            Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
 
         if (body != null && body.hasContentType()) {
             headers.put("Content-Type", body.getContentType());
         }
 
         HttpRequest httpRequest = getRequestBuilder(uri, headers, httpRequestTimeout)
-                .method(method, (body != null ?
-                        HttpRequest.BodyPublishers.ofInputStream(body::getInputStream) :
-                        HttpRequest.BodyPublishers.noBody()))
+                .method(method,
+                        (body != null ? HttpRequest.BodyPublishers.ofInputStream(body::getInputStream)
+                                : HttpRequest.BodyPublishers.noBody()))
                 .build();
 
         getHttpLogger().logRequest(httpRequest, (body != null ? body.getInputStream() : null));
@@ -401,16 +394,15 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * @return The constructed HttpRequest.
      */
     private HttpRequest createStringRequest(URI uri,
-                                            String method,
-                                            String body,
-                                            Map<String, String> headers,
-                                            Long httpRequestTimeout
-    ) throws InterruptedException, IOException, HiroException {
+            String method,
+            String body,
+            Map<String, String> headers,
+            Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
 
         HttpRequest httpRequest = getRequestBuilder(uri, headers, httpRequestTimeout)
-                .method(method, (body != null ?
-                        HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8) :
-                        HttpRequest.BodyPublishers.noBody()))
+                .method(method,
+                        (body != null ? HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8)
+                                : HttpRequest.BodyPublishers.noBody()))
                 .build();
 
         getHttpLogger().logRequest(httpRequest, body);
@@ -428,15 +420,14 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * @param httpRequest The httpRequest to send
      * @param maxRetries  The amount of retries on errors. When this is null, {@link #maxRetries} will be used.
      * @return A HttpResponse containing an InputStream of the incoming body part of
-     * the result.
+     *         the result.
      * @throws HiroException        When status errors occur.
      * @throws IOException          On IO errors with the connection.
      * @throws InterruptedException When the call gets interrupted.
      */
     public HttpResponse<InputStream> send(
             HttpRequest httpRequest,
-            Integer maxRetries
-    ) throws HiroException, IOException, InterruptedException {
+            Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
         HttpResponse<InputStream> httpResponse = null;
         int retryCount = (maxRetries != null ? maxRetries : this.maxRetries);
@@ -451,7 +442,6 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
         return httpResponse;
     }
 
-
     // ###############################################################################################
     // ## Asynchronous sending and receiving ##
     // ###############################################################################################
@@ -459,12 +449,14 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
     /**
      * <p>
      * Send a HttpRequest asynchronously and return a future for a {@link HttpResponseParser}.
-     * </p><p>
+     * </p>
+     * <p>
      * Applies the internal {@link #checkResponse(HttpResponse, int)}.
      * The retry counter is irrelevant here. When the token expires, it will be detected and a new token will be
      * requested, but you need to handle a {@link CompletionException} and look for the cause {@link RetryException}
      * within it. If this is the cause, you need to retry the same HttpRequest again externally.
-     * </p><p>
+     * </p>
+     * <p>
      * Also logs the response.
      * </p>
      *
@@ -534,8 +526,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             String body,
             Map<String, String> headers,
             Long httpRequestTimeout,
-            Integer maxRetries
-    ) throws HiroException, IOException, InterruptedException {
+            Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
         Map<String, String> initialHeaders = startHeaders(body, headers);
 
@@ -577,8 +568,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             StreamContainer bodyContainer,
             Map<String, String> headers,
             Long httpRequestTimeout,
-            Integer maxRetries
-    ) throws HiroException, IOException, InterruptedException {
+            Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
         Map<String, String> initialHeaders = startHeaders(bodyContainer, headers);
 
@@ -617,8 +607,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             StreamContainer bodyContainer,
             Map<String, String> headers,
             Long httpRequestTimeout,
-            Integer maxRetries
-    ) throws HiroException, IOException, InterruptedException {
+            Integer maxRetries) throws HiroException, IOException, InterruptedException {
         Map<String, String> initialHeaders = startHeaders(bodyContainer, headers);
 
         HttpRequest httpRequest = createStreamRequest(uri, method, bodyContainer, initialHeaders, httpRequestTimeout);
@@ -648,8 +637,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             String method,
             String body,
             Map<String, String> headers,
-            Long httpRequestTimeout
-    ) throws InterruptedException, IOException, HiroException {
+            Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
         Map<String, String> initialHeaders = startHeaders(body, headers);
 
         HttpRequest httpRequest = createStringRequest(uri, method, body, initialHeaders, httpRequestTimeout);
@@ -677,8 +665,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             String method,
             StreamContainer bodyContainer,
             Map<String, String> headers,
-            Long httpRequestTimeout
-    ) throws InterruptedException, IOException, HiroException {
+            Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
         Map<String, String> initialHeaders = startHeaders(bodyContainer, headers);
 
         HttpRequest httpRequest = createStreamRequest(uri, method, bodyContainer, initialHeaders, httpRequestTimeout);
@@ -711,8 +698,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             URI uri,
             Map<String, String> headers,
             Long httpRequestTimeout,
-            Integer maxRetries
-    ) throws HiroException, IOException, InterruptedException {
+            Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
         return executeWithStringBody(clazz, uri, "GET", null, headers, httpRequestTimeout, maxRetries);
     }
@@ -740,8 +726,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             String body,
             Map<String, String> headers,
             Long httpRequestTimeout,
-            Integer maxRetries
-    ) throws HiroException, IOException, InterruptedException {
+            Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
         return executeWithStringBody(clazz, uri, "POST", body, headers, httpRequestTimeout, maxRetries);
     }
@@ -769,8 +754,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             String body,
             Map<String, String> headers,
             Long httpRequestTimeout,
-            Integer maxRetries
-    ) throws HiroException, IOException, InterruptedException {
+            Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
         return executeWithStringBody(clazz, uri, "PUT", body, headers, httpRequestTimeout, maxRetries);
     }
@@ -798,8 +782,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             String body,
             Map<String, String> headers,
             Long httpRequestTimeout,
-            Integer maxRetries
-    ) throws HiroException, IOException, InterruptedException {
+            Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
         return executeWithStringBody(clazz, uri, "PATCH", body, headers, httpRequestTimeout, maxRetries);
     }
@@ -825,8 +808,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             URI uri,
             Map<String, String> headers,
             Long httpRequestTimeout,
-            Integer maxRetries
-    ) throws HiroException, IOException, InterruptedException {
+            Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
         return executeWithStringBody(clazz, uri, "DELETE", null, headers, httpRequestTimeout, maxRetries);
     }
@@ -848,8 +830,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             URI uri,
             Map<String, String> headers,
             Long httpRequestTimeout,
-            Integer maxRetries
-    )
+            Integer maxRetries)
             throws HiroException, IOException, InterruptedException {
 
         return executeBinary(uri, "GET", null, headers, httpRequestTimeout, maxRetries);
@@ -877,8 +858,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             StreamContainer body,
             Map<String, String> headers,
             Long httpRequestTimeout,
-            Integer maxRetries
-    ) throws HiroException, IOException, InterruptedException {
+            Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
         return executeWithStreamBody(clazz, uri, "POST", body, headers, httpRequestTimeout, maxRetries);
     }
@@ -905,8 +885,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             StreamContainer body,
             Map<String, String> headers,
             Long httpRequestTimeout,
-            Integer maxRetries
-    ) throws HiroException, IOException, InterruptedException {
+            Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
         return executeWithStreamBody(clazz, uri, "PUT", body, headers, httpRequestTimeout, maxRetries);
     }
@@ -933,8 +912,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             StreamContainer body,
             Map<String, String> headers,
             Long httpRequestTimeout,
-            Integer maxRetries
-    ) throws HiroException, IOException, InterruptedException {
+            Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
         return executeWithStreamBody(clazz, uri, "PATCH", body, headers, httpRequestTimeout, maxRetries);
     }
@@ -979,7 +957,8 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * @throws IOException                On IO errors.
      * @throws InterruptedException       When a call (possibly of an overwritten method) gets interrupted.
      */
-    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount) throws HiroException, IOException, InterruptedException {
+    public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount)
+            throws HiroException, IOException, InterruptedException {
         int statusCode = httpResponse.statusCode();
 
         if (statusCode < 200 || statusCode > 399) {
@@ -998,13 +977,11 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
                     errorCode = hiroError.getCode();
                 }
 
-                throw (errorCode == 401 ?
-                        new TokenUnauthorizedException(message, errorCode, null) :
-                        new HiroHttpException(message, errorCode, null));
+                throw (errorCode == 401 ? new TokenUnauthorizedException(message, errorCode, null)
+                        : new HiroHttpException(message, errorCode, null));
             } catch (IOException e) {
                 throw new HiroHttpException(message, errorCode, body, e);
             }
-
 
         }
 

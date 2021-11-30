@@ -82,5 +82,4 @@ public class URIPath {
                 .collect(Collectors.joining("/"));
     }
 
-
 }

@@ -1,17 +1,29 @@
-VERSION := $(shell cat ./VERSION)
+#
+# This Makefile does also work on Windows if you have Cygwin installed.
+# WSL should work as well, although this is not tested.
+#
 
-compile: set_version
-	mvn $(MVN_OPTIONS) compile
+PROJECT_VERSION := $(shell cat ./VERSION)
+MVN ?= mvn
 
-install: set_version
-	mvn $(MVN_OPTIONS) install
+compile: .version
+	$(MVN) $(MVN_OPTIONS) compile
 
-deploy: set_version
-	mvn $(MVN_OPTIONS) deploy
+install: .version
+	$(MVN) $(MVN_OPTIONS) install
 
-set_version:
-	mvn $(MVN_OPTIONS) versions:set -DallowSnapshots=true -DnewVersion="$(VERSION)" || true
-	mvn $(MVN_OPTIONS) versions:commit
+package: .version
+	$(MVN) $(MVN_OPTIONS) package
+
+deploy: .version
+	$(MVN) $(MVN_OPTIONS) deploy
+
+.version: VERSION
+	$(MVN) $(MVN_OPTIONS) versions:set -DallowSnapshots=true -DnewVersion="$(PROJECT_VERSION)" || true
+	$(MVN) $(MVN_OPTIONS) versions:commit
+	echo "$(PROJECT_VERSION)" > .version
 
 clean:
-	mvn $(MVN_OPTIONS) clean
+	$(MVN) $(MVN_OPTIONS) clean
+	rm -rf .aws-sam
+	rm -f .version

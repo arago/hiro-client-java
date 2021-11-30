@@ -51,7 +51,6 @@ public class EventWebSocketTest {
         }
     }
 
-
     @BeforeAll
     static void init() throws IOException {
         try {
@@ -95,12 +94,10 @@ public class EventWebSocketTest {
                 .setApiUrl(config.api_url)
                 .setToken("Invalid")
                 .setAcceptAllCerts(config.accept_all_certs)
-                .build()
-        ) {
+                .build()) {
             try (EventWebSocket eventWebSocket = EventWebSocket.newBuilder(handler, listener)
                     .setName("events-ws-test")
-                    .build()
-            ) {
+                    .build()) {
                 eventWebSocket.start();
                 Thread.sleep(1000);
             }
@@ -110,8 +107,7 @@ public class EventWebSocketTest {
                 UnauthorizedWebSocketException.class,
                 () -> {
                     throw listener.innerError;
-                }
-        );
+                });
     }
 
     @Test
@@ -133,8 +129,7 @@ public class EventWebSocketTest {
 
                 assertThrows(
                         ConnectException.class,
-                        eventWebSocket::start
-                );
+                        eventWebSocket::start);
             }
         }
     }

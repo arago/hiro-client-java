@@ -11,11 +11,16 @@ import java.util.Map;
  */
 public class DecodedToken extends HiroJsonMap {
 
+    private static final long serialVersionUID = -4395614281008269396L;
+
     public String sub;
 
     public String aud;
 
     public static class Data extends HiroJsonMap {
+
+        private static final long serialVersionUID = -4885257322637217350L;
+
         public List<String> teams;
 
         @JsonProperty("default-scope")

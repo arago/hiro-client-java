@@ -31,7 +31,8 @@ public class GenericAPITest {
     @BeforeAll
     static void init() throws IOException {
         try {
-            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
+            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(),
+                    Config.class);
 
             handler = PasswordAuthTokenAPIHandler.newBuilder()
                     .setApiUrl(config.api_url)
@@ -51,7 +52,6 @@ public class GenericAPITest {
         if (handler != null)
             handler.close();
     }
-
 
     @Test
     void getVersion() throws IOException, InterruptedException, HiroException {
@@ -77,8 +77,7 @@ public class GenericAPITest {
 
         assertThrows(
                 HiroException.class,
-                () -> handler.getApiUriOf("no_such_api")
-        );
+                () -> handler.getApiUriOf("no_such_api"));
     }
 
     @Test
@@ -90,8 +89,7 @@ public class GenericAPITest {
 
         HiroHttpException hiroHttpException = assertThrows(
                 HiroHttpException.class,
-                () -> apiHandler.get(HiroMessage.class, uri, null, null, null)
-        );
+                () -> apiHandler.get(HiroMessage.class, uri, null, null, null));
 
         log.info(hiroHttpException.toString());
 
@@ -107,8 +105,7 @@ public class GenericAPITest {
 
         HiroHttpException hiroHttpException = assertThrows(
                 HiroHttpException.class,
-                () -> apiHandler.get(HiroMessage.class, uri.resolve("wrongPath"), null, null, null)
-        );
+                () -> apiHandler.get(HiroMessage.class, uri.resolve("wrongPath"), null, null, null));
 
         log.info(hiroHttpException.toString());
 
@@ -124,8 +121,7 @@ public class GenericAPITest {
 
         HttpTimeoutException httpTimeoutException = assertThrows(
                 HttpTimeoutException.class,
-                () -> apiHandler.get(HiroMessage.class, uri, null, 10L, null)
-        );
+                () -> apiHandler.get(HiroMessage.class, uri, null, 10L, null));
 
         log.info(httpTimeoutException.toString());
     }
@@ -139,8 +135,7 @@ public class GenericAPITest {
 
         HiroHttpException hiroHttpException = assertThrows(
                 HiroHttpException.class,
-                () -> apiHandler.get(HiroMessage.class, uri, null, null, 2)
-        );
+                () -> apiHandler.get(HiroMessage.class, uri, null, null, 2));
 
         log.info(hiroHttpException.toString());
 

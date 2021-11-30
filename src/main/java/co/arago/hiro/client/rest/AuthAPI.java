@@ -149,7 +149,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
 
         /**
          * @return A {@link HttpResponseParser} containing the InputStream of the image, the mediaType and the size
-         * (if available).
+         *         (if available).
          * @throws HiroException        When the call returns a http status error.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
@@ -265,8 +265,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
             try {
                 body = JsonUtil.DEFAULT.toString(
                         Map.of("oldPassword", oldPassword,
-                                "newPassword", newPassword)
-                );
+                                "newPassword", newPassword));
             } catch (JsonProcessingException e) {
                 // ignore
             }
@@ -479,7 +478,6 @@ public class AuthAPI extends AuthenticatedAPIHandler {
             query.put("include-virtual", String.valueOf(includeVirtual));
             return self();
         }
-
 
         @Override
         protected GetMeTeamsCommand self() {

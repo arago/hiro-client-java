@@ -1,5 +1,9 @@
 # Project exclude paths
 /target/
 /.idea/
+/.aws-sam
 **.bak
 **.log
+**.settings
+**.classpath
+**.project

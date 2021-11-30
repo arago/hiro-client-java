@@ -27,7 +27,7 @@ import java.util.Optional;
  */
 public class HttpResponseParser extends ContentHeaderHandler {
 
-    private static final String[] TEXT_CONTENT = new String[]{
+    private static final String[] TEXT_CONTENT = new String[] {
             "text/",
             "application/json",
             "application/xhtml",
@@ -97,9 +97,9 @@ public class HttpResponseParser extends ContentHeaderHandler {
 
                 @Override
                 public void close() {
-                    String message = (StringUtils.startsWithAny(mediaType, TEXT_CONTENT)) ?
-                            new String(buffer.array(), (charset == null ? StandardCharsets.UTF_8 : charset)) :
-                            "(hex) " + HexUtil.bytesToHex(buffer.array());
+                    String message = (StringUtils.startsWithAny(mediaType, TEXT_CONTENT))
+                            ? new String(buffer.array(), (charset == null ? StandardCharsets.UTF_8 : charset))
+                            : "(hex) " + HexUtil.bytesToHex(buffer.array());
 
                     if (count >= httpLogger.getMaxBinaryLength())
                         message += "... [rest omitted. final size: " + count + " char]";

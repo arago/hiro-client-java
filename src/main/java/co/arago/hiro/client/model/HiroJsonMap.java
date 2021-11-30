@@ -17,7 +17,7 @@ import java.util.Map;
 public class HiroJsonMap implements JsonMessage {
 
     private static final long serialVersionUID = 2435046646890203816L;
-    
+
     /**
      * All unknown keys - if any - of the JSON will be collected here
      */

@@ -21,8 +21,7 @@ public class HiroTimeseriesListMessage extends HiroItemListMessage<HiroTimeserie
         @JsonCreator
         public TimeseriesEntry(
                 @JsonProperty("value") String value,
-                @JsonProperty("timestamp") Long timestamp
-        ) {
+                @JsonProperty("timestamp") Long timestamp) {
             this.value = value;
             this.timestamp = timestamp;
         }

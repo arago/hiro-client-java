@@ -17,6 +17,7 @@ import co.arago.hiro.client.model.websocket.events.EventsFilter;
  */
 public class EventRegisterMessage implements JsonMessage {
 
+    private static final long serialVersionUID = 7202735409241206750L;
 
     public final String type = "register";
 

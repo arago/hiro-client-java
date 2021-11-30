@@ -9,6 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 /**
  * An incoming events message from the events-ws.<br>
  * <i>Example:</i>
+ * 
  * <pre>
  * {
  *   "id": "c1234567890abcdefghijklmn_c1234567890abcdefghijklmn",
@@ -25,6 +26,7 @@ import org.apache.commons.lang3.StringUtils;
  * </pre>
  */
 public class EventsMessage extends HiroJsonMap {
+    private static final long serialVersionUID = 4059559087109882138L;
     public final String id;
     public final Long timestamp;
     public final Long nanotime;
@@ -39,8 +41,7 @@ public class EventsMessage extends HiroJsonMap {
             @JsonProperty("timestamp") Long timestamp,
             @JsonProperty("nanotime") Long nanotime,
             @JsonProperty("body") HiroVertexMessage body,
-            @JsonProperty("metadata") HiroVertexMessage metadata
-    ) {
+            @JsonProperty("metadata") HiroVertexMessage metadata) {
         this.id = id;
         this.timestamp = timestamp;
         this.nanotime = nanotime;

@@ -123,89 +123,94 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
          * @throws InterruptedException When a sleep gets interrupted.
          */
         @Override
-        public void onMessage(WebSocket webSocket, HiroMessage message) throws HiroException, IOException, InterruptedException {
+        public void onMessage(WebSocket webSocket, HiroMessage message)
+                throws HiroException, IOException, InterruptedException {
             try {
                 ActionMessageType actionMessageType = ActionMessageType.fromString((String) message.getMap().get("type"));
 
                 switch (actionMessageType) {
-                    case SUBMIT_ACTION: {
+                case SUBMIT_ACTION: {
 
-                        ActionHandlerSubmit actionHandlerSubmit = JsonUtil.DEFAULT.transformObject(message, ActionHandlerSubmit.class);
-                        log.info("Handling \"{}\" (id: {})", actionHandlerSubmit.getType(), actionHandlerSubmit.getId());
+                    ActionHandlerSubmit actionHandlerSubmit = JsonUtil.DEFAULT.transformObject(message,
+                            ActionHandlerSubmit.class);
+                    log.info("Handling \"{}\" (id: {})", actionHandlerSubmit.getType(), actionHandlerSubmit.getId());
 
-                        send(new ActionHandlerAck(actionHandlerSubmit.getId()).toJsonString());
+                    send(new ActionHandlerAck(actionHandlerSubmit.getId()).toJsonString());
 
-                        try {
-                            submitActionStore.add(
-                                    actionHandlerSubmit.expiresAt(),
-                                    actionHandlerSubmit.getId(),
-                                    actionHandlerSubmit
-                            );
-                        } catch (StoreItemExpiredException | StoreItemExistsException e) {
-                            log.info(e.getMessage());
-                            return;
-                        }
-
-                        ActionHandlerResult actionHandlerResult = actionResultStore.get(actionHandlerSubmit.getId());
-                        if (actionHandlerResult != null) {
-                            log.info("Handling \"{}\" (id: {}): Already processed.", actionHandlerSubmit.getType(), actionHandlerSubmit.getId());
-                            send(actionHandlerResult.toJsonString());
-                            return;
-                        }
-
-                        try {
-                            actionWebSocketListener.onActionSubmit(ActionWebSocket.this, actionHandlerSubmit);
-                        } catch (Exception e) {
-                            log.error("Handling action threw exception.", e);
-                            sendActionResult(actionHandlerSubmit.getId(), new ResultParams().setCode(500).setMessage(e.getMessage()));
-                        }
-
-                        break;
+                    try {
+                        submitActionStore.add(
+                                actionHandlerSubmit.expiresAt(),
+                                actionHandlerSubmit.getId(),
+                                actionHandlerSubmit);
+                    } catch (StoreItemExpiredException | StoreItemExistsException e) {
+                        log.info(e.getMessage());
+                        return;
                     }
-                    case SEND_ACTION_RESULT: {
 
-                        ActionHandlerResult actionHandlerResult = JsonUtil.DEFAULT.transformObject(message, ActionHandlerResult.class);
-                        log.info("Handling \"{}\" (id: {})", actionHandlerResult.getType(), actionHandlerResult.getId());
-
-                        send(new ActionHandlerNack(actionHandlerResult.getId(), 400, "sendActionResult rejected").toJsonString());
-
-                        break;
+                    ActionHandlerResult actionHandlerResult = actionResultStore.get(actionHandlerSubmit.getId());
+                    if (actionHandlerResult != null) {
+                        log.info("Handling \"{}\" (id: {}): Already processed.", actionHandlerSubmit.getType(),
+                                actionHandlerSubmit.getId());
+                        send(actionHandlerResult.toJsonString());
+                        return;
                     }
-                    case ACKNOWLEDGED: {
 
-                        ActionHandlerAck actionHandlerAck = JsonUtil.DEFAULT.transformObject(message, ActionHandlerAck.class);
-                        log.info("Handling \"{}\" (id: {})", actionHandlerAck.getType(), actionHandlerAck.getId());
-
-                        actionResultStore.remove(actionHandlerAck.getId());
-
-                        break;
+                    try {
+                        actionWebSocketListener.onActionSubmit(ActionWebSocket.this, actionHandlerSubmit);
+                    } catch (Exception e) {
+                        log.error("Handling action threw exception.", e);
+                        sendActionResult(actionHandlerSubmit.getId(),
+                                new ResultParams().setCode(500).setMessage(e.getMessage()));
                     }
-                    case NEGATIVE_ACKNOWLEDGED: {
 
-                        ActionHandlerNack actionHandlerNack = JsonUtil.DEFAULT.transformObject(message, ActionHandlerNack.class);
-                        log.info("Handling \"{}\" (id: {})", actionHandlerNack.getType(), actionHandlerNack.getId());
+                    break;
+                }
+                case SEND_ACTION_RESULT: {
 
-                        ActionHandlerResult actionHandlerResult = actionResultStore.get(actionHandlerNack.getId());
-                        if (actionHandlerResult != null) {
-                            Thread.sleep(1);
-                            send(actionHandlerResult.toJsonString());
-                        }
+                    ActionHandlerResult actionHandlerResult = JsonUtil.DEFAULT.transformObject(message,
+                            ActionHandlerResult.class);
+                    log.info("Handling \"{}\" (id: {})", actionHandlerResult.getType(), actionHandlerResult.getId());
 
-                        break;
+                    send(new ActionHandlerNack(actionHandlerResult.getId(), 400, "sendActionResult rejected").toJsonString());
+
+                    break;
+                }
+                case ACKNOWLEDGED: {
+
+                    ActionHandlerAck actionHandlerAck = JsonUtil.DEFAULT.transformObject(message, ActionHandlerAck.class);
+                    log.info("Handling \"{}\" (id: {})", actionHandlerAck.getType(), actionHandlerAck.getId());
+
+                    actionResultStore.remove(actionHandlerAck.getId());
+
+                    break;
+                }
+                case NEGATIVE_ACKNOWLEDGED: {
+
+                    ActionHandlerNack actionHandlerNack = JsonUtil.DEFAULT.transformObject(message, ActionHandlerNack.class);
+                    log.info("Handling \"{}\" (id: {})", actionHandlerNack.getType(), actionHandlerNack.getId());
+
+                    ActionHandlerResult actionHandlerResult = actionResultStore.get(actionHandlerNack.getId());
+                    if (actionHandlerResult != null) {
+                        Thread.sleep(1);
+                        send(actionHandlerResult.toJsonString());
                     }
-                    case ERROR: {
 
-                        ActionHandlerError actionHandlerError = JsonUtil.DEFAULT.transformObject(message, ActionHandlerError.class);
-                        log.info("Received error message (code {}): {}", actionHandlerError.getCode(), actionHandlerError.getMessage());
+                    break;
+                }
+                case ERROR: {
 
-                        break;
-                    }
-                    case CONFIG_CHANGED: {
+                    ActionHandlerError actionHandlerError = JsonUtil.DEFAULT.transformObject(message, ActionHandlerError.class);
+                    log.info("Received error message (code {}): {}", actionHandlerError.getCode(),
+                            actionHandlerError.getMessage());
 
-                        actionWebSocketListener.onConfigChanged(ActionWebSocket.this);
+                    break;
+                }
+                case CONFIG_CHANGED: {
 
-                        break;
-                    }
+                    actionWebSocketListener.onConfigChanged(ActionWebSocket.this);
+
+                    break;
+                }
                 }
 
             } catch (IllegalStateException | IllegalArgumentException e) {
@@ -237,6 +242,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
      * If no message is set, a standard message will be generated depending on whether data is present or not.
      * <p>
      * Without data:
+     * 
      * <pre>
      *     {
      *         "code": code,
@@ -245,6 +251,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
      * </pre>
      * <p>
      * or with data:
+     * 
      * <pre>
      *     {
      *         "code": code,
@@ -381,9 +388,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
         this.internalListener = new InternalListener(
                 name + "-listener",
                 new InternalActionListener(
-                        notNull(builder.getActionWebSocketListener(), "actionWebSocketListener")
-                )
-        );
+                        notNull(builder.getActionWebSocketListener(), "actionWebSocketListener")));
 
         this.resultRetries = builder.resultRetries;
 
@@ -400,8 +405,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
      */
     public static Conf<?> newBuilder(
             AbstractTokenAPIHandler tokenAPIHandler,
-            ActionWebSocketListener actionWebSocketListener
-    ) {
+            ActionWebSocketListener actionWebSocketListener) {
         return new ActionWebSocket.Builder(tokenAPIHandler, actionWebSocketListener);
     }
 

@@ -99,7 +99,6 @@ public class ContentHeaderHandler {
         return StringUtils.isNotBlank(mediaType);
     }
 
-
     /**
      * Constructor used when Content-Headers have to be constructed.
      *

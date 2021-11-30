@@ -1,17 +1,16 @@
 package co.arago.hiro.client.connection.token;
 
-import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
-import co.arago.hiro.client.exceptions.AuthenticationTokenException;
-import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.model.token.DecodedToken;
-import co.arago.util.json.JsonUtil;
-import org.apache.commons.lang3.StringUtils;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
+
+import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
+import co.arago.hiro.client.exceptions.AuthenticationTokenException;
+import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.hiro.client.model.token.DecodedToken;
+import co.arago.util.json.JsonUtil;
 
 public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler {
 
@@ -33,7 +32,7 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      *
      * @param builder The builder to use.
      */
-    protected AbstractTokenAPIHandler(Conf builder) {
+    protected AbstractTokenAPIHandler(Conf<?> builder) {
         super(builder);
     }
 
@@ -108,7 +107,7 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      * Check for existence of a refresh token in the TokenAPIHandler.
      *
      * @return true if a refresh token retrieved, false if no such token exists or these tokens are not applicable for
-     * this TokenAPIHandler.
+     *         this TokenAPIHandler.
      */
     public abstract boolean hasRefreshToken();
 

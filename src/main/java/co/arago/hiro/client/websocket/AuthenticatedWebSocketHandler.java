@@ -159,7 +159,6 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
             return self();
         }
 
-
         public int getMaxRetries() {
             return maxRetries;
         }
@@ -256,9 +255,8 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
             try {
                 listener.onOpen(webSocket);
 
-                Status currentStatus = status.updateAndGet(s ->
-                        (s == Status.STARTING || s == Status.RESTARTING) ? Status.RUNNING_PRELIMINARY : s
-                );
+                Status currentStatus = status
+                        .updateAndGet(s -> (s == Status.STARTING || s == Status.RESTARTING) ? Status.RUNNING_PRELIMINARY : s);
 
                 if (currentStatus != Status.RUNNING_PRELIMINARY)
                     throw new IllegalStateException("WebSocket not in a starting state.");
@@ -306,12 +304,12 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
 
                             Status currentStatus = status.updateAndGet(s -> {
                                 switch (s) {
-                                    case RUNNING_PRELIMINARY:
-                                        return Status.FAILED;
-                                    case RUNNING:
-                                        return Status.RESTARTING;
-                                    default:
-                                        return s;
+                                case RUNNING_PRELIMINARY:
+                                    return Status.FAILED;
+                                case RUNNING:
+                                    return Status.RESTARTING;
+                                default:
+                                    return s;
                                 }
                             });
 
@@ -372,7 +370,8 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
          */
         @Override
         public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-            log.debug("{}: Got close message {}", name, (StringUtils.isBlank(reason) ? statusCode : statusCode + ": " + reason));
+            log.debug("{}: Got close message {}", name,
+                    (StringUtils.isBlank(reason) ? statusCode : statusCode + ": " + reason));
 
             try {
                 listener.onClose(webSocket, statusCode, reason);
@@ -595,7 +594,8 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
         if (reconnectDelay > 0)
             Thread.sleep(reconnectDelay * 1000L);
 
-        return (reconnectDelay < 10 ? reconnectDelay + 1 : (reconnectDelay < 60 ? reconnectDelay + 10 : 60 + new Random().nextInt(540)));
+        return (reconnectDelay < 10 ? reconnectDelay + 1
+                : (reconnectDelay < 60 ? reconnectDelay + 10 : 60 + new Random().nextInt(540)));
     }
 
     /**
@@ -617,16 +617,16 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
             WebSocket webSocketRef;
             synchronized (this) {
                 switch (status.get()) {
-                    case NONE:
-                        throw new WebSocketException("Websocket not started");
-                    case CLOSED:
-                    case FAILED:
-                        throw new WebSocketException("Websocket has exited");
-                    case RUNNING_PRELIMINARY:
-                    case RUNNING:
-                        break;
-                    default:
-                        throw new WebSocketException("Websocket not ready");
+                case NONE:
+                    throw new WebSocketException("Websocket not started");
+                case CLOSED:
+                case FAILED:
+                    throw new WebSocketException("Websocket has exited");
+                case RUNNING_PRELIMINARY:
+                case RUNNING:
+                    break;
+                default:
+                    throw new WebSocketException("Websocket not ready");
                 }
 
                 webSocketRef = webSocket;
