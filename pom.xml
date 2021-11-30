@@ -6,7 +6,7 @@
 
     <groupId>co.arago.hiro.client</groupId>
     <artifactId>hiro-client-java</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
 
     <organization>
         <name>arago GmbH</name>

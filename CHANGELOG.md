@@ -1,3 +1,7 @@
+# v0.2.1
+
+* Handle invalid refresh tokens and retry via getToken().
+
 # v0.2.0
 
 * Add method to decode HIRO token data.
