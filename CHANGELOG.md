@@ -1,3 +1,8 @@
+# v0.2.2
+
+* Try to get token via requestToken() if refreshToken() fails with
+  any HiroHttpException.
+
 # v0.2.1
 
 * Handle invalid refresh tokens and retry via getToken().
