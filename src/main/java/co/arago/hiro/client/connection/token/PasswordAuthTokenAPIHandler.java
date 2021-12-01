@@ -460,7 +460,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                     maxRetries);
 
             this.tokenInfo.parse(tokenResponse);
-        } catch (TokenUnauthorizedException e) {
+        } catch (HiroHttpException e) {
             log.warn("Error using refresh token: {}", e.getMessage());
             requestToken();
         }
