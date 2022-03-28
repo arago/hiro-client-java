@@ -1,5 +1,6 @@
 package co.arago.hiro.client.connection.token;
 
+import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
 import co.arago.hiro.client.exceptions.FixedTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import org.apache.commons.lang3.StringUtils;
@@ -20,11 +21,11 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         /**
-         * @param tokenEnv Name of the environment variable. Default is "HIRO_TOKEN".
+         * @param tokenEnv Name of the environment variable. Blank values are ignored. Default is
+         *                 {@link EnvironmentTokenAPIHandler#DEFAULT_ENV}.
          * @return {@link #self()}
          */
         public T setTokenEnv(String tokenEnv) {
-            this.tokenEnv = tokenEnv;
             return self();
         }
 
@@ -48,6 +49,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
     // ## Main part ##
     // ###############################################################################################
 
+    public final static String DEFAULT_ENV = "HIRO_TOKEN";
+
     protected final String tokenEnv;
 
     /**
@@ -57,7 +60,18 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
      */
     protected EnvironmentTokenAPIHandler(Conf<?> builder) {
         super(builder);
-        this.tokenEnv = builder.getTokenEnv();
+        this.tokenEnv = StringUtils.isBlank(builder.getTokenEnv()) ? DEFAULT_ENV : builder.getTokenEnv();
+    }
+
+    /**
+     * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
+     *
+     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
+     * @param tokenEnv          The name of the environment variable.
+     */
+    public EnvironmentTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler, String tokenEnv) {
+        super(versionAPIHandler);
+        this.tokenEnv = StringUtils.isBlank(tokenEnv) ? DEFAULT_ENV : tokenEnv;
     }
 
     public static Conf<?> newBuilder() {

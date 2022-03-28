@@ -1,16 +1,16 @@
 package co.arago.hiro.client.connection.token;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.Base64;
-import java.util.Map;
-
 import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
 import co.arago.hiro.client.exceptions.AuthenticationTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.token.DecodedToken;
 import co.arago.util.json.JsonUtil;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.Base64;
+import java.util.Map;
 
 public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler {
 
@@ -34,6 +34,15 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      */
     protected AbstractTokenAPIHandler(Conf<?> builder) {
         super(builder);
+    }
+
+    /**
+     * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
+     *
+     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
+     */
+    protected AbstractTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler) {
+        super(versionAPIHandler);
     }
 
     /**

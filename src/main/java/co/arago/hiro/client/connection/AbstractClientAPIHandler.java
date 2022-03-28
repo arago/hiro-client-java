@@ -8,6 +8,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLParameters;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import java.net.CookieManager;
 import java.net.InetSocketAddress;
 import java.net.ProxySelector;
 import java.net.http.HttpClient;
@@ -39,6 +40,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         protected Long connectTimeout;
         protected SSLParameters sslParameters;
         protected HttpClient httpClient;
+        protected CookieManager cookieManager;
         protected SSLContext sslContext;
         protected int maxConnectionPool = 8;
         protected int maxBinaryLogLength = 1024;
@@ -141,6 +143,22 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
             return self();
         }
 
+        public CookieManager getCookieManager() {
+            return cookieManager;
+        }
+
+        /**
+         * Instance of an externally configured CookieManager. An internal CookieManager will be built if this is not
+         * set.
+         *
+         * @param cookieManager Instance of a CookieManager.
+         * @return {@link #self()}
+         */
+        public T setCookieManager(CookieManager cookieManager) {
+            this.cookieManager = cookieManager;
+            return self();
+        }
+
         public int getMaxConnectionPool() {
             return maxConnectionPool;
         }
@@ -227,9 +245,10 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     protected HttpClient httpClient;
     protected SSLContext sslContext;
     protected final int maxConnectionPool;
+    protected final CookieManager cookieManager;
 
     protected final HttpLogger httpLogger;
-    protected boolean externalHttpClient;
+    protected boolean externalConnection;
 
     /**
      * Protected Constructor. Attributes shall be filled via builders.
@@ -245,9 +264,10 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         this.sslParameters = builder.getSslParameters();
         this.httpClient = builder.getHttpClient();
         this.maxConnectionPool = builder.getMaxConnectionPool();
+        this.cookieManager = builder.cookieManager != null ? builder.cookieManager : new CookieManager();
         this.httpLogger = new HttpLogger(builder.getMaxBinaryLogLength());
 
-        this.externalHttpClient = (this.httpClient != null);
+        this.externalConnection = (this.httpClient != null);
 
         if (acceptAllCerts == null) {
             this.sslContext = builder.getSslContext();
@@ -263,6 +283,27 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
                 this.sslContext = null;
             }
         }
+    }
+
+    /**
+     * Protected Copy Constructor. Attributes shall be copied from another AbstractClientAPIHandler.
+     *
+     * @param other The source AbstractClientAPIHandler.
+     */
+    protected AbstractClientAPIHandler(AbstractClientAPIHandler other) {
+        super(other);
+        this.proxy = other.proxy;
+        this.followRedirects = other.followRedirects;
+        this.connectTimeout = other.connectTimeout;
+        this.sslContext = other.sslContext;
+        this.sslParameters = other.sslParameters;
+        this.httpClient = other.httpClient;
+        this.maxConnectionPool = other.maxConnectionPool;
+        this.cookieManager = other.cookieManager;
+        this.httpLogger = other.httpLogger;
+        // Always set externalClient to true, so a call to close() does not close the external connection.
+        // External connections have to be closed on their own.
+        this.externalConnection = true;
     }
 
     // ###############################################################################################
@@ -296,6 +337,9 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         if (sslParameters != null)
             builder.sslParameters(sslParameters);
 
+        if (cookieManager != null)
+            builder.cookieHandler(cookieManager);
+
         builder.executor(Executors.newFixedThreadPool(maxConnectionPool));
 
         httpClient = builder.build();
@@ -303,12 +347,14 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     }
 
     /**
-     * Shut the {@link #httpClient} down by shutting down its ExecutorService. If the
-     * {@link #httpClient} has been provided externally, this call will be ignored.
+     * Shut the {@link #httpClient} down by shutting down its ExecutorService. This call will be ignored if
+     * {@link #externalConnection} is set to true (this happens, when {@link #httpClient} has been provided externally
+     * or this ClientAPIHandler has been created via its connection copy constructor
+     * {@link AbstractClientAPIHandler#AbstractClientAPIHandler(AbstractClientAPIHandler)}.
      */
     @Override
     public void close() {
-        if (externalHttpClient || httpClient == null || httpClient.executor().isEmpty())
+        if (externalConnection || httpClient == null || httpClient.executor().isEmpty())
             return;
 
         Executor executor = httpClient.executor().orElse(null);
@@ -324,9 +370,10 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
             } catch (InterruptedException e) {
                 executorService.shutdownNow();
             }
-            httpClient = null;
-            System.gc();
         }
+
+        httpClient = null;
+        System.gc();
     }
 
     /**

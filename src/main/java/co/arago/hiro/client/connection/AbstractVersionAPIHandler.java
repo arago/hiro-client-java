@@ -36,6 +36,16 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
     }
 
     /**
+     * Protected Copy Constructor. Attributes shall be copied from another AbstractVersionAPIHandler.
+     *
+     * @param other The source AbstractVersionAPIHandler.
+     */
+    protected AbstractVersionAPIHandler(AbstractVersionAPIHandler other) {
+        super(other);
+        this.versionMap = other.versionMap;
+    }
+
+    /**
      * Get API Versions
      * <p>
      * <i>HIRO REST query API: `GET {@link #apiUrl} + '/api/version'`</i>

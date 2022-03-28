@@ -1,5 +1,6 @@
 package co.arago.hiro.client.connection.token;
 
+import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
 import co.arago.hiro.client.exceptions.AuthenticationTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
@@ -285,14 +286,43 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         this.tokenInfo.refreshPause = builder.getRefreshPause();
 
         if (!builder.getForceLogging()) {
-            try {
-                httpLogger.addFilter(getUri("app"));
-                httpLogger.addFilter(getUri("refresh"));
-                httpLogger.addFilter(getUri("revoke"));
-            } catch (IOException | InterruptedException | HiroException e) {
-                log.error("Cannot get apiPath URI. Disable logging of http bodies.", e);
-                httpLogger.setLogBody(false);
-            }
+            configureLogging();
+        }
+    }
+
+    /**
+     * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
+     *
+     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
+     * @param builder           Only configuration specific to a PasswordAuthTokenAPIHandler, see {@link Conf}, will
+     *                          be copied from the builder. The AbstractVersionAPIHandler overwrites everything else.
+     */
+    public PasswordAuthTokenAPIHandler(
+            AbstractVersionAPIHandler versionAPIHandler,
+            Conf<?> builder) {
+        super(versionAPIHandler);
+        this.username = notBlank(builder.getUsername(), "username");
+        this.password = notBlank(builder.getPassword(), "password");
+        this.clientId = notBlank(builder.getClientId(), "clientId");
+        this.clientSecret = notBlank(builder.getClientSecret(), "clientSecret");
+        this.apiPath = builder.getApiPath();
+
+        this.tokenInfo.refreshOffset = builder.getRefreshOffset();
+        this.tokenInfo.refreshPause = builder.getRefreshPause();
+
+        if (!builder.getForceLogging()) {
+            configureLogging();
+        }
+    }
+
+    private void configureLogging() {
+        try {
+            httpLogger.addFilter(getUri("app"));
+            httpLogger.addFilter(getUri("refresh"));
+            httpLogger.addFilter(getUri("revoke"));
+        } catch (IOException | InterruptedException | HiroException e) {
+            log.error("Cannot get apiPath URI. Disable logging of http bodies.", e);
+            httpLogger.setLogBody(false);
         }
     }
 

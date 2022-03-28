@@ -11,7 +11,7 @@ public class StreamContainer extends ContentHeaderHandler {
     /**
      * The inputStream for the response body
      */
-    private InputStream inputStream;
+    private final InputStream inputStream;
 
     /**
      * Constructor used when streams have to be sent.

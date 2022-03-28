@@ -1,5 +1,6 @@
 package co.arago.hiro.client.connection.token;
 
+import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
 import co.arago.hiro.client.exceptions.FixedTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import org.apache.commons.lang3.StringUtils;
@@ -59,6 +60,17 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
     protected FixedTokenAPIHandler(Conf<Builder> builder) {
         super(builder);
         this.token = notNull(builder.getToken(), "token");
+    }
+
+    /**
+     * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
+     *
+     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
+     * @param token             The token to use with this connection.
+     */
+    public FixedTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler, String token) {
+        super(versionAPIHandler);
+        this.token = notNull(token, "token");
     }
 
     public static Conf<?> newBuilder() {

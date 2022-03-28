@@ -1,7 +1,13 @@
+# v0.3.0
+
+* Added GraphConnectionHandler. A basic connection to the HIRO Graph without any authentication. Can be used as root
+  connection for several TokenAPIHandlers, i.e. a FixedTokenApiHandler with a token for each user that shall all use the
+  same connection.
+* Added CookieManager to connections.
+
 # v0.2.2
 
-* Try to get token via requestToken() if refreshToken() fails with
-  any HiroHttpException.
+* Try to get token via requestToken() if refreshToken() fails with any HiroHttpException.
 
 # v0.2.1
 

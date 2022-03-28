@@ -172,7 +172,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
     static {
         version = AbstractClientAPIHandler.class.getPackage().getImplementationVersion();
         String t = AbstractClientAPIHandler.class.getPackage().getImplementationTitle();
-        title = (t != null ? t : "java-hiro-client");
+        title = (t != null ? t : "hiro-client-java");
     }
 
     protected final URL apiUrl;
@@ -181,6 +181,11 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
     protected final Long httpRequestTimeout;
     protected int maxRetries;
 
+    /**
+     * Constructor
+     *
+     * @param builder The builder to use.
+     */
     protected AbstractAPIHandler(GetterConf builder) {
         this.apiUrl = notNull(builder.getApiUrl(), "apiUrl");
         this.webSocketUri = builder.getWebSocketUri();
@@ -188,6 +193,19 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
         this.httpRequestTimeout = builder.getHttpRequestTimeout();
         this.userAgent = builder.getUserAgent() != null ? builder.getUserAgent()
                 : (version != null ? title + " " + version : title);
+    }
+
+    /**
+     * Copy constructor
+     *
+     * @param other The object to copy the data from.
+     */
+    protected AbstractAPIHandler(AbstractAPIHandler other) {
+        this.apiUrl = other.apiUrl;
+        this.webSocketUri = other.webSocketUri;
+        this.maxRetries = other.maxRetries;
+        this.httpRequestTimeout = other.httpRequestTimeout;
+        this.userAgent = other.userAgent;
     }
 
     public URL getApiUrl() {

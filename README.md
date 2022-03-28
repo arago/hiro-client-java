@@ -184,10 +184,43 @@ class Example {
 }
 ```
 
+### Connection sharing
+
+When you need to create a token externally, it is a good idea to share a GraphConnectionHandler between
+TokenAPIHandlers. The connection, cookies and API version information will be shared among them. The connection will
+_not_ be closed when `TokenAPIHandler#close()` is called - you need to close the GraphConnectionHandler explicitly.
+
+```java
+import co.arago.hiro.client.connection.GraphConnectionHandler;
+import co.arago.hiro.client.connection.token.FixedTokenAPIHandler;
+import co.arago.hiro.client.rest.GraphAPI;
+
+import java.io.IOException;
+
+class Example {
+    public static void main(String[] args) throws HiroException, IOException, InterruptedException {
+
+        // Build a connection without any token handling
+        try (GraphConnectionHandler connectionHandler = GraphConnectionHandler.newBuilder()
+                .setApiUrl(API_URL)
+                .build()
+        ) {
+            GraphAPI graphAPI_user1 = GraphAPI.newBuilder(new FixedTokenAPIHandler(connectionHandler, "TOKEN_1"))
+                    .build();
+
+            GraphAPI graphAPI_user2 = GraphAPI.newBuilder(new FixedTokenAPIHandler(connectionHandler, "TOKEN_2"))
+                    .build();
+        }
+
+    }
+}
+```
+
 ### External HTTP Client
 
-An external httpClient can be provided to the TokenAPIHandlers via their Builders using `setClient(HttpClient client)`.
-If this is the case, a call to `close()` of such a handler will have no effect. It has to be closed externally.
+An external httpClient can be provided to the TokenAPIHandlers or a GraphConnectionHandler via their Builders
+using `setClient(HttpClient client)`. If this is the case, a call to `close()` of such a handler will have no effect. It
+has to be closed externally.
 
 Example with an external httpClient:
 
@@ -416,7 +449,7 @@ class Example {
 }
 ```
 
-I contrast to the other API Client objects the websockets need to be closed explicitly after usage.
+In contrast to the other API Client objects the websockets need to be closed explicitly after usage.
 
 ## Action Websocket
 
