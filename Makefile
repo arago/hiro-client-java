@@ -5,6 +5,7 @@
 
 PROJECT_VERSION := $(shell cat ./VERSION)
 MVN ?= mvn
+MVN_OPTIONS ?= -T 1C
 
 compile: .version
 	$(MVN) $(MVN_OPTIONS) compile

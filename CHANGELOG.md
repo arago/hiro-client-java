@@ -1,3 +1,8 @@
+# v0.3.1
+
+* Library updates.
+* Added multithreaded option to mvn in `Makefile`.
+
 # v0.3.0
 
 * Added GraphConnectionHandler. A basic connection to the HIRO Graph without any authentication. Can be used as root
