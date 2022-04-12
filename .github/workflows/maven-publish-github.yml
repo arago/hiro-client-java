@@ -25,10 +25,12 @@ jobs:
           java-version: '11'
           distribution: 'adopt'
           cache: maven
-          gpg-private-key: ${{ secrets.ARAGO_GPG_KEY }}
-          gpg-passphrase: ARAGO_GPG_KEY_PASSWORD
+      - name: Install gpg secret key
+        run: |
+          cat <(echo -e "${{ secrets.ARAGO_GPG_KEY }}") | gpg --batch --import
+          gpg --list-secret-keys --keyid-format LONG
       - name: Publish to Repository
         run: make deploy
         env:
-          MVN_OPTIONS: "--batch-mode --no-transfer-progress"
+          MVN_OPTIONS: "--batch-mode --no-transfer-progress -Dgpg.passphrase=${{ secrets.ARAGO_GPG_KEY_PASSWORD }}"
           GITHUB_TOKEN: ${{ secrets.ARAGO_GITHUB_TOKEN }}
