@@ -16,11 +16,11 @@ jobs:
       packages: write
 
     steps:
+      - uses: actions/checkout@v2
       - name: Install gpg secret key
         run: |
           cat <(echo -e "${{ secrets.ARAGO_GPG_KEY }}") | gpg --batch --import
           gpg --list-secret-keys --keyid-format LONG
-      - uses: actions/checkout@v2
       - name: Set up JDK 11 and Maven Central Repository
         uses: actions/setup-java@v2
         with:
@@ -35,3 +35,4 @@ jobs:
           MVN_OPTIONS: "--batch-mode --no-transfer-progress -DuseRepo=global -Dgpg.passphrase=${{ secrets.ARAGO_GPG_KEY_PASSWORD }}"
           MAVEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_USER }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          GITHUB_TOKEN: ${{ secrets.ARAGO_GITHUB_TOKEN }}
