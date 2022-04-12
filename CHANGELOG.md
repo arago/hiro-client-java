@@ -1,3 +1,9 @@
+# v0.3.2
+
+* Fixed handling of refresh tokens.
+* Fixed a typo in TokenResponse.
+* Use native GPG functions in GitHub actions.
+
 # v0.3.1
 
 * Library updates.

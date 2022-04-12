@@ -247,12 +247,15 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          */
         public void parse(TokenResponse tokenResponse) {
             this.token = tokenResponse.token;
-            this.refreshToken = tokenResponse.refreshToken;
             this.expiresAt = tokenResponse.expiresAt;
             this.identity = tokenResponse.identity;
-            this.indentityId = tokenResponse.indentityId;
+            this.identityId = tokenResponse.identityId;
             this.application = tokenResponse.application;
             this.type = tokenResponse.type;
+
+            // Keep refresh token until it is set anew in the response.
+            if (StringUtils.isNotBlank(tokenResponse.refreshToken))
+                this.refreshToken = tokenResponse.refreshToken;
 
             this.lastUpdate = Instant.now();
         }

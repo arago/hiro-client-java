@@ -36,7 +36,7 @@ public class TokenResponse extends HiroMessage {
     public String identity;
 
     @JsonProperty("_IDENTITY_ID")
-    public String indentityId;
+    public String identityId;
 
     @JsonProperty("_APPLICATION")
     public String application;
