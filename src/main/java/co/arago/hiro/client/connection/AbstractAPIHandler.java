@@ -322,7 +322,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             return new URI(
                     uri.getScheme(),
                     uri.getUserInfo(),
-                    uri.getAuthority(),
+                    uri.getHost(),
                     uri.getPort(),
                     null,
                     queryString,
