@@ -414,7 +414,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
         URI pathUri = buildURI(apiUri, path.build(), false);
 
-        return addQueryAndFragment(pathUri, query, fragment);
+        return addQueryFragmentAndNormalize(pathUri, query, fragment);
     }
 
     /**

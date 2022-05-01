@@ -1,6 +1,5 @@
 package co.arago.hiro.client.util.httpclient;
 
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -39,9 +38,9 @@ public class UriQueryMap extends MultiValueMap {
                 if (builder.length() > 0)
                     builder.append("&");
 
-                builder.append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8))
+                builder.append(URLPartEncoder.encodeNoPlus(entry.getKey(), StandardCharsets.UTF_8))
                         .append("=")
-                        .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
+                        .append(URLPartEncoder.encodeNoPlus(value, StandardCharsets.UTF_8));
             }
         }
 
