@@ -52,25 +52,27 @@ public class ContentHeaderHandler {
      * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type">Documentation of Content-Type</a>
      */
     public void setContentType(String contentType) {
-        if (contentType != null) {
-            List<String> contentParts = Arrays.stream(contentType.split(";"))
-                    .map(String::trim)
-                    .collect(Collectors.toList());
+        if (contentType == null)
+            return;
 
-            this.mediaType = contentParts.remove(0);
+        List<String> contentParts = Arrays.stream(contentType.split(";"))
+                .map(String::trim)
+                .collect(Collectors.toList());
 
-            for (String contentPart : contentParts) {
-                String[] parameter = contentPart.split("=");
-                if (parameter.length == 2) {
-                    if (StringUtils.equalsIgnoreCase(parameter[0], "charset")) {
-                        this.charset = Charset.forName(parameter[1]);
-                    }
-                    if (StringUtils.equalsIgnoreCase(parameter[0], "boundary")) {
-                        this.boundary = parameter[1];
-                    }
+        this.mediaType = contentParts.remove(0);
+
+        for (String contentPart : contentParts) {
+            String[] parameter = contentPart.split("=");
+            if (parameter.length == 2) {
+                if (StringUtils.equalsIgnoreCase(parameter[0], "charset")) {
+                    this.charset = Charset.forName(parameter[1]);
+                }
+                if (StringUtils.equalsIgnoreCase(parameter[0], "boundary")) {
+                    this.boundary = parameter[1];
                 }
             }
         }
+
     }
 
     /**
@@ -79,17 +81,16 @@ public class ContentHeaderHandler {
      * @return The HTTP header value for Content-Type.
      */
     public String getContentType() {
-        String contentType = null;
+        if (mediaType == null)
+            return null;
 
-        if (mediaType != null) {
-            contentType = mediaType;
+        String contentType = mediaType;
 
-            if (charset != null) {
-                contentType += ";charset=" + charset;
-            }
-            if (boundary != null) {
-                contentType += ";boundary=" + charset;
-            }
+        if (charset != null) {
+            contentType += ";charset=" + charset;
+        }
+        if (boundary != null) {
+            contentType += ";boundary=" + charset;
         }
 
         return contentType;
