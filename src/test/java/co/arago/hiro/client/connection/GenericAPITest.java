@@ -21,7 +21,9 @@ import java.net.URI;
 import java.net.http.HttpTimeoutException;
 import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class GenericAPITest {
     public static PasswordAuthTokenAPIHandler handler;

@@ -89,7 +89,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          * @return {@link #self()}
          */
         public GetMeAccountCommand setProfile(Boolean profile) {
-            query.put("profile", String.valueOf(profile));
+            query.put("profile", (profile != null) ? String.valueOf(profile) : null);
             return self();
         }
 
@@ -475,7 +475,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
          * @return {@link #self()}
          */
         public GetMeTeamsCommand setIncludeVirtual(Boolean includeVirtual) {
-            query.put("include-virtual", String.valueOf(includeVirtual));
+            query.put("include-virtual", (includeVirtual != null) ? String.valueOf(includeVirtual) : null);
             return self();
         }
 

@@ -8,6 +8,7 @@ import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.model.token.TokenRefreshRequest;
 import co.arago.hiro.client.model.token.TokenRequest;
 import co.arago.hiro.client.model.token.TokenResponse;
+import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -458,7 +459,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                 TokenResponse.class,
                 getUri("app"),
                 tokenRequest.toJsonString(),
-                Map.of("Content-Type", "application/json"),
+                new HttpHeaderMap(Map.of("Content-Type", "application/json")),
                 httpRequestTimeout,
                 maxRetries);
 
@@ -488,7 +489,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                     TokenResponse.class,
                     getUri("refresh"),
                     tokenRequest.toJsonString(),
-                    Map.of("Content-Type", "application/json"),
+                    new HttpHeaderMap(Map.of("Content-Type", "application/json")),
                     httpRequestTimeout,
                     maxRetries);
 
@@ -514,9 +515,9 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                 TokenResponse.class,
                 getUri("revoke"),
                 tokenRequest.toJsonString(),
-                Map.of(
+                new HttpHeaderMap(Map.of(
                         "Content-Type", "application/json",
-                        "Authorization", "Bearer " + getToken()),
+                        "Authorization", "Bearer " + getToken())),
                 httpRequestTimeout,
                 maxRetries);
 

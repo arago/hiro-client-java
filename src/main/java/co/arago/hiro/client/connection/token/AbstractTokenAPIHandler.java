@@ -4,13 +4,13 @@ import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
 import co.arago.hiro.client.exceptions.AuthenticationTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.token.DecodedToken;
+import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.util.json.JsonUtil;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.Map;
 
 public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler {
 
@@ -52,7 +52,7 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      * @param headers Map of headers with initial values.
      */
     @Override
-    public void addToHeaders(Map<String, String> headers) {
+    public void addToHeaders(HttpHeaderMap headers) {
         headers.put("User-Agent", userAgent);
     }
 

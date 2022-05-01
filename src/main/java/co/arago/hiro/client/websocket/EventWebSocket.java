@@ -4,7 +4,12 @@ import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.websocket.events.EventsFilter;
-import co.arago.hiro.client.model.websocket.events.impl.*;
+import co.arago.hiro.client.model.websocket.events.impl.ClearEventsMessage;
+import co.arago.hiro.client.model.websocket.events.impl.EventRegisterMessage;
+import co.arago.hiro.client.model.websocket.events.impl.EventUnregisterMessage;
+import co.arago.hiro.client.model.websocket.events.impl.EventsMessage;
+import co.arago.hiro.client.model.websocket.events.impl.SubscribeScopeMessage;
+import co.arago.hiro.client.model.websocket.events.impl.TokenRefreshMessage;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
 import co.arago.util.json.JsonUtil;
 import org.slf4j.Logger;
@@ -13,8 +18,18 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.http.WebSocket;
 import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * The handler for Event WebSocket.

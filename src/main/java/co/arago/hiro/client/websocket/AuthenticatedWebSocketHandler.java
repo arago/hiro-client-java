@@ -1,7 +1,11 @@
 package co.arago.hiro.client.websocket;
 
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
-import co.arago.hiro.client.exceptions.*;
+import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.hiro.client.exceptions.RefreshTokenWebSocketException;
+import co.arago.hiro.client.exceptions.UnauthorizedWebSocketException;
+import co.arago.hiro.client.exceptions.WebSocketException;
+import co.arago.hiro.client.exceptions.WebSocketMessageException;
 import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.VersionResponse;
@@ -20,7 +24,11 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
