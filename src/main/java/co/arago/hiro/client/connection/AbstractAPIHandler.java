@@ -24,6 +24,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -292,44 +293,69 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * Add query and fragment to a URI - if any.
      *
      * @param uri      The URI for the query and fragment.
-     * @param query    Map of query parameters to set. Can be null for no query parameters.
+     * @param query    Map of query parameters to set. Can be null for no query parameters. Values of this map can
+     *                 either be Strings or a Collection of Strings.
      * @param fragment URI Fragment. Can be null for no fragment.
      * @return The constructed URI
      */
-    public static URI addQueryAndFragment(URI uri, Map<String, String> query, String fragment) {
+    public static URI addQueryAndFragment(URI uri, Map<String, ?> query, String fragment) {
 
         String queryString = null;
 
         if (query != null) {
             StringBuilder queryStringBuilder = null;
-            for (Map.Entry<String, String> entry : query.entrySet()) {
+            for (Map.Entry<String, ?> entry : query.entrySet()) {
                 if (queryStringBuilder == null) {
                     queryStringBuilder = new StringBuilder();
                 } else {
                     queryStringBuilder.append("&");
                 }
-                queryStringBuilder
-                        .append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8))
-                        .append("=")
-                        .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
+                if (entry.getValue() instanceof String) {
+                    addQueryPart(queryStringBuilder, entry.getKey(), (String) entry.getValue());
+                } else if (entry.getValue() instanceof Collection) {
+                    int i = 0;
+                    for (Object valueItem : (Collection<?>) entry.getValue()) {
+                        if (valueItem instanceof String) {
+                            if (i > 0)
+                                queryStringBuilder.append("&");
+                            addQueryPart(queryStringBuilder, entry.getKey(), (String) valueItem);
+                            i++;
+                        }
+                    }
+                }
             }
             if (queryStringBuilder != null)
                 queryString = queryStringBuilder.toString();
         }
 
+        String sourceUri = uri.toASCIIString();
+
+        if (StringUtils.isNotBlank(queryString)) {
+            if (sourceUri.contains("?")) {
+                throw new IllegalArgumentException("Given uri must not have a query part already.");
+            }
+            sourceUri += "?" + queryString;
+        }
+
+        if (StringUtils.isNotBlank(fragment)) {
+            if (sourceUri.contains("#")) {
+                throw new IllegalArgumentException("Given uri must not have a fragment part already.");
+            }
+            sourceUri += "#" + fragment;
+        }
+
         try {
-            // Use resolve to add the path to avoid double escaping errors.
-            return new URI(
-                    uri.getScheme(),
-                    uri.getUserInfo(),
-                    uri.getHost(),
-                    uri.getPort(),
-                    null,
-                    queryString,
-                    fragment).resolve(uri.getRawPath());
+            return new URI(sourceUri).normalize();
         } catch (URISyntaxException e) {
             return uri;
         }
+    }
+
+    private static void addQueryPart(StringBuilder builder, String key, String value) {
+        builder
+                .append(URLEncoder.encode(key, StandardCharsets.UTF_8))
+                .append("=")
+                .append(URLEncoder.encode(value, StandardCharsets.UTF_8));
     }
 
     /**
