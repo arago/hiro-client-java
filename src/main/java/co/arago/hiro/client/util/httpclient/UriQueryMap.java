@@ -1,8 +1,8 @@
 package co.arago.hiro.client.util.httpclient;
 
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A map for http query parameters.
@@ -31,20 +31,14 @@ public class UriQueryMap extends MultiValueMap {
      */
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-
-        for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-            for (String value : entry.getValue()) {
-                if (builder.length() > 0)
-                    builder.append("&");
-
-                builder.append(URLPartEncoder.encodeNoPlus(entry.getKey(), StandardCharsets.UTF_8))
-                        .append("=")
-                        .append(URLPartEncoder.encodeNoPlus(value, StandardCharsets.UTF_8));
-            }
-        }
-
-        return (builder.length() > 0) ? builder.toString() : null;
+        return map.entrySet().stream()
+                .map(entry -> entry.getValue().stream()
+                        .map(value -> URLPartEncoder.encodeNoPlus(entry.getKey(), StandardCharsets.UTF_8) +
+                                "=" +
+                                URLPartEncoder.encodeNoPlus(value, StandardCharsets.UTF_8))
+                        .collect(Collectors.joining("&"))
+                )
+                .collect(Collectors.joining("&"));
     }
 
 }
