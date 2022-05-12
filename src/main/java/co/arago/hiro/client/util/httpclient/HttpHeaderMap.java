@@ -30,12 +30,6 @@ public class HttpHeaderMap extends MultiValueMap {
      * @param builder The builder which will receive the headers.
      */
     public void addHeaders(HttpRequest.Builder builder) {
-        for (Map.Entry<String, List<String>> entry : map.entrySet()) {
-            if (entry.getValue() != null) {
-                for (String value : entry.getValue()) {
-                    builder.header(entry.getKey(), value);
-                }
-            }
-        }
+        map.forEach((key, valueList) -> valueList.forEach(value -> builder.header(key, value)));
     }
 }

@@ -36,8 +36,7 @@ public class UriQueryMap extends MultiValueMap {
                         .map(value -> URLPartEncoder.encodeNoPlus(entry.getKey(), StandardCharsets.UTF_8) +
                                 "=" +
                                 URLPartEncoder.encodeNoPlus(value, StandardCharsets.UTF_8))
-                        .collect(Collectors.joining("&"))
-                )
+                        .collect(Collectors.joining("&")))
                 .collect(Collectors.joining("&"));
     }
 

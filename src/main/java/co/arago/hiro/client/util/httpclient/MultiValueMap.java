@@ -27,9 +27,7 @@ public class MultiValueMap {
      * @param initialValues A map of initial values. The values need to be either String or Collection&lt;String&gt;.
      */
     public MultiValueMap(Map<String, ?> initialValues) {
-        for (Map.Entry<String, ?> entry : initialValues.entrySet()) {
-            put(entry.getKey(), (String) entry.getValue());
-        }
+        initialValues.forEach(this::appendAtKey);
     }
 
     /**
@@ -42,9 +40,7 @@ public class MultiValueMap {
     public void putAll(Map<String, ?> initialValues) {
         map.clear();
 
-        for (Map.Entry<String, ?> entry : initialValues.entrySet()) {
-            put(entry.getKey(), (String) entry.getValue());
-        }
+        initialValues.forEach(this::appendAtKey);
     }
 
     /**
@@ -54,7 +50,8 @@ public class MultiValueMap {
      * @param value The value itself. ATTENTION: If this is null, the key and its values will be removed from the map.
      */
     public void put(String key, String value) {
-        appendAtKeyInMapOrRemove(new ArrayList<>(), key, value);
+        map.remove(key);
+        appendAtKey(key, value);
     }
 
     /**
@@ -64,9 +61,7 @@ public class MultiValueMap {
      *               ATTENTION: If a key with a value == null is encountered, all values under this key will be removed.
      */
     public void addAll(Map<String, ?> values) {
-        for (Map.Entry<String, ?> entry : values.entrySet()) {
-            add(entry.getKey(), (String) entry.getValue());
-        }
+        values.forEach(this::appendAtKey);
     }
 
     /**
@@ -76,10 +71,7 @@ public class MultiValueMap {
      * @param value The value itself. ATTENTION: If this is null, the key and its values will be removed from the map.
      */
     public void add(String key, String value) {
-        List<String> existingValues = map.get(key);
-        List<String> valueList = (existingValues == null) ? new ArrayList<>() : existingValues;
-
-        appendAtKeyInMapOrRemove(valueList, key, value);
+        appendAtKey(key, value);
     }
 
     /**
@@ -89,39 +81,40 @@ public class MultiValueMap {
      * @return The first value found.
      */
     public String getFirst(String key) {
-        return map.get(key).iterator().next();
+        return getAll(key).iterator().next();
     }
 
     /**
-     * Add (or remove) an entry to the map.
+     * Obtain all values for a key.
      *
-     * @param valueList The value list where the value will be appended to.
-     * @param key       The key for the entry in the map.
-     * @param value     The value to be appended. ATTENTION: If this is null, the key and its values will be
-     *                  removed from the map.
+     * @param key Key for a value list.
+     * @return List of all values under that key.
+     */
+    public List<String> getAll(String key) {
+        return map.get(key);
+    }
+
+    /**
+     * Add an entry in the map to the list named by key unless the value is null.
+     *
+     * @param key   The key for the list in the map.
+     * @param value The value to be appended.
      * @throws ClassCastException When the value is not null, not of type String nor Collection&lt;String&gt;.
      */
-    private void appendAtKeyInMapOrRemove(List<String> valueList, String key, Object value) {
-        if (value == null) {
-            map.remove(key);
-            return;
-        }
+    private void appendAtKey(String key, Object value) {
+        List<String> valueList = map.computeIfAbsent(key, k -> new ArrayList<>());
 
         if (value instanceof String) {
             valueList.add((String) value);
         } else if (value instanceof Collection) {
-            for (Object collectionEntry : (Collection<?>) value) {
-                if (collectionEntry instanceof String) {
-                    valueList.add((String) collectionEntry);
-                } else {
-                    throw new ClassCastException("Values need to be of String type.");
-                }
-            }
-        } else {
-            throw new ClassCastException("Value needs to be of String type.");
+            ((Collection<?>) value).forEach(collectionValue -> {
+                if (!(collectionValue instanceof String))
+                    throw new ClassCastException("Values in Collection need to be of String type.");
+                valueList.add((String) collectionValue);
+            });
+        } else if (value != null) {
+            throw new ClassCastException("Value needs to be of String or Collection<String> type.");
         }
-
-        map.put(key, valueList);
     }
 
     @Override
