@@ -1,3 +1,7 @@
+# v0.3.3
+
+* Bugfixed URI handling. Old handling removed query parameters.
+
 # v0.3.2
 
 * Fixed handling of refresh tokens.
