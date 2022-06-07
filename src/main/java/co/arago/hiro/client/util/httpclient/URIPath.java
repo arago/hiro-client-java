@@ -2,7 +2,6 @@ package co.arago.hiro.client.util.httpclient;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -78,7 +77,7 @@ public class URIPath {
      */
     public String build() {
         return path.stream()
-                .map(part -> URLEncoder.encode(part, StandardCharsets.UTF_8))
+                .map(part -> URLPartEncoder.encodeNoPlus(part, StandardCharsets.UTF_8))
                 .collect(Collectors.joining("/"));
     }
 

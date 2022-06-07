@@ -444,7 +444,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public QueryTimeseriesCommand setLimit(Integer limit) {
-            query.compute("limit", (k, v) -> (limit != null ? limit.toString() : null));
+            query.put("limit", (limit != null) ? limit.toString() : null);
             return this;
         }
 
@@ -453,7 +453,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public QueryTimeseriesCommand setOrder(String order) {
-            query.compute("order", (k, v) -> order);
+            query.put("order", order);
             return this;
         }
 
@@ -462,7 +462,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public QueryTimeseriesCommand setAggregate(String aggregate) {
-            query.compute("aggregate", (k, v) -> aggregate);
+            query.put("aggregate", aggregate);
             return this;
         }
 
@@ -1105,7 +1105,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setLimit(Integer limit) {
-            query.compute("limit", (k, v) -> (limit != null ? limit.toString() : null));
+            query.put("limit", (limit != null) ? limit.toString() : null);
             return this;
         }
 
@@ -1114,7 +1114,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setOffset(Integer offset) {
-            query.compute("offset", (k, v) -> (offset != null ? offset.toString() : null));
+            query.put("offset", (offset != null) ? offset.toString() : null);
             return this;
         }
 
@@ -1137,7 +1137,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setType(String type) {
-            query.compute("type", (k, v) -> type);
+            query.put("type", type);
             return this;
         }
 
@@ -1146,7 +1146,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setVersion(Integer version) {
-            query.compute("version", (k, v) -> (version != null ? version.toString() : null));
+            query.put("version", (version != null) ? version.toString() : null);
             return this;
         }
 
@@ -1155,7 +1155,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setVid(String vid) {
-            query.compute("vid", (k, v) -> vid);
+            query.put("vid", vid);
             return this;
         }
 
@@ -1242,7 +1242,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetTimeseriesCommand setLimit(Integer limit) {
-            query.compute("limit", (k, v) -> (limit != null ? limit.toString() : null));
+            query.put("limit", (limit != null) ? limit.toString() : null);
             return this;
         }
 
@@ -1251,7 +1251,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetTimeseriesCommand setOrder(String order) {
-            query.compute("order", (k, v) -> order);
+            query.put("order", order);
             return this;
         }
 
@@ -1260,7 +1260,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetTimeseriesCommand setWith(String with) {
-            query.compute("with", (k, v) -> with);
+            query.put("with", with);
             return this;
         }
 
@@ -1269,7 +1269,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetTimeseriesCommand setAggregate(String aggregate) {
-            query.compute("aggregate", (k, v) -> aggregate);
+            query.put("aggregate", aggregate);
             return this;
         }
 

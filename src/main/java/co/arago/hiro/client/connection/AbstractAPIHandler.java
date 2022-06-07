@@ -7,8 +7,11 @@ import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.util.HttpLogger;
+import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
+import co.arago.hiro.client.util.httpclient.URLPartEncoder;
+import co.arago.hiro.client.util.httpclient.UriQueryMap;
 import co.arago.util.json.JsonUtil;
 import co.arago.util.validation.RequiredFieldChecks;
 import org.apache.commons.lang3.RegExUtils;
@@ -18,14 +21,15 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.*;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -292,44 +296,45 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * Add query and fragment to a URI - if any.
      *
      * @param uri      The URI for the query and fragment.
-     * @param query    Map of query parameters to set. Can be null for no query parameters.
-     * @param fragment URI Fragment. Can be null for no fragment.
+     * @param query    Map of query parameters to set. Can be null for no query parameters, otherwise uri must not have
+     *                 a query already.
+     * @param fragment URI Fragment. Can be null for no fragment, otherwise uri must not have a fragment already.
      * @return The constructed URI
      */
-    public static URI addQueryAndFragment(URI uri, Map<String, String> query, String fragment) {
+    public static URI addQueryFragmentAndNormalize(URI uri, UriQueryMap query, String fragment) {
 
-        String queryString = null;
+        String sourceUri = uri.toASCIIString();
 
         if (query != null) {
-            StringBuilder queryStringBuilder = null;
-            for (Map.Entry<String, String> entry : query.entrySet()) {
-                if (queryStringBuilder == null) {
-                    queryStringBuilder = new StringBuilder();
-                } else {
-                    queryStringBuilder.append("&");
+            String encodedQueryString = query.toString();
+
+            if (StringUtils.isNotBlank(encodedQueryString)) {
+                if (sourceUri.contains("?")) {
+                    throw new IllegalArgumentException("Given uri must not have a query part already.");
                 }
-                queryStringBuilder
-                        .append(URLEncoder.encode(entry.getKey(), StandardCharsets.UTF_8))
-                        .append("=")
-                        .append(URLEncoder.encode(entry.getValue(), StandardCharsets.UTF_8));
+                sourceUri += "?" + encodedQueryString;
             }
-            if (queryStringBuilder != null)
-                queryString = queryStringBuilder.toString();
+        }
+
+        if (StringUtils.isNotBlank(fragment)) {
+            if (sourceUri.contains("#")) {
+                throw new IllegalArgumentException("Given uri must not have a fragment part already.");
+            }
+            sourceUri += "#" + URLPartEncoder.encodeNoPlus(fragment, StandardCharsets.UTF_8);
         }
 
         try {
-            // Use resolve to add the path to avoid double escaping errors.
-            return new URI(
-                    uri.getScheme(),
-                    uri.getUserInfo(),
-                    uri.getAuthority(),
-                    uri.getPort(),
-                    null,
-                    queryString,
-                    fragment).resolve(uri.getRawPath());
+            return new URI(sourceUri).normalize();
         } catch (URISyntaxException e) {
             return uri;
         }
+    }
+
+    private static void addQueryPart(StringBuilder builder, String key, String value) {
+        builder
+                .append(URLPartEncoder.encodeNoPlus(key, StandardCharsets.UTF_8))
+                .append("=")
+                .append(URLPartEncoder.encodeNoPlus(value, StandardCharsets.UTF_8));
     }
 
     /**
@@ -346,7 +351,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      */
     public HttpRequest.Builder getRequestBuilder(
             URI uri,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
         HttpRequest.Builder builder = HttpRequest.newBuilder(uri);
         addToHeaders(headers);
@@ -356,9 +361,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
         if (finalTimeout != null)
             builder.timeout(Duration.ofMillis(finalTimeout));
 
-        for (Map.Entry<String, String> headerEntry : headers.entrySet()) {
-            builder.header(headerEntry.getKey(), headerEntry.getValue());
-        }
+        headers.addHeaders(builder);
 
         return builder;
     }
@@ -382,7 +385,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
     private HttpRequest createStreamRequest(URI uri,
             String method,
             StreamContainer body,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
 
         if (body != null && body.hasContentType()) {
@@ -414,7 +417,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
     private HttpRequest createStringRequest(URI uri,
             String method,
             String body,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
 
         HttpRequest httpRequest = getRequestBuilder(uri, headers, httpRequestTimeout)
@@ -499,20 +502,12 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
     // ## Public Request Methods ##
     // ###############################################################################################
 
-    private Map<String, String> startHeaders(String body, Map<String, String> headers) {
-        Map<String, String> initialHeaders = new HashMap<>();
-
-        if (headers != null)
-            initialHeaders.putAll(headers);
-
-        return initialHeaders;
+    private HttpHeaderMap startHeaders(String body, HttpHeaderMap headers) {
+        return headers != null ? headers : new HttpHeaderMap();
     }
 
-    private Map<String, String> startHeaders(StreamContainer bodyContainer, Map<String, String> headers) {
-        Map<String, String> initialHeaders = new HashMap<>();
-
-        if (headers != null)
-            initialHeaders.putAll(headers);
+    private HttpHeaderMap startHeaders(StreamContainer bodyContainer, HttpHeaderMap headers) {
+        HttpHeaderMap initialHeaders = (headers == null) ? new HttpHeaderMap() : headers;
 
         if (bodyContainer != null && bodyContainer.hasContentType())
             initialHeaders.put("Content-Type", bodyContainer.getContentType());
@@ -542,11 +537,11 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             URI uri,
             String method,
             String body,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout,
             Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
-        Map<String, String> initialHeaders = startHeaders(body, headers);
+        HttpHeaderMap initialHeaders = startHeaders(body, headers);
 
         initialHeaders.put("Accept", "application/json");
 
@@ -584,11 +579,11 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             URI uri,
             String method,
             StreamContainer bodyContainer,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout,
             Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
-        Map<String, String> initialHeaders = startHeaders(bodyContainer, headers);
+        HttpHeaderMap initialHeaders = startHeaders(bodyContainer, headers);
 
         initialHeaders.put("Accept", "application/json");
 
@@ -623,10 +618,11 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             URI uri,
             String method,
             StreamContainer bodyContainer,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout,
             Integer maxRetries) throws HiroException, IOException, InterruptedException {
-        Map<String, String> initialHeaders = startHeaders(bodyContainer, headers);
+
+        HttpHeaderMap initialHeaders = startHeaders(bodyContainer, headers);
 
         HttpRequest httpRequest = createStreamRequest(uri, method, bodyContainer, initialHeaders, httpRequestTimeout);
 
@@ -654,9 +650,9 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             URI uri,
             String method,
             String body,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
-        Map<String, String> initialHeaders = startHeaders(body, headers);
+        HttpHeaderMap initialHeaders = startHeaders(body, headers);
 
         HttpRequest httpRequest = createStringRequest(uri, method, body, initialHeaders, httpRequestTimeout);
 
@@ -682,9 +678,9 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             URI uri,
             String method,
             StreamContainer bodyContainer,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
-        Map<String, String> initialHeaders = startHeaders(bodyContainer, headers);
+        HttpHeaderMap initialHeaders = startHeaders(bodyContainer, headers);
 
         HttpRequest httpRequest = createStreamRequest(uri, method, bodyContainer, initialHeaders, httpRequestTimeout);
 
@@ -714,7 +710,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
     public <T extends HiroMessage> T get(
             Class<T> clazz,
             URI uri,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout,
             Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
@@ -742,7 +738,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             Class<T> clazz,
             URI uri,
             String body,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout,
             Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
@@ -770,7 +766,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             Class<T> clazz,
             URI uri,
             String body,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout,
             Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
@@ -798,7 +794,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             Class<T> clazz,
             URI uri,
             String body,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout,
             Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
@@ -824,7 +820,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
     public <T extends HiroMessage> T delete(
             Class<T> clazz,
             URI uri,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout,
             Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
@@ -846,7 +842,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      */
     public HttpResponseParser getBinary(
             URI uri,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout,
             Integer maxRetries)
             throws HiroException, IOException, InterruptedException {
@@ -874,7 +870,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             Class<T> clazz,
             URI uri,
             StreamContainer body,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout,
             Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
@@ -901,7 +897,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             Class<T> clazz,
             URI uri,
             StreamContainer body,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout,
             Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
@@ -928,7 +924,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             Class<T> clazz,
             URI uri,
             StreamContainer body,
-            Map<String, String> headers,
+            HttpHeaderMap headers,
             Long httpRequestTimeout,
             Integer maxRetries) throws HiroException, IOException, InterruptedException {
 
@@ -961,7 +957,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * @throws IOException          On IO errors.
      * @throws InterruptedException When a call (possibly of an overwritten method) gets interrupted.
      */
-    abstract public void addToHeaders(Map<String, String> headers) throws InterruptedException, IOException, HiroException;
+    abstract public void addToHeaders(HttpHeaderMap headers) throws InterruptedException, IOException, HiroException;
 
     /**
      * The default way to check responses for errors and extract error messages.

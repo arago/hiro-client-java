@@ -1,6 +1,6 @@
 package co.arago.hiro.client.connection;
 
-import java.util.Map;
+import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 
 /**
  * Basic connection to the HIRO Graph without any authentication. Can be used as root connection for several
@@ -64,7 +64,7 @@ public class GraphConnectionHandler extends AbstractVersionAPIHandler {
      * @param headers Map of headers with initial values.
      */
     @Override
-    public void addToHeaders(Map<String, String> headers) {
+    public void addToHeaders(HttpHeaderMap headers) {
         headers.put("User-Agent", userAgent);
     }
 
