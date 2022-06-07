@@ -2,6 +2,7 @@ package co.arago.hiro.client.rest;
 
 import co.arago.hiro.client.connection.AbstractAPIHandler;
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
+import co.arago.hiro.client.exceptions.FixedTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
@@ -449,7 +450,11 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
             // Add one additional retry for obtaining a new token.
             if (retryCount >= 0) {
                 log.info("Trying to refresh token because of {}.", e.toString());
-                tokenAPIHandler.refreshToken();
+                try {
+                    tokenAPIHandler.refreshToken();
+                } catch (FixedTokenException ignored) {
+                    throw e;
+                }
                 return true;
             } else {
                 throw e;
