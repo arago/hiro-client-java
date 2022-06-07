@@ -1,3 +1,7 @@
+# v0.3.4
+
+* Send 401 when token is unauthorized and cannot be refreshed. Avoid being hidden by a FixedTokenException.
+
 # v0.3.3
 
 * Bugfixed URI handling. Old handling removed query parameters.
