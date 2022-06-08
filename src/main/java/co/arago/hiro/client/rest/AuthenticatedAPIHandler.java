@@ -1,5 +1,6 @@
 package co.arago.hiro.client.rest;
 
+import co.arago.hiro.client.connection.APIHandler;
 import co.arago.hiro.client.connection.AbstractAPIHandler;
 import co.arago.hiro.client.connection.token.TokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
@@ -17,7 +18,7 @@ import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 
-public interface AuthenticatedAPIHandler {
+public interface AuthenticatedAPIHandler extends APIHandler {
     /**
      * Construct an AbstractAPIHandler.GetterConf from the values of this Conf and the supplied tokenAPIHandler.
      * This ensures, that some values (apiUrl and userAgent) are always set via the tokenAPIHandler
