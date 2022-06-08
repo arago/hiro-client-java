@@ -289,12 +289,13 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
     private void configureLogging() {
         try {
-            httpLogger.addFilter(getUri("app"));
-            httpLogger.addFilter(getUri("refresh"));
-            httpLogger.addFilter(getUri("revoke"));
+            getHttpLogger().addFilter(getUri("app"));
+            getHttpLogger().addFilter(getUri("token"));
+            getHttpLogger().addFilter(getUri("refresh"));
+            getHttpLogger().addFilter(getUri("revoke"));
         } catch (IOException | InterruptedException | HiroException e) {
             log.error("Cannot get apiPath URI. Disable logging of http bodies.", e);
-            httpLogger.setLogBody(false);
+            getHttpLogger().setLogBody(false);
         }
     }
 

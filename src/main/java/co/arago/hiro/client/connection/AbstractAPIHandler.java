@@ -6,10 +6,11 @@ import co.arago.hiro.client.exceptions.RetryException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
-import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
+import co.arago.hiro.client.util.httpclient.URLPartEncoder;
+import co.arago.hiro.client.util.httpclient.UriQueryMap;
 import co.arago.util.json.JsonUtil;
 import co.arago.util.validation.RequiredFieldChecks;
 import org.apache.commons.lang3.RegExUtils;
@@ -23,7 +24,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
@@ -236,7 +236,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks implements 
      */
     public URI buildApiURI(String path) {
         try {
-            return APIHandler.buildURI(getApiUrl().toURI(), path, true);
+            return buildURI(getApiUrl().toURI(), path, true);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Cannot create URI using path '" + path + "'", e);
         }
@@ -250,7 +250,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks implements 
      */
     public URI buildEndpointURI(String path) {
         try {
-            return APIHandler.buildURI(getApiUrl().toURI(), path, false);
+            return buildURI(getApiUrl().toURI(), path, false);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Cannot create URI using path '" + path + "'", e);
         }
@@ -263,7 +263,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks implements 
      * @return The constructed URI
      */
     public URI buildWebSocketURI(String path) {
-        return APIHandler.buildURI(getWebSocketUri(), path, false);
+        return buildURI(getWebSocketUri(), path, false);
     }
 
     /**
@@ -865,30 +865,6 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks implements 
     // ###############################################################################################
 
     /**
-     * Abstract class that needs to be overwritten by a supplier of a HttpLogger.
-     *
-     * @return The HttpLogger to use with this class.
-     */
-    abstract protected HttpLogger getHttpLogger();
-
-    /**
-     * Abstract class that needs to be overwritten by a supplier of a HttpClient.
-     *
-     * @return The HttpClient to use with this class.
-     */
-    abstract protected HttpClient getOrBuildClient();
-
-    /**
-     * Override this to add authentication tokens.
-     *
-     * @param headers Map of headers with initial values.
-     * @throws HiroException        On internal errors regarding hiro data processing.
-     * @throws IOException          On IO errors.
-     * @throws InterruptedException When a call (possibly of an overwritten method) gets interrupted.
-     */
-    abstract public void addToHeaders(HttpHeaderMap headers) throws InterruptedException, IOException, HiroException;
-
-    /**
      * The default way to check responses for errors and extract error messages.
      *
      * @param httpResponse The httpResponse from the HttpRequest
@@ -929,6 +905,63 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks implements 
         }
 
         return false;
+    }
+
+    /**
+     * Build a complete uri from the url and path.
+     *
+     * @param uri        The uri to use as root.
+     * @param path       The path to append to the url.
+     * @param finalSlash Append a final slash?
+     * @return The constructed URI
+     */
+    protected static URI buildURI(URI uri, String path, boolean finalSlash) {
+        return uri.resolve(RegExUtils.removePattern(path, "^/+") + (finalSlash ? "/" : ""));
+    }
+
+    /**
+     * Add query and fragment to a URI - if any.
+     *
+     * @param uri      The URI for the query and fragment.
+     * @param query    Map of query parameters to set. Can be null for no query parameters, otherwise uri must not have
+     *                 a query already.
+     * @param fragment URI Fragment. Can be null for no fragment, otherwise uri must not have a fragment already.
+     * @return The constructed URI
+     */
+    protected static URI addQueryFragmentAndNormalize(URI uri, UriQueryMap query, String fragment) {
+
+        String sourceUri = uri.toASCIIString();
+
+        if (query != null) {
+            String encodedQueryString = query.toString();
+
+            if (StringUtils.isNotBlank(encodedQueryString)) {
+                if (sourceUri.contains("?")) {
+                    throw new IllegalArgumentException("Given uri must not have a query part already.");
+                }
+                sourceUri += "?" + encodedQueryString;
+            }
+        }
+
+        if (StringUtils.isNotBlank(fragment)) {
+            if (sourceUri.contains("#")) {
+                throw new IllegalArgumentException("Given uri must not have a fragment part already.");
+            }
+            sourceUri += "#" + URLPartEncoder.encodeNoPlus(fragment, StandardCharsets.UTF_8);
+        }
+
+        try {
+            return new URI(sourceUri).normalize();
+        } catch (URISyntaxException e) {
+            return uri;
+        }
+    }
+
+    protected static void addQueryPart(StringBuilder builder, String key, String value) {
+        builder
+                .append(URLPartEncoder.encodeNoPlus(key, StandardCharsets.UTF_8))
+                .append("=")
+                .append(URLPartEncoder.encodeNoPlus(value, StandardCharsets.UTF_8));
     }
 
 }

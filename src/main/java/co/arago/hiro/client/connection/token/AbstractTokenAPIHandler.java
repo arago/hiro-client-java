@@ -41,8 +41,7 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
     }
 
     /**
-     * Override this to add authentication tokens. TokenHandlers do not have tokens, so this only returns default
-     * headers.
+     * This just adds the userAgent to the headers.
      *
      * @param headers Map of headers with initial values.
      */

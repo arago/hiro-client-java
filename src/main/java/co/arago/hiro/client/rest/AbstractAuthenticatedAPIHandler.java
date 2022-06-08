@@ -1,6 +1,5 @@
 package co.arago.hiro.client.rest;
 
-import co.arago.hiro.client.connection.APIHandler;
 import co.arago.hiro.client.connection.AbstractAPIHandler;
 import co.arago.hiro.client.connection.token.TokenAPIHandler;
 import co.arago.hiro.client.exceptions.FixedTokenException;
@@ -23,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
@@ -191,6 +191,47 @@ public abstract class AbstractAuthenticatedAPIHandler extends AbstractAPIHandler
     }
 
     /**
+     * Construct an AbstractAPIHandler.GetterConf from the values of this Conf and the supplied tokenAPIHandler.
+     * This ensures, that some values (apiUrl and userAgent) are always set via the tokenAPIHandler
+     * and some others use default values from there (httpRequestTimeout and maxRetries) unless set
+     * in the builder for this Handler.
+     *
+     * @param builder         The builder of this handler.
+     * @param tokenAPIHandler The tokenApiHandler for this Handler.
+     * @return An AbstractAPIHandler.GetterConf for the parent class.
+     */
+    static AbstractAPIHandler.GetterConf makeHandlerConf(AbstractAuthenticatedAPIHandler.Conf<?> builder,
+            TokenAPIHandler tokenAPIHandler) {
+        return new AbstractAPIHandler.GetterConf() {
+            @Override
+            public URL getApiUrl() {
+                return tokenAPIHandler.getApiUrl();
+            }
+
+            @Override
+            public URI getWebSocketUri() {
+                return tokenAPIHandler.getWebSocketUri();
+            }
+
+            @Override
+            public Long getHttpRequestTimeout() {
+                return builder.getHttpRequestTimeout() != null ? builder.getHttpRequestTimeout()
+                        : tokenAPIHandler.getHttpRequestTimeout();
+            }
+
+            @Override
+            public int getMaxRetries() {
+                return builder.getMaxRetries() > 0 ? builder.getMaxRetries() : tokenAPIHandler.getMaxRetries();
+            }
+
+            @Override
+            public String getUserAgent() {
+                return tokenAPIHandler.getUserAgent();
+            }
+        };
+    }
+
+    /**
      * The basic configuration for all requests that are sending JSON data. Handle queries, headers and fragments.
      *
      * @param <T> The Builder type
@@ -347,7 +388,7 @@ public abstract class AbstractAuthenticatedAPIHandler extends AbstractAPIHandler
      * @param builder The builder to use.
      */
     protected AbstractAuthenticatedAPIHandler(Conf<?> builder) {
-        super(AuthenticatedAPIHandler.makeHandlerConf(builder, builder.getTokenApiHandler()));
+        super(makeHandlerConf(builder, builder.getTokenApiHandler()));
         this.apiName = builder.getApiName();
         this.apiPath = builder.getApiPath();
         this.tokenAPIHandler = notNull(builder.getTokenApiHandler(), "tokenApiHandler");
@@ -374,9 +415,9 @@ public abstract class AbstractAuthenticatedAPIHandler extends AbstractAPIHandler
         if (apiUri == null)
             apiUri = (apiPath != null ? buildApiURI(apiPath) : tokenAPIHandler.getApiUriOf(apiName));
 
-        URI pathUri = APIHandler.buildURI(apiUri, path.build(), false);
+        URI pathUri = buildURI(apiUri, path.build(), false);
 
-        return APIHandler.addQueryFragmentAndNormalize(pathUri, query, fragment);
+        return addQueryFragmentAndNormalize(pathUri, query, fragment);
     }
 
     /**

@@ -5,22 +5,18 @@ import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.exceptions.RetryException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.model.HiroMessage;
+import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
-import co.arago.hiro.client.util.httpclient.URLPartEncoder;
-import co.arago.hiro.client.util.httpclient.UriQueryMap;
-import org.apache.commons.lang3.RegExUtils;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -36,63 +32,6 @@ public interface APIHandler {
         int getMaxRetries();
 
         String getUserAgent();
-    }
-
-    /**
-     * Build a complete uri from the url and path.
-     *
-     * @param uri        The uri to use as root.
-     * @param path       The path to append to the url.
-     * @param finalSlash Append a final slash?
-     * @return The constructed URI
-     */
-    static URI buildURI(URI uri, String path, boolean finalSlash) {
-        return uri.resolve(RegExUtils.removePattern(path, "^/+") + (finalSlash ? "/" : ""));
-    }
-
-    /**
-     * Add query and fragment to a URI - if any.
-     *
-     * @param uri      The URI for the query and fragment.
-     * @param query    Map of query parameters to set. Can be null for no query parameters, otherwise uri must not have
-     *                 a query already.
-     * @param fragment URI Fragment. Can be null for no fragment, otherwise uri must not have a fragment already.
-     * @return The constructed URI
-     */
-    static URI addQueryFragmentAndNormalize(URI uri, UriQueryMap query, String fragment) {
-
-        String sourceUri = uri.toASCIIString();
-
-        if (query != null) {
-            String encodedQueryString = query.toString();
-
-            if (StringUtils.isNotBlank(encodedQueryString)) {
-                if (sourceUri.contains("?")) {
-                    throw new IllegalArgumentException("Given uri must not have a query part already.");
-                }
-                sourceUri += "?" + encodedQueryString;
-            }
-        }
-
-        if (StringUtils.isNotBlank(fragment)) {
-            if (sourceUri.contains("#")) {
-                throw new IllegalArgumentException("Given uri must not have a fragment part already.");
-            }
-            sourceUri += "#" + URLPartEncoder.encodeNoPlus(fragment, StandardCharsets.UTF_8);
-        }
-
-        try {
-            return new URI(sourceUri).normalize();
-        } catch (URISyntaxException e) {
-            return uri;
-        }
-    }
-
-    static void addQueryPart(StringBuilder builder, String key, String value) {
-        builder
-                .append(URLPartEncoder.encodeNoPlus(key, StandardCharsets.UTF_8))
-                .append("=")
-                .append(URLPartEncoder.encodeNoPlus(value, StandardCharsets.UTF_8));
     }
 
     URL getApiUrl();
@@ -541,5 +480,17 @@ public interface APIHandler {
      */
     boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount)
             throws HiroException, IOException, InterruptedException;
+
+    /**
+     * Needs to be implemented by a supplier of a HttpLogger.
+     *
+     * @return The HttpLogger to use with this class.
+     */
+    HttpLogger getHttpLogger();
+
+    /**
+     * @return The HttpClient to use with this class. Lazy initialization.
+     */
+    HttpClient getOrBuildClient();
 
 }

@@ -238,17 +238,17 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     // ## Main part ##
     // ###############################################################################################
 
-    protected final AbstractClientAPIHandler.ProxySpec proxy;
-    protected final boolean followRedirects;
-    protected final Long connectTimeout;
-    protected final SSLParameters sslParameters;
-    protected HttpClient httpClient;
-    protected SSLContext sslContext;
-    protected final int maxConnectionPool;
-    protected final CookieManager cookieManager;
+    private final AbstractClientAPIHandler.ProxySpec proxy;
+    private final boolean followRedirects;
+    private final Long connectTimeout;
+    private final SSLParameters sslParameters;
+    private HttpClient httpClient;
+    private SSLContext sslContext;
+    private final int maxConnectionPool;
+    private final CookieManager cookieManager;
 
-    protected final HttpLogger httpLogger;
-    protected boolean externalConnection;
+    private final HttpLogger httpLogger;
+    private boolean externalConnection;
 
     /**
      * Protected Constructor. Attributes shall be filled via builders.

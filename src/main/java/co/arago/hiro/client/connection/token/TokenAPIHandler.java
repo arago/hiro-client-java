@@ -4,7 +4,6 @@ import co.arago.hiro.client.connection.VersionAPIHandler;
 import co.arago.hiro.client.exceptions.AuthenticationTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.token.DecodedToken;
-import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.util.json.JsonUtil;
 
 import java.io.IOException;
@@ -14,34 +13,6 @@ import java.util.Base64;
 
 public interface TokenAPIHandler extends VersionAPIHandler {
     /**
-     * Decode the payload part of any token.
-     *
-     * @param token The token to decode.
-     * @return Decoded token as {@link DecodedToken}.
-     * @throws IOException   When call has IO errors.
-     * @throws HiroException On Hiro protocol / handling errors.
-     */
-    static DecodedToken decodeToken(String token) throws HiroException, IOException {
-        String[] data = token.split("\\.");
-
-        if (data.length == 1)
-            throw new AuthenticationTokenException("Token is missing base64 encoded data.", 500, token);
-
-        String json = new String(Base64.getUrlDecoder().decode(data[1]), StandardCharsets.UTF_8);
-
-        return JsonUtil.DEFAULT.toObject(json, DecodedToken.class);
-    }
-
-    /**
-     * Override this to add authentication tokens. TokenHandlers do not have tokens, so this only returns default
-     * headers.
-     *
-     * @param headers Map of headers with initial values.
-     */
-    @Override
-    void addToHeaders(HttpHeaderMap headers);
-
-    /**
      * Return the current token.
      *
      * @return The current token.
@@ -50,16 +21,6 @@ public interface TokenAPIHandler extends VersionAPIHandler {
      * @throws HiroException        On Hiro protocol / handling errors.
      */
     String getToken() throws IOException, InterruptedException, HiroException;
-
-    /**
-     * Decode the payload part of the internal token.
-     *
-     * @return Decoded token as {@link DecodedToken}.
-     * @throws InterruptedException When call gets interrupted.
-     * @throws IOException          When call has IO errors.
-     * @throws HiroException        On Hiro protocol / handling errors.
-     */
-    DecodedToken decodeToken() throws HiroException, IOException, InterruptedException;
 
     /**
      * Refresh an invalid token.
@@ -100,4 +61,34 @@ public interface TokenAPIHandler extends VersionAPIHandler {
      * @return The Instant after which the token shall be refreshed. null if token cannot be refreshed.
      */
     Instant expiryInstant();
+
+    /**
+     * Decode the payload part of the internal token.
+     *
+     * @return Decoded token as {@link DecodedToken}.
+     * @throws InterruptedException When call gets interrupted.
+     * @throws IOException          When call has IO errors.
+     * @throws HiroException        On Hiro protocol / handling errors.
+     */
+    DecodedToken decodeToken() throws HiroException, IOException, InterruptedException;
+
+    /**
+     * Decode the payload part of any token.
+     *
+     * @param token The token to decode.
+     * @return Decoded token as {@link DecodedToken}.
+     * @throws IOException   When call has IO errors.
+     * @throws HiroException On Hiro protocol / handling errors.
+     */
+    static DecodedToken decodeToken(String token) throws HiroException, IOException {
+        String[] data = token.split("\\.");
+
+        if (data.length == 1)
+            throw new AuthenticationTokenException("Token is missing base64 encoded data.", 500, token);
+
+        String json = new String(Base64.getUrlDecoder().decode(data[1]), StandardCharsets.UTF_8);
+
+        return JsonUtil.DEFAULT.toObject(json, DecodedToken.class);
+    }
+
 }
