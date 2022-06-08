@@ -1,7 +1,6 @@
 package co.arago.hiro.client.util.httpclient;
 
 import java.net.http.HttpRequest;
-import java.util.List;
 import java.util.Map;
 
 /**

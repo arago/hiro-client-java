@@ -1,6 +1,6 @@
 package co.arago.hiro.client.rest;
 
-import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
+import co.arago.hiro.client.connection.token.TokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.DefaultHiroItemListMessage;
 import co.arago.hiro.client.model.HiroMessage;
@@ -15,20 +15,20 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-public class GraphAPI extends AuthenticatedAPIHandler {
+public class GraphAPI extends AbstractAuthenticatedAPIHandler {
 
     // ###############################################################################################
     // ## Conf and Builder ##
     // ###############################################################################################
 
-    public static abstract class Conf<T extends Conf<T>> extends AuthenticatedAPIHandler.Conf<T> {
+    public static abstract class Conf<T extends Conf<T>> extends AbstractAuthenticatedAPIHandler.Conf<T> {
 
         public abstract GraphAPI build();
     }
 
     public static final class Builder extends Conf<Builder> {
 
-        private Builder(String apiName, AbstractTokenAPIHandler tokenAPIHandler) {
+        private Builder(String apiName, TokenAPIHandler tokenAPIHandler) {
             setApiName(apiName);
             setTokenApiHandler(tokenAPIHandler);
         }
@@ -56,7 +56,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         super(builder);
     }
 
-    public static Conf<?> newBuilder(AbstractTokenAPIHandler tokenAPIHandler) {
+    public static Conf<?> newBuilder(TokenAPIHandler tokenAPIHandler) {
         return new Builder("graph", tokenAPIHandler);
     }
 

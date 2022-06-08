@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Class for API httpRequests that contains a HttpClient and a HttpLogger.
  */
-public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implements AutoCloseable {
+public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implements ClientAPIHandler {
 
     final static Logger log = LoggerFactory.getLogger(AbstractClientAPIHandler.class);
 

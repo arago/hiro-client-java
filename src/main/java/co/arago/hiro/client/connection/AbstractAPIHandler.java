@@ -10,8 +10,6 @@ import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
-import co.arago.hiro.client.util.httpclient.URLPartEncoder;
-import co.arago.hiro.client.util.httpclient.UriQueryMap;
 import co.arago.util.json.JsonUtil;
 import co.arago.util.validation.RequiredFieldChecks;
 import org.apache.commons.lang3.RegExUtils;
@@ -36,25 +34,13 @@ import java.util.concurrent.CompletionException;
 /**
  * Root class with fields and tool methods for all API Handlers
  */
-public abstract class AbstractAPIHandler extends RequiredFieldChecks {
+public abstract class AbstractAPIHandler extends RequiredFieldChecks implements APIHandler {
 
     final static Logger log = LoggerFactory.getLogger(AbstractAPIHandler.class);
 
     // ###############################################################################################
     // ## Conf and Builder ##
     // ###############################################################################################
-
-    public interface GetterConf {
-        URL getApiUrl();
-
-        URI getWebSocketUri();
-
-        Long getHttpRequestTimeout();
-
-        int getMaxRetries();
-
-        String getUserAgent();
-    }
 
     /**
      * The basic configuration for all APIHAndler
@@ -250,7 +236,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      */
     public URI buildApiURI(String path) {
         try {
-            return buildURI(getApiUrl().toURI(), path, true);
+            return APIHandler.buildURI(getApiUrl().toURI(), path, true);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Cannot create URI using path '" + path + "'", e);
         }
@@ -264,7 +250,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      */
     public URI buildEndpointURI(String path) {
         try {
-            return buildURI(getApiUrl().toURI(), path, false);
+            return APIHandler.buildURI(getApiUrl().toURI(), path, false);
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Cannot create URI using path '" + path + "'", e);
         }
@@ -277,64 +263,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * @return The constructed URI
      */
     public URI buildWebSocketURI(String path) {
-        return buildURI(getWebSocketUri(), path, false);
-    }
-
-    /**
-     * Build a complete uri from the url and path.
-     *
-     * @param uri        The uri to use as root.
-     * @param path       The path to append to the url.
-     * @param finalSlash Append a final slash?
-     * @return The constructed URI
-     */
-    protected static URI buildURI(URI uri, String path, boolean finalSlash) {
-        return uri.resolve(RegExUtils.removePattern(path, "^/+") + (finalSlash ? "/" : ""));
-    }
-
-    /**
-     * Add query and fragment to a URI - if any.
-     *
-     * @param uri      The URI for the query and fragment.
-     * @param query    Map of query parameters to set. Can be null for no query parameters, otherwise uri must not have
-     *                 a query already.
-     * @param fragment URI Fragment. Can be null for no fragment, otherwise uri must not have a fragment already.
-     * @return The constructed URI
-     */
-    public static URI addQueryFragmentAndNormalize(URI uri, UriQueryMap query, String fragment) {
-
-        String sourceUri = uri.toASCIIString();
-
-        if (query != null) {
-            String encodedQueryString = query.toString();
-
-            if (StringUtils.isNotBlank(encodedQueryString)) {
-                if (sourceUri.contains("?")) {
-                    throw new IllegalArgumentException("Given uri must not have a query part already.");
-                }
-                sourceUri += "?" + encodedQueryString;
-            }
-        }
-
-        if (StringUtils.isNotBlank(fragment)) {
-            if (sourceUri.contains("#")) {
-                throw new IllegalArgumentException("Given uri must not have a fragment part already.");
-            }
-            sourceUri += "#" + URLPartEncoder.encodeNoPlus(fragment, StandardCharsets.UTF_8);
-        }
-
-        try {
-            return new URI(sourceUri).normalize();
-        } catch (URISyntaxException e) {
-            return uri;
-        }
-    }
-
-    private static void addQueryPart(StringBuilder builder, String key, String value) {
-        builder
-                .append(URLPartEncoder.encodeNoPlus(key, StandardCharsets.UTF_8))
-                .append("=")
-                .append(URLPartEncoder.encodeNoPlus(value, StandardCharsets.UTF_8));
+        return APIHandler.buildURI(getWebSocketUri(), path, false);
     }
 
     /**

@@ -6,7 +6,7 @@ import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.VersionResponse;
-import co.arago.hiro.client.rest.AuthenticatedAPIHandler;
+import co.arago.hiro.client.rest.AbstractAuthenticatedAPIHandler;
 import co.arago.hiro.client.rest.GraphAPI;
 import co.arago.util.json.JsonUtil;
 import org.junit.jupiter.api.AfterAll;
@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class GenericAPITest {
     public static PasswordAuthTokenAPIHandler handler;
-    public static AuthenticatedAPIHandler apiHandler;
+    public static AbstractAuthenticatedAPIHandler apiHandler;
     final static Logger log = LoggerFactory.getLogger(GenericAPITest.class);
 
     @BeforeAll

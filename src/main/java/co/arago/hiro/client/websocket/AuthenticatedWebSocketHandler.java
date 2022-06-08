@@ -1,6 +1,6 @@
 package co.arago.hiro.client.websocket;
 
-import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
+import co.arago.hiro.client.connection.token.TokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.RefreshTokenWebSocketException;
 import co.arago.hiro.client.exceptions.UnauthorizedWebSocketException;
@@ -56,7 +56,7 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
         private Map<String, String> headers = new HashMap<>();
         private String fragment;
         private long webSocketMessageTimeout = 60000L;
-        private AbstractTokenAPIHandler tokenAPIHandler;
+        private TokenAPIHandler tokenAPIHandler;
         private int maxRetries = 2;
         private boolean reconnectOnFailedSend = false;
 
@@ -180,7 +180,7 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
             return self();
         }
 
-        public AbstractTokenAPIHandler getTokenApiHandler() {
+        public TokenAPIHandler getTokenApiHandler() {
             return this.tokenAPIHandler;
         }
 
@@ -188,7 +188,7 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
          * @param tokenAPIHandler The tokenAPIHandler for this API.
          * @return {@link #self()}
          */
-        public T setTokenApiHandler(AbstractTokenAPIHandler tokenAPIHandler) {
+        public T setTokenApiHandler(TokenAPIHandler tokenAPIHandler) {
             this.tokenAPIHandler = tokenAPIHandler;
             return self();
         }
@@ -454,7 +454,7 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
     protected final String endpoint;
     protected final String protocol;
     protected final int maxRetries;
-    protected final AbstractTokenAPIHandler tokenAPIHandler;
+    protected final TokenAPIHandler tokenAPIHandler;
     protected final Map<String, String> query = new HashMap<>();
     protected final Map<String, String> headers = new HashMap<>();
     protected final String fragment;

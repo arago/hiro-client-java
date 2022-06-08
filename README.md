@@ -33,6 +33,7 @@ Most of the documentation is done in the sourcecode.
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.rest.GraphAPI;
+import co.arago.hiro.client.rest.GraphAPIAbstract;
 import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
 
 import java.io.IOException;
@@ -157,7 +158,6 @@ import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.rest.GraphAPI;
-import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
 
 import java.io.IOException;
 
@@ -194,6 +194,7 @@ _not_ be closed when `TokenAPIHandler#close()` is called - you need to close the
 import co.arago.hiro.client.connection.GraphConnectionHandler;
 import co.arago.hiro.client.connection.token.FixedTokenAPIHandler;
 import co.arago.hiro.client.rest.GraphAPI;
+import co.arago.hiro.client.rest.GraphAPIAbstract;
 
 import java.io.IOException;
 
@@ -229,12 +230,11 @@ import co.arago.hiro.client.Config;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.rest.GraphAPI;
+import co.arago.hiro.client.rest.GraphAPIAbstract;
 import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
-import co.arago.util.json.JsonUtil;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
-import java.nio.file.Paths;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -328,14 +328,10 @@ import co.arago.hiro.client.Config;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.websocket.events.impl.EventsMessage;
-import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.websocket.EventWebSocket;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
-import co.arago.util.json.JsonUtil;
-import co.arago.hiro.client.model.token.DecodedToken;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 
 class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
@@ -390,14 +386,11 @@ import co.arago.hiro.client.Config;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.websocket.events.impl.EventsMessage;
-import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.websocket.EventWebSocket;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
-import co.arago.util.json.JsonUtil;
 import co.arago.hiro.client.model.token.DecodedToken;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 
 class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {

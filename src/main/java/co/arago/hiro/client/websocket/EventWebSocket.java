@@ -1,6 +1,6 @@
 package co.arago.hiro.client.websocket;
 
-import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
+import co.arago.hiro.client.connection.token.TokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.websocket.events.EventsFilter;
@@ -192,7 +192,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
 
     public static final class Builder extends Conf<Builder> {
 
-        private Builder(AbstractTokenAPIHandler tokenAPIHandler, EventWebSocketListener webSocketListener) {
+        private Builder(TokenAPIHandler tokenAPIHandler, EventWebSocketListener webSocketListener) {
             setTokenApiHandler(tokenAPIHandler);
             setEventWebSocketListener(webSocketListener);
         }
@@ -358,7 +358,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
     private final Map<String, EventsFilter> eventsFilterMap;
 
     /**
-     * Protected Constructor. Use {@link #newBuilder(AbstractTokenAPIHandler, EventWebSocketListener)}.
+     * Protected Constructor. Use {@link #newBuilder(TokenAPIHandler, EventWebSocketListener)}.
      *
      * @param builder The {@link Builder} to use.
      */
@@ -381,7 +381,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
      * @return The {@link Builder} for {@link EventWebSocket}.
      */
     public static Conf<?> newBuilder(
-            AbstractTokenAPIHandler tokenAPIHandler,
+            TokenAPIHandler tokenAPIHandler,
             EventWebSocketListener eventWebSocketListener) {
         return new EventWebSocket.Builder(tokenAPIHandler, eventWebSocketListener);
     }

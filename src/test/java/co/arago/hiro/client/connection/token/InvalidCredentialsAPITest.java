@@ -44,7 +44,7 @@ public class InvalidCredentialsAPITest {
         if (handlerBuilder == null)
             return;
 
-        try (AbstractTokenAPIHandler handler = handlerBuilder.setPassword("Wrong").build()) {
+        try (TokenAPIHandler handler = handlerBuilder.setPassword("Wrong").build()) {
 
             AuthAPI apiHandler = AuthAPI.newBuilder(handler).build();
 
@@ -63,7 +63,7 @@ public class InvalidCredentialsAPITest {
         if (handlerBuilder == null)
             return;
 
-        try (AbstractTokenAPIHandler handler = handlerBuilder.setClientSecret("Wrong").build()) {
+        try (TokenAPIHandler handler = handlerBuilder.setClientSecret("Wrong").build()) {
 
             AuthAPI apiHandler = AuthAPI.newBuilder(handler).build();
 
@@ -82,7 +82,7 @@ public class InvalidCredentialsAPITest {
         if (handlerBuilder == null)
             return;
 
-        try (AbstractTokenAPIHandler handler = handlerBuilder.setApiUrl("http://nothing.here").build()) {
+        try (TokenAPIHandler handler = handlerBuilder.setApiUrl("http://nothing.here").build()) {
 
             AuthAPI apiHandler = AuthAPI.newBuilder(handler).build();
 

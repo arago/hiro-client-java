@@ -9,7 +9,7 @@ import java.net.URI;
 /**
  * Handles Version information for HIRO.
  */
-public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler {
+public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler implements VersionAPIHandler {
 
     // ###############################################################################################
     // ## Conf and Builder ##
@@ -55,7 +55,8 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
      * @throws IOException          When the connection fails.
      * @throws InterruptedException When interrupted.
      */
-    protected VersionResponse requestVersionMap() throws IOException, InterruptedException, HiroException {
+    @Override
+    public VersionResponse requestVersionMap() throws IOException, InterruptedException, HiroException {
         return get(VersionResponse.class,
                 buildEndpointURI("/api/version"),
                 null,
@@ -72,6 +73,7 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
      * @throws IOException          When the connection fails.
      * @throws InterruptedException When interrupted.
      */
+    @Override
     public VersionResponse getVersionMap() throws HiroException, IOException, InterruptedException {
         if (versionMap == null)
             versionMap = requestVersionMap();
@@ -88,6 +90,7 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
      * @throws IOException          When the connection fails.
      * @throws InterruptedException When interrupted.
      */
+    @Override
     public URI getApiUriOf(String apiName) throws IOException, InterruptedException, HiroException {
         return buildApiURI(getVersionMap().getVersionEntryOf(apiName).endpoint);
     }

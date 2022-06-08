@@ -1,6 +1,6 @@
 package co.arago.hiro.client.websocket;
 
-import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
+import co.arago.hiro.client.connection.token.TokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.WebSocketException;
 import co.arago.hiro.client.model.HiroMessage;
@@ -76,7 +76,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
 
     public static final class Builder extends Conf<Builder> {
 
-        private Builder(AbstractTokenAPIHandler tokenAPIHandler, ActionWebSocketListener webSocketListener) {
+        private Builder(TokenAPIHandler tokenAPIHandler, ActionWebSocketListener webSocketListener) {
             setTokenApiHandler(tokenAPIHandler);
             setActionWebSocketListener(webSocketListener);
         }
@@ -408,7 +408,7 @@ public class ActionWebSocket extends AuthenticatedWebSocketHandler {
      * @return The {@link ActionWebSocket.Builder} for {@link ActionWebSocket}.
      */
     public static Conf<?> newBuilder(
-            AbstractTokenAPIHandler tokenAPIHandler,
+            TokenAPIHandler tokenAPIHandler,
             ActionWebSocketListener actionWebSocketListener) {
         return new ActionWebSocket.Builder(tokenAPIHandler, actionWebSocketListener);
     }

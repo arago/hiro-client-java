@@ -1,6 +1,6 @@
 package co.arago.hiro.client.util;
 
-import co.arago.hiro.client.connection.AbstractAPIHandler;
+import co.arago.hiro.client.connection.APIHandler;
 import co.arago.hiro.client.util.httpclient.URIPath;
 import co.arago.hiro.client.util.httpclient.UriQueryMap;
 import org.junit.jupiter.api.Test;
@@ -31,7 +31,7 @@ public class UriTest {
 
         String fragment = "This is a fragment";
 
-        URI finalUri = AbstractAPIHandler.addQueryFragmentAndNormalize(
+        URI finalUri = APIHandler.addQueryFragmentAndNormalize(
                 URI.create("http://localhost:8080/" + uriPath.build()),
                 uriQueryMap,
                 fragment);
