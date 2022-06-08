@@ -126,7 +126,7 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      * Check for existence of a refresh token in the TokenAPIHandler.
      *
      * @return true if a refresh token retrieved, false if no such token exists or these tokens are not applicable for
-     * this TokenAPIHandler.
+     *         this TokenAPIHandler.
      */
     public abstract boolean hasRefreshToken();
 

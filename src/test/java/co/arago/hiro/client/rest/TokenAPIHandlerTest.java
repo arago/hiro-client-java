@@ -69,14 +69,11 @@ class TokenAPIHandlerTest {
         String token2;
 
         if (handler.hasRefreshToken()) {
-            handler.setRefreshPause(30000L);
             handler.refreshToken();
-            handler.setRefreshPause(0L);
 
             token2 = handler.getToken();
             log.info("Token 2 ...{}", token2.substring(token2.length() - 12));
             assertFalse(StringUtils.isBlank(token2));
-            assertEquals(token1, token2);
 
         } else {
             log.warn("No refreshToken available");
