@@ -1,3 +1,7 @@
+# v0.3.5
+
+* Changes for compatibility with auth api 6.6 of HIRO graph.
+
 # v0.3.4
 
 * Send 401 when token is unauthorized and cannot be refreshed. Avoid being hidden by a FixedTokenException.
