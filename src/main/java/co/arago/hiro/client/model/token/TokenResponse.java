@@ -1,6 +1,7 @@
 package co.arago.hiro.client.model.token;
 
 import co.arago.hiro.client.model.HiroMessage;
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -9,7 +10,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * <pre>
  * {
- *     "_TOKEN": "...",
+ *     "access_token" or "_TOKEN": "...",
  *     "refresh_token": "...",
  *     "expires-at": 1234567890,
  *     "_IDENTITY": "...",
@@ -23,7 +24,8 @@ public class TokenResponse extends HiroMessage {
 
     private static final long serialVersionUID = -4007996463168969516L;
 
-    @JsonProperty("_TOKEN")
+    @JsonProperty("access_token")
+    @JsonAlias("_TOKEN")
     public String token;
 
     @JsonProperty("refresh_token")

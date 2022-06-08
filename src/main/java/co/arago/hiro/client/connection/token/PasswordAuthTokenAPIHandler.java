@@ -8,6 +8,7 @@ import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.model.token.TokenRefreshRequest;
 import co.arago.hiro.client.model.token.TokenRequest;
 import co.arago.hiro.client.model.token.TokenResponse;
+import co.arago.hiro.client.model.token.TokenRevokeRequest;
 import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -36,7 +37,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         private String clientId;
         private String clientSecret;
         private Long refreshOffset = 5000L;
-        private Long refreshPause = 0L;
         private boolean forceLogging = false;
         private String apiPath;
 
@@ -125,22 +125,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
             return self();
         }
 
-        public Long getRefreshPause() {
-            return refreshPause;
-        }
-
-        /**
-         * Timespan where calls to refresh the token will be ignored and only the current token will be returned. Avoids
-         * refresh floods that can happen with multiple threads using the same TokenAPIHandler. Default is 30000 (30s).
-         *
-         * @param refreshPause Buffer span in ms
-         * @return {@link #self()}
-         */
-        public T setRefreshPause(Long refreshPause) {
-            this.refreshPause = refreshPause;
-            return self();
-        }
-
         public boolean getForceLogging() {
             return forceLogging;
         }
@@ -196,11 +180,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         private static final long serialVersionUID = 8659946445124247439L;
 
         /**
-         * ms of time, where no refresh calls are sent to the backend to avoid request flooding
-         */
-        public long refreshPause = 0;
-
-        /**
          * Timestamp of when the token has been fetched
          */
         protected Instant lastUpdate;
@@ -217,15 +196,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
          */
         public boolean tokenExpired() {
             return Instant.now().isAfter(expiryInstant());
-        }
-
-        /**
-         * Check, whether the token has been renewed within the last {@link #refreshPause} ms.
-         *
-         * @return true if within the timespan, false otherwise.
-         */
-        public boolean tokenFresh() {
-            return Instant.now().isBefore(lastUpdate.plus(refreshPause, ChronoUnit.MILLIS));
         }
 
         /**
@@ -287,7 +257,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         this.apiPath = builder.getApiPath();
 
         this.tokenInfo.refreshOffset = builder.getRefreshOffset();
-        this.tokenInfo.refreshPause = builder.getRefreshPause();
 
         if (!builder.getForceLogging()) {
             configureLogging();
@@ -312,7 +281,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         this.apiPath = builder.getApiPath();
 
         this.tokenInfo.refreshOffset = builder.getRefreshOffset();
-        this.tokenInfo.refreshPause = builder.getRefreshPause();
 
         if (!builder.getForceLogging()) {
             configureLogging();
@@ -345,17 +313,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
         this.tokenInfo.refreshOffset = refreshOffset;
     }
 
-    public long getRefreshPause() {
-        return tokenInfo.refreshPause;
-    }
-
-    /**
-     * @param refreshPause ms of time, where no refresh calls are sent to the backend to avoid request flooding
-     */
-    public void setRefreshPause(long refreshPause) {
-        this.tokenInfo.refreshPause = refreshPause;
-    }
-
     /**
      * Construct my URI.
      * This method will query /api/version once to construct the URI unless {@link #apiPath} is set.
@@ -380,15 +337,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
      */
     public synchronized boolean tokenExpired() {
         return tokenInfo.tokenExpired();
-    }
-
-    /**
-     * Check, whether the token has been renewed within the last {@link TokenInfo#refreshPause} ms.
-     *
-     * @return true if within the timespan, false otherwise.
-     */
-    public synchronized boolean tokenFresh() {
-        return tokenInfo.tokenFresh();
     }
 
     /**
@@ -479,10 +427,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
                 return;
             }
 
-            if (tokenFresh()) {
-                return;
-            }
-
             TokenRefreshRequest tokenRequest = new TokenRefreshRequest(clientId, clientSecret, tokenInfo.refreshToken);
 
             TokenResponse tokenResponse = post(
@@ -509,7 +453,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractTokenAPIHandler {
             return;
         }
 
-        TokenRefreshRequest tokenRequest = new TokenRefreshRequest(clientId, clientSecret, tokenInfo.refreshToken);
+        TokenRevokeRequest tokenRequest = new TokenRevokeRequest(clientId, clientSecret, tokenInfo.refreshToken);
 
         TokenResponse tokenResponse = post(
                 TokenResponse.class,

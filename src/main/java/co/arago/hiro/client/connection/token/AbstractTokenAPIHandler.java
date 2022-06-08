@@ -67,7 +67,7 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
     public abstract String getToken() throws IOException, InterruptedException, HiroException;
 
     /**
-     * Decode the payload part of a token.
+     * Decode the payload part of the internal token.
      *
      * @return Decoded token as {@link DecodedToken}.
      * @throws InterruptedException When call gets interrupted.
@@ -75,8 +75,18 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      * @throws HiroException        On Hiro protocol / handling errors.
      */
     public DecodedToken decodeToken() throws HiroException, IOException, InterruptedException {
-        String token = getToken();
+        return decodeToken(getToken());
+    }
 
+    /**
+     * Decode the payload part of any token.
+     *
+     * @param token The token to decode.
+     * @return Decoded token as {@link DecodedToken}.
+     * @throws IOException   When call has IO errors.
+     * @throws HiroException On Hiro protocol / handling errors.
+     */
+    public static DecodedToken decodeToken(String token) throws HiroException, IOException {
         String[] data = token.split("\\.");
 
         if (data.length == 1)
@@ -116,7 +126,7 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      * Check for existence of a refresh token in the TokenAPIHandler.
      *
      * @return true if a refresh token retrieved, false if no such token exists or these tokens are not applicable for
-     *         this TokenAPIHandler.
+     * this TokenAPIHandler.
      */
     public abstract boolean hasRefreshToken();
 

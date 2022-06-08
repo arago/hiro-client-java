@@ -69,6 +69,32 @@ public class HiroJsonMap implements JsonMessage {
     }
 
     /**
+     * Returns a value from the {@link #fieldsMap}, which are fields that have NOT been assigned to fields of derived
+     * children directly.
+     *
+     * @param key The key in the {@link #fieldsMap}.
+     * @return The value found in {@link #fieldsMap} or null if not found.
+     */
+    @JsonIgnore
+    public Object getUnmappedField(String key) {
+        return fieldsMap.get(key);
+    }
+
+    /**
+     * Returns any field found in this class, being inside {@link #fieldsMap} or a field of a derived class.
+     * <p>
+     * (This is a costly operation to be called multiple times on the same object. It might be more efficient to use
+     * {@link #toMap()} and get the fields from the map returned.)
+     *
+     * @param key The name of the field.
+     * @return The value found.
+     */
+    @JsonIgnore
+    public Object getField(String key) {
+        return toMap().get(key);
+    }
+
+    /**
      * Returns the map of fields that have NOT been assigned to fields of derived children directly.
      *
      * @return The map of the remaining fields.

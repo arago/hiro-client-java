@@ -28,6 +28,8 @@ public class DecodedToken extends HiroJsonMap {
 
         public String organization;
 
+        public List<String> organizations;
+
         @JsonProperty("_APPLICATION")
         public String application;
 
