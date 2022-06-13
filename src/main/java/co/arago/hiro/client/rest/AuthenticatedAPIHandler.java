@@ -11,7 +11,7 @@ import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import co.arago.hiro.client.util.httpclient.URIPath;
-import co.arago.hiro.client.util.httpclient.UriQueryMap;
+import co.arago.hiro.client.util.httpclient.UriEncodedMap;
 import co.arago.util.json.JsonUtil;
 import co.arago.util.validation.RequiredFieldChecks;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -134,7 +134,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> extends RequiredFieldChecks {
 
         protected final URIPath path;
-        protected UriQueryMap query = new UriQueryMap();
+        protected UriEncodedMap query = new UriEncodedMap();
         protected HttpHeaderMap headers = new HttpHeaderMap();
         protected String fragment;
 
@@ -408,7 +408,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @throws InterruptedException Call got interrupted
      * @throws HiroException        When calling /api/version responds with an error
      */
-    public URI getEndpointUri(URIPath path, UriQueryMap query, String fragment)
+    public URI getEndpointUri(URIPath path, UriEncodedMap query, String fragment)
             throws IOException, InterruptedException, HiroException {
         if (apiUri == null)
             apiUri = (apiPath != null ? buildApiURI(apiPath) : tokenAPIHandler.getApiUriOf(apiName));

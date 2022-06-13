@@ -11,7 +11,7 @@ import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import co.arago.hiro.client.util.httpclient.URLPartEncoder;
-import co.arago.hiro.client.util.httpclient.UriQueryMap;
+import co.arago.hiro.client.util.httpclient.UriEncodedMap;
 import co.arago.util.json.JsonUtil;
 import co.arago.util.validation.RequiredFieldChecks;
 import org.apache.commons.lang3.RegExUtils;
@@ -301,7 +301,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * @param fragment URI Fragment. Can be null for no fragment, otherwise uri must not have a fragment already.
      * @return The constructed URI
      */
-    public static URI addQueryFragmentAndNormalize(URI uri, UriQueryMap query, String fragment) {
+    public static URI addQueryFragmentAndNormalize(URI uri, UriEncodedMap query, String fragment) {
 
         String sourceUri = uri.toASCIIString();
 

@@ -343,6 +343,9 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         builder.executor(Executors.newFixedThreadPool(maxConnectionPool));
 
         httpClient = builder.build();
+
+        log.debug("HttpClient created");
+
         return httpClient;
     }
 
@@ -354,26 +357,32 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
      */
     @Override
     public void close() {
-        if (externalConnection || httpClient == null || httpClient.executor().isEmpty())
-            return;
+        try {
+            if (externalConnection || httpClient == null || httpClient.executor().isEmpty())
+                return;
 
-        Executor executor = httpClient.executor().orElse(null);
+            Executor executor = httpClient.executor().orElse(null);
 
-        if (executor instanceof ExecutorService) {
-            ExecutorService executorService = (ExecutorService) httpClient.executor().get();
+            if (executor instanceof ExecutorService) {
+                ExecutorService executorService = (ExecutorService) httpClient.executor().get();
 
-            executorService.shutdown();
-            try {
-                if (!executorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                executorService.shutdown();
+                try {
+                    if (!executorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                        executorService.shutdownNow();
+                    }
+                } catch (InterruptedException e) {
                     executorService.shutdownNow();
                 }
-            } catch (InterruptedException e) {
-                executorService.shutdownNow();
             }
-        }
 
-        httpClient = null;
-        System.gc();
+            httpClient = null;
+            System.gc();
+
+            log.debug("HttpClient closed");
+        } catch (Throwable t) {
+            log.error("Error closing HttpClient.", t);
+        }
     }
 
     /**

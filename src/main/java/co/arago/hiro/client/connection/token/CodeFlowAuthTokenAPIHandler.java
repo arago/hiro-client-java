@@ -1,15 +1,24 @@
 package co.arago.hiro.client.connection.token;
 
 import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
+import co.arago.hiro.client.exceptions.AuthenticationTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
+import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
+import co.arago.hiro.client.model.token.AuthorizeRequest;
 import co.arago.hiro.client.model.token.CodeFlowTokenRequest;
 import co.arago.hiro.client.model.token.TokenResponse;
+import co.arago.hiro.client.util.PkceUtil;
 import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
+import co.arago.hiro.client.util.httpclient.UriEncodedMap;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandler {
@@ -21,36 +30,10 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
     // ###############################################################################################
 
     public static abstract class Conf<T extends Conf<T>> extends AbstractRemoteAuthTokenAPIHandler.Conf<T> {
-        private String code;
-        private String codeVerifier;
 
         private String redirectUri;
 
-        public String getCode() {
-            return code;
-        }
-
-        /**
-         * @param code Code value given back via initial redirect.
-         * @return {@link #self()}
-         */
-        public T setCode(String code) {
-            this.code = code;
-            return self();
-        }
-
-        public String getCodeVerifier() {
-            return codeVerifier;
-        }
-
-        /**
-         * @param codeVerifier PKCE Code verifier for the code challenge of the initial redirect call.
-         * @return {@link #self()}
-         */
-        public T setCodeVerifier(String codeVerifier) {
-            this.codeVerifier = codeVerifier;
-            return self();
-        }
+        private String scope;
 
         public String getRedirectUri() {
             return redirectUri;
@@ -65,18 +48,27 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
             return self();
         }
 
+        public String getScope() {
+            return scope;
+        }
+
+        /**
+         * @param scope Optional authorization scope (not used atm).
+         * @return {@link #self()}
+         */
+        public T setScope(String scope) {
+            this.scope = scope;
+            return self();
+        }
+
         /**
          * Shorthand to set all credentials at once.
          *
-         * @param code         Code value given back via initial redirect.
-         * @param codeVerifier PKCE Code verifier for the code challenge of the initial redirect call.
-         * @param redirectUri  Redirect uri from the initial redirect.
-         * @param clientId     HIRO client_id of app
+         * @param redirectUri Redirect uri from the initial redirect.
+         * @param clientId    HIRO client_id of app
          * @return {@link #self()}
          */
-        public T setCredentials(String code, String codeVerifier, String redirectUri, String clientId) {
-            setCode(code);
-            setCodeVerifier(codeVerifier);
+        public T setCredentials(String redirectUri, String clientId) {
             setRedirectUri(redirectUri);
             setClientId(clientId);
             return self();
@@ -101,35 +93,78 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
     // ## Main part ##
     // ###############################################################################################
 
-    protected final String code;
-    protected final String codeVerifier;
     protected final String redirectUri;
+
+    protected final String scope;
+
+    private final PkceUtil pkceUtil = new PkceUtil();
+
+    protected String code;
+
+    protected String state = PkceUtil.generateRandomBase64(16);
 
     protected CodeFlowAuthTokenAPIHandler(Conf<?> builder) {
         super(builder);
-        this.code = notBlank(builder.getCode(), "code");
-        this.codeVerifier = notBlank(builder.getCodeVerifier(), "codeVerifier");
         this.redirectUri = notBlank(builder.getRedirectUri(), "redirectUri");
+        this.scope = builder.getScope();
     }
 
     /**
      * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
      *
      * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     * @param builder           Only configuration specific to a PasswordAuthTokenAPIHandler, see {@link Conf}, will
+     * @param builder           Only configuration specific to a CodeFlowAuthTokenAPIHandler, see {@link Conf}, will
      *                          be copied from the builder. The AbstractVersionAPIHandler overwrites everything else.
      */
     public CodeFlowAuthTokenAPIHandler(
             AbstractVersionAPIHandler versionAPIHandler,
             Conf<?> builder) {
         super(versionAPIHandler, builder);
-        this.code = notBlank(builder.getCode(), "code");
-        this.codeVerifier = notBlank(builder.getCodeVerifier(), "codeVerifier");
         this.redirectUri = notBlank(builder.getRedirectUri(), "redirectUri");
+        this.scope = builder.getScope();
     }
 
     public static Conf<?> newBuilder() {
         return new Builder();
+    }
+
+    /**
+     * Generate a URI for a browser to use for the authorization call. This call will be answered with a
+     * redirection to a login page.
+     *
+     * @return The URI for a login page.
+     * @throws IOException          On a failed call to /api/version
+     * @throws InterruptedException Call got interrupted
+     * @throws HiroException        When calling /api/version responds with an error
+     */
+    public URI getAuthorizeUri() throws HiroException, IOException, InterruptedException {
+        try {
+            return addQueryFragmentAndNormalize(
+                    getUri("authorize"),
+                    new UriEncodedMap(new AuthorizeRequest(
+                            clientId,
+                            redirectUri,
+                            pkceUtil.getCodeChallenge(),
+                            state,
+                            scope).toMap()),
+                    null);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Handle authorization callback data.
+     *
+     * @param state The state returned by the callback. Must not have changed.
+     * @param code  The one-time-code returned (used to obtain a full authorization token).
+     * @throws AuthenticationTokenException When the state of the callback does not match the internal state.
+     */
+    public void handleAuthorizeCallback(String state, String code) throws AuthenticationTokenException {
+        if (!StringUtils.equals(state, this.state))
+            throw new AuthenticationTokenException("The parameter 'state' of the callback does not match.", 400, null);
+
+        this.code = code;
     }
 
     /**
@@ -144,6 +179,10 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
     @Override
     protected void requestToken(String organization, String organizationId)
             throws IOException, InterruptedException, HiroException {
+
+        if (StringUtils.isBlank(code))
+            throw new TokenUnauthorizedException("unauthorized", 401, null);
+
         if (organization != null)
             this.organization = organization;
         if (organizationId != null)
@@ -157,16 +196,34 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
             throw new HiroHttpException("Auth api version /api/auth/[version] has to be at least 6.6.", 500, null);
 
         CodeFlowTokenRequest tokenRequest = new CodeFlowTokenRequest(
-                code, codeVerifier, redirectUri, clientId, clientSecret, organization, organizationId);
+                code, pkceUtil.getCodeVerifier(), redirectUri, clientId, clientSecret, organization, organizationId);
 
         tokenResponse = post(
                 TokenResponse.class,
                 getUri("token"),
-                tokenRequest.toFormString(),
+                tokenRequest.toEncodedString(),
                 new HttpHeaderMap(Map.of("Content-Type", "application/x-www-form-urlencoded")),
                 httpRequestTimeout,
                 maxRetries);
 
         this.tokenInfo.parse(tokenResponse);
+        this.code = null;
+    }
+
+    /**
+     * Refresh an invalid token.
+     * <p>
+     * Uses the internal values of organization and organizationId if present.
+     *
+     * @throws InterruptedException When call gets interrupted.
+     * @throws IOException          When call has IO errors.
+     * @throws HiroException        On Hiro protocol / handling errors.
+     */
+    @Override
+    public synchronized void refreshToken() throws HiroException, IOException, InterruptedException {
+        if (!hasRefreshToken())
+            throw new AuthenticationTokenException("unauthorized", 401, null);
+
+        super.refreshToken();
     }
 }

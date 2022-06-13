@@ -191,12 +191,12 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
          * @return The Instant after which the token shall be refreshed. null if token cannot be refreshed.
          */
         public Instant expiryInstant() {
-            if (getExpiresAt() - refreshOffset < 0)
+            if (expiresAt() - refreshOffset < 0)
                 return Instant.MIN;
-            return Instant.ofEpochMilli(getExpiresAt()).minus(refreshOffset, ChronoUnit.MILLIS);
+            return Instant.ofEpochMilli(expiresAt()).minus(refreshOffset, ChronoUnit.MILLIS);
         }
 
-        public Long getExpiresAt() {
+        public Long expiresAt() {
             if (expiresAt == null && expiresIn == null)
                 return Long.MAX_VALUE;
 
@@ -384,6 +384,13 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
     }
 
     /**
+     * @return The refresh token or null if no token data or refresh token exists.
+     */
+    public String getRefreshToken() {
+        return tokenInfo.refreshToken;
+    }
+
+    /**
      * Obtain a new token from the auth API.
      *
      * @param organization:   Optional organization name. May be null.
@@ -449,8 +456,8 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
                 tokenResponse = post(
                         TokenResponse.class,
                         getUri("token"),
-                        tokenRequest.toFormString(),
-                        new HttpHeaderMap(Map.of("Content-Type", "x-www-form-urlencoded")),
+                        tokenRequest.toEncodedString(),
+                        new HttpHeaderMap(Map.of("Content-Type", "application/x-www-form-urlencoded")),
                         httpRequestTimeout,
                         maxRetries);
             } else {
@@ -472,7 +479,7 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
 
     /**
      * Revoke a token. This only works if a refreshToken is available.
-     * 
+     *
      * @throws InterruptedException When call gets interrupted.
      * @throws IOException          When call has IO errors.
      * @throws HiroException        On Hiro protocol / handling errors.
@@ -497,23 +504,31 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
 
         float authApiVersion = Float.parseFloat(getVersionMap().getVersionEntryOf("auth").version);
 
-        TokenRevokeRequest tokenRequest;
+        TokenResponse tokenResponse;
 
         if (authApiVersion >= 6.6f) {
-            tokenRequest = new TokenRevokeRequest(clientId, clientSecret, tokenInfo.refreshToken, tokenHint);
-        } else {
-            tokenRequest = new TokenRevokeRequest(clientId, clientSecret, tokenInfo.refreshToken);
-        }
+            TokenRevokeRequest tokenRequest = new TokenRevokeRequest(clientId, clientSecret, tokenInfo.refreshToken, tokenHint);
 
-        TokenResponse tokenResponse = post(
-                TokenResponse.class,
-                getUri("revoke"),
-                tokenRequest.toJsonStringNoNull(),
-                new HttpHeaderMap(Map.of(
-                        "Content-Type", "application/json",
-                        "Authorization", "Bearer " + getToken())),
-                httpRequestTimeout,
-                maxRetries);
+            tokenResponse = post(
+                    TokenResponse.class,
+                    getUri("revoke"),
+                    tokenRequest.toJsonStringNoNull(),
+                    new HttpHeaderMap(Map.of("Content-Type", "application/json")),
+                    httpRequestTimeout,
+                    maxRetries);
+        } else {
+            TokenRevokeRequest tokenRequest = new TokenRevokeRequest(clientId, clientSecret, tokenInfo.refreshToken);
+
+            tokenResponse = post(
+                    TokenResponse.class,
+                    getUri("revoke"),
+                    tokenRequest.toJsonStringNoNull(),
+                    new HttpHeaderMap(Map.of(
+                            "Content-Type", "application/json",
+                            "Authorization", "Bearer " + getToken())),
+                    httpRequestTimeout,
+                    maxRetries);
+        }
 
         this.tokenInfo.parse(tokenResponse);
     }

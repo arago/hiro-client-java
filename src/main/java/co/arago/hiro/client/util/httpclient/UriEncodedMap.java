@@ -7,12 +7,12 @@ import java.util.stream.Collectors;
 /**
  * A map for http query parameters.
  */
-public class UriQueryMap extends MultiValueMap {
+public class UriEncodedMap extends MultiValueMap {
 
     /**
      * Constructor for an empty map.
      */
-    public UriQueryMap() {
+    public UriEncodedMap() {
     }
 
     /**
@@ -20,7 +20,7 @@ public class UriQueryMap extends MultiValueMap {
      *
      * @param initialValues A map of initial values. The values need to be either String or Collection&lt;String&gt;.
      */
-    public UriQueryMap(Map<String, ?> initialValues) {
+    public UriEncodedMap(Map<String, ?> initialValues) {
         super(initialValues);
     }
 

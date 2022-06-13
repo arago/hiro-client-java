@@ -143,8 +143,8 @@ public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
             tokenResponse = post(
                     TokenResponse.class,
                     getUri("token"),
-                    tokenRequest.toFormString(),
-                    new HttpHeaderMap(Map.of("Content-Type", "x-www-form-urlencoded")),
+                    tokenRequest.toEncodedString(),
+                    new HttpHeaderMap(Map.of("Content-Type", "application/x-www-form-urlencoded")),
                     httpRequestTimeout,
                     maxRetries);
         } else {

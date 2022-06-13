@@ -1,6 +1,6 @@
 package co.arago.hiro.client.model.token;
 
-import co.arago.hiro.client.model.EncodedFormMessage;
+import co.arago.hiro.client.model.EncodedUriMessage;
 import co.arago.hiro.client.model.JsonMessage;
 import co.arago.util.json.JsonUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,7 +22,7 @@ import java.util.Map;
  * }
  * </pre>
  */
-public abstract class AbstractTokenRequest implements JsonMessage, EncodedFormMessage {
+public abstract class AbstractTokenRequest implements JsonMessage, EncodedUriMessage {
 
     // Match the JSON structure for the request.
 
