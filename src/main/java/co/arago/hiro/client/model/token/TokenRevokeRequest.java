@@ -4,14 +4,26 @@ import co.arago.hiro.client.model.JsonMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
- * JSON for a token revoke request.
+ * JSON for a token revoke request.<br>
  *
- *
+ * Deprecated:
+ * 
  * <pre>
  * {
  *     "client_id": "...",
  *     "client_secret": "...",
  *     "refresh_token": "..."
+ * }
+ * </pre>
+ *
+ * Current:
+ * 
+ * <pre>
+ * {
+ *     "client_id": "...",
+ *     "client_secret": "...",
+ *     "token": "...",
+ *     "token_hint": "..."
  * }
  * </pre>
  */
@@ -30,13 +42,26 @@ public class TokenRevokeRequest implements JsonMessage {
     @JsonProperty("refresh_token")
     public String refreshToken;
 
+    @JsonProperty("token")
+    public String token;
+
+    @JsonProperty("token_hint")
+    public String tokenHint;
+
     public TokenRevokeRequest() {
     }
 
+    @Deprecated
     public TokenRevokeRequest(String clientId, String clientSecret, String refreshToken) {
         this.clientId = clientId;
         this.clientSecret = clientSecret;
         this.refreshToken = refreshToken;
     }
 
+    public TokenRevokeRequest(String clientId, String clientSecret, String token, String tokenHint) {
+        this.clientId = clientId;
+        this.clientSecret = clientSecret;
+        this.token = token;
+        this.tokenHint = tokenHint;
+    }
 }

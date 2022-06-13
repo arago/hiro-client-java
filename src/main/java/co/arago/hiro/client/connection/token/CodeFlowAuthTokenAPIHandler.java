@@ -2,7 +2,8 @@ package co.arago.hiro.client.connection.token;
 
 import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
-import co.arago.hiro.client.model.token.PasswordTokenRequest;
+import co.arago.hiro.client.exceptions.HiroHttpException;
+import co.arago.hiro.client.model.token.CodeFlowTokenRequest;
 import co.arago.hiro.client.model.token.TokenResponse;
 import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import org.slf4j.Logger;
@@ -11,62 +12,77 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Map;
 
-public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandler {
+public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandler {
 
-    final static Logger log = LoggerFactory.getLogger(PasswordAuthTokenAPIHandler.class);
+    final static Logger log = LoggerFactory.getLogger(CodeFlowAuthTokenAPIHandler.class);
 
     // ###############################################################################################
     // ## Conf and Builder ##
     // ###############################################################################################
 
     public static abstract class Conf<T extends Conf<T>> extends AbstractRemoteAuthTokenAPIHandler.Conf<T> {
-        private String username;
-        private String password;
+        private String code;
+        private String codeVerifier;
 
-        public String getUsername() {
-            return username;
+        private String redirectUri;
+
+        public String getCode() {
+            return code;
         }
 
         /**
-         * @param username HIRO username for user account
+         * @param code Code value given back via initial redirect.
          * @return {@link #self()}
          */
-        public T setUsername(String username) {
-            this.username = username;
+        public T setCode(String code) {
+            this.code = code;
             return self();
         }
 
-        public String getPassword() {
-            return password;
+        public String getCodeVerifier() {
+            return codeVerifier;
         }
 
         /**
-         * @param password HIRO password for user account
+         * @param codeVerifier PKCE Code verifier for the code challenge of the initial redirect call.
          * @return {@link #self()}
          */
-        public T setPassword(String password) {
-            this.password = password;
+        public T setCodeVerifier(String codeVerifier) {
+            this.codeVerifier = codeVerifier;
+            return self();
+        }
+
+        public String getRedirectUri() {
+            return redirectUri;
+        }
+
+        /**
+         * @param redirectUri Redirect uri from the initial redirect.
+         * @return {@link #self()}
+         */
+        public T setRedirectUri(String redirectUri) {
+            this.redirectUri = redirectUri;
             return self();
         }
 
         /**
          * Shorthand to set all credentials at once.
          *
-         * @param username     HIRO username for user account
-         * @param password     HIRO password for user account
+         * @param code         Code value given back via initial redirect.
+         * @param codeVerifier PKCE Code verifier for the code challenge of the initial redirect call.
+         * @param redirectUri  Redirect uri from the initial redirect.
          * @param clientId     HIRO client_id of app
-         * @param clientSecret HIRO client_secret of app
          * @return {@link #self()}
          */
-        public T setCredentials(String username, String password, String clientId, String clientSecret) {
-            setUsername(username);
-            setPassword(password);
+        public T setCredentials(String code, String codeVerifier, String redirectUri, String clientId) {
+            setCode(code);
+            setCodeVerifier(codeVerifier);
+            setRedirectUri(redirectUri);
             setClientId(clientId);
-            setClientSecret(clientSecret);
             return self();
         }
 
-        public abstract PasswordAuthTokenAPIHandler build();
+        public abstract CodeFlowAuthTokenAPIHandler build();
     }
 
     public static final class Builder extends Conf<Builder> {
@@ -76,8 +92,8 @@ public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
             return this;
         }
 
-        public PasswordAuthTokenAPIHandler build() {
-            return new PasswordAuthTokenAPIHandler(this);
+        public CodeFlowAuthTokenAPIHandler build() {
+            return new CodeFlowAuthTokenAPIHandler(this);
         }
     }
 
@@ -85,14 +101,15 @@ public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
     // ## Main part ##
     // ###############################################################################################
 
-    protected final String username;
-    protected final String password;
+    protected final String code;
+    protected final String codeVerifier;
+    protected final String redirectUri;
 
-    protected PasswordAuthTokenAPIHandler(Conf<?> builder) {
+    protected CodeFlowAuthTokenAPIHandler(Conf<?> builder) {
         super(builder);
-        notBlank(clientSecret, "clientSecret");
-        this.username = notBlank(builder.getUsername(), "username");
-        this.password = notBlank(builder.getPassword(), "password");
+        this.code = notBlank(builder.getCode(), "code");
+        this.codeVerifier = notBlank(builder.getCodeVerifier(), "codeVerifier");
+        this.redirectUri = notBlank(builder.getRedirectUri(), "redirectUri");
     }
 
     /**
@@ -102,13 +119,13 @@ public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
      * @param builder           Only configuration specific to a PasswordAuthTokenAPIHandler, see {@link Conf}, will
      *                          be copied from the builder. The AbstractVersionAPIHandler overwrites everything else.
      */
-    public PasswordAuthTokenAPIHandler(
+    public CodeFlowAuthTokenAPIHandler(
             AbstractVersionAPIHandler versionAPIHandler,
             Conf<?> builder) {
         super(versionAPIHandler, builder);
-        notBlank(clientSecret, "clientSecret");
-        this.username = notBlank(builder.getUsername(), "username");
-        this.password = notBlank(builder.getPassword(), "password");
+        this.code = notBlank(builder.getCode(), "code");
+        this.codeVerifier = notBlank(builder.getCodeVerifier(), "codeVerifier");
+        this.redirectUri = notBlank(builder.getRedirectUri(), "redirectUri");
     }
 
     public static Conf<?> newBuilder() {
@@ -136,26 +153,19 @@ public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
 
         TokenResponse tokenResponse;
 
-        PasswordTokenRequest tokenRequest = new PasswordTokenRequest(
-                username, password, clientId, clientSecret, organization, organizationId);
+        if (authApiVersion < 6.6f)
+            throw new HiroHttpException("Auth api version /api/auth/[version] has to be at least 6.6.", 500, null);
 
-        if (authApiVersion >= 6.6f) {
-            tokenResponse = post(
-                    TokenResponse.class,
-                    getUri("token"),
-                    tokenRequest.toFormString(),
-                    new HttpHeaderMap(Map.of("Content-Type", "x-www-form-urlencoded")),
-                    httpRequestTimeout,
-                    maxRetries);
-        } else {
-            tokenResponse = post(
-                    TokenResponse.class,
-                    getUri("app"),
-                    tokenRequest.toJsonStringNoNull(),
-                    new HttpHeaderMap(Map.of("Content-Type", "application/json")),
-                    httpRequestTimeout,
-                    maxRetries);
-        }
+        CodeFlowTokenRequest tokenRequest = new CodeFlowTokenRequest(
+                code, codeVerifier, redirectUri, clientId, clientSecret, organization, organizationId);
+
+        tokenResponse = post(
+                TokenResponse.class,
+                getUri("token"),
+                tokenRequest.toFormString(),
+                new HttpHeaderMap(Map.of("Content-Type", "application/x-www-form-urlencoded")),
+                httpRequestTimeout,
+                maxRetries);
 
         this.tokenInfo.parse(tokenResponse);
     }
