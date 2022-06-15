@@ -41,6 +41,7 @@ public class GenericAPITest {
                     .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                     .setAcceptAllCerts(config.accept_all_certs)
                     .setForceLogging(config.force_logging)
+                    .setShutdownTimeout(0)
                     .build();
 
             apiHandler = GraphAPI.newBuilder(handler).build();

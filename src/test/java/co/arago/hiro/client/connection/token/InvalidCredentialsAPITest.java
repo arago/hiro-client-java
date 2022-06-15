@@ -33,7 +33,8 @@ public class InvalidCredentialsAPITest {
                     .setApiUrl(config.api_url)
                     .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                     .setAcceptAllCerts(config.accept_all_certs)
-                    .setForceLogging(config.force_logging);
+                    .setForceLogging(config.force_logging)
+                    .setShutdownTimeout(0);
         } catch (FileNotFoundException e) {
             log.warn("Skipping tests: {}.", e.getMessage());
         }

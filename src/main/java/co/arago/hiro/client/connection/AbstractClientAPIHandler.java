@@ -29,6 +29,10 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
 
     final static Logger log = LoggerFactory.getLogger(AbstractClientAPIHandler.class);
 
+    protected final static Long DEFAULT_SHUTDOWN_TIMEOUT = 3000L;
+    protected final static int DEFAULT_MAX_BINARY_LOG_LENGTH = 1024;
+    protected final static int DEFAULT_MAX_CONNECTION_POOL = 8;
+
     // ###############################################################################################
     // ## Conf and Builder ##
     // ###############################################################################################
@@ -38,12 +42,14 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         protected boolean followRedirects = true;
         protected Boolean acceptAllCerts;
         protected Long connectTimeout;
+
+        protected long shutdownTimeout = DEFAULT_SHUTDOWN_TIMEOUT;
         protected SSLParameters sslParameters;
         protected HttpClient httpClient;
         protected CookieManager cookieManager;
         protected SSLContext sslContext;
-        protected int maxConnectionPool = 8;
-        protected int maxBinaryLogLength = 1024;
+        protected int maxConnectionPool = DEFAULT_MAX_CONNECTION_POOL;
+        protected int maxBinaryLogLength = DEFAULT_MAX_BINARY_LOG_LENGTH;
 
         ProxySpec getProxy() {
             return proxy;
@@ -81,6 +87,21 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          */
         public T setConnectTimeout(Long connectTimeout) {
             this.connectTimeout = connectTimeout;
+            return self();
+        }
+
+        public long getShutdownTimeout() {
+            return shutdownTimeout;
+        }
+
+        /**
+         * @param shutdownTimeout Time to wait in milliseconds for a complete shutdown of the Java 11 HttpClientImpl.
+         *                        If this is set to a value too low, you might need to wait elsewhere for the HttpClient
+         *                        to shut down properly. Default is 3000ms.
+         * @return {@link #self()}
+         */
+        public T setShutdownTimeout(long shutdownTimeout) {
+            this.shutdownTimeout = shutdownTimeout;
             return self();
         }
 
@@ -242,13 +263,15 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     protected final boolean followRedirects;
     protected final Long connectTimeout;
     protected final SSLParameters sslParameters;
-    protected HttpClient httpClient;
+    private HttpClient httpClient;
     protected SSLContext sslContext;
     protected final int maxConnectionPool;
     protected final CookieManager cookieManager;
 
     protected final HttpLogger httpLogger;
     protected boolean externalConnection;
+
+    protected final Long shutdownTimeout;
 
     /**
      * Protected Constructor. Attributes shall be filled via builders.
@@ -260,6 +283,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         this.proxy = builder.getProxy();
         this.followRedirects = builder.isFollowRedirects();
         this.connectTimeout = builder.getConnectTimeout();
+        this.shutdownTimeout = builder.getShutdownTimeout();
         Boolean acceptAllCerts = builder.getAcceptAllCerts();
         this.sslParameters = builder.getSslParameters();
         this.httpClient = builder.getHttpClient();
@@ -295,6 +319,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         this.proxy = other.proxy;
         this.followRedirects = other.followRedirects;
         this.connectTimeout = other.connectTimeout;
+        this.shutdownTimeout = other.shutdownTimeout;
         this.sslContext = other.sslContext;
         this.sslParameters = other.sslParameters;
         this.httpClient = other.httpClient;
@@ -350,10 +375,15 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     }
 
     /**
+     * <p>
      * Shut the {@link #httpClient} down by shutting down its ExecutorService. This call will be ignored if
      * {@link #externalConnection} is set to true (this happens, when {@link #httpClient} has been provided externally
-     * or this ClientAPIHandler has been created via its connection copy constructor
-     * {@link AbstractClientAPIHandler#AbstractClientAPIHandler(AbstractClientAPIHandler)}.
+     * or this ClientAPIHandler has been created via its connection copy constructor.
+     * </p>
+     * <p>
+     * Be aware, that there is a shutdown timeout so the Java 11 HttpClient can clean itself up properly. See
+     * {@link Conf#setShutdownTimeout(long)}.
+     * </p>
      */
     @Override
     public void close() {
@@ -364,7 +394,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
             Executor executor = httpClient.executor().orElse(null);
 
             if (executor instanceof ExecutorService) {
-                ExecutorService executorService = (ExecutorService) httpClient.executor().get();
+                ExecutorService executorService = (ExecutorService) executor;
 
                 executorService.shutdown();
                 try {
@@ -378,6 +408,8 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
 
             httpClient = null;
             System.gc();
+
+            Thread.sleep(shutdownTimeout);
 
             log.debug("HttpClient closed");
         } catch (Throwable t) {
