@@ -273,6 +273,8 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
 
     protected final Long shutdownTimeout;
 
+    private final AbstractClientAPIHandler sharedConnectionHandler;
+
     /**
      * Protected Constructor. Attributes shall be filled via builders.
      *
@@ -292,6 +294,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         this.httpLogger = new HttpLogger(builder.getMaxBinaryLogLength());
 
         this.externalConnection = (this.httpClient != null);
+        this.sharedConnectionHandler = null;
 
         if (acceptAllCerts == null) {
             this.sslContext = builder.getSslContext();
@@ -322,13 +325,13 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         this.shutdownTimeout = other.shutdownTimeout;
         this.sslContext = other.sslContext;
         this.sslParameters = other.sslParameters;
-        this.httpClient = other.httpClient;
         this.maxConnectionPool = other.maxConnectionPool;
         this.cookieManager = other.cookieManager;
         this.httpLogger = other.httpLogger;
         // Always set externalClient to true, so a call to close() does not close the external connection.
         // External connections have to be closed on their own.
         this.externalConnection = true;
+        this.sharedConnectionHandler = other;
     }
 
     // ###############################################################################################
@@ -336,7 +339,8 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     // ###############################################################################################
 
     /**
-     * Return {@link #httpClient}. Build a new client if necessary.
+     * Return {@link #httpClient} or the httpClient of {@link #sharedConnectionHandler} if available.
+     * Build a new client if necessary.
      *
      * @return The cached HttpClient
      */
@@ -344,6 +348,9 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     public HttpClient getOrBuildClient() {
         if (httpClient != null)
             return httpClient;
+
+        if (sharedConnectionHandler != null)
+            return sharedConnectionHandler.getOrBuildClient();
 
         HttpClient.Builder builder = HttpClient.newBuilder();
 
