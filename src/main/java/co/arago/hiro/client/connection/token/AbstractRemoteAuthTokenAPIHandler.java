@@ -471,8 +471,8 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
             }
 
             this.tokenInfo.parse(tokenResponse);
-        } catch (HiroHttpException e) {
-            log.warn("Error using refresh token: {}", e.getMessage());
+        } catch (AuthenticationTokenException e) {
+            log.debug("Request new access_token");
             requestToken(organization, organizationId);
         }
     }
@@ -493,42 +493,35 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
      * Revoke a token.
      *
      * @param tokenHint The type of token to revoke. Valid are "refresh_token" and "access_token".
-     * @throws InterruptedException When call gets interrupted.
-     * @throws IOException          When call has IO errors.
-     * @throws HiroException        On Hiro protocol / handling errors.
+     * @throws InterruptedException       When call gets interrupted.
+     * @throws IOException                When call has IO errors.
+     * @throws HiroException              On Hiro protocol / handling errors.
+     * @throws TokenUnauthorizedException When neither access_token nor refresh_token exist.
      */
     public synchronized void revokeToken(String tokenHint) throws IOException, InterruptedException, HiroException {
         if (!hasToken() || !hasRefreshToken()) {
-            return;
+            throw new TokenUnauthorizedException("unauthorized", 401, null);
         }
 
         float authApiVersion = Float.parseFloat(getVersionMap().getVersionEntryOf("auth").version);
 
-        TokenResponse tokenResponse;
+        TokenRevokeRequest tokenRequest;
 
         if (authApiVersion >= 6.6f) {
-            TokenRevokeRequest tokenRequest = new TokenRevokeRequest(clientId, clientSecret, tokenInfo.refreshToken, tokenHint);
-
-            tokenResponse = post(
-                    TokenResponse.class,
-                    getUri("revoke"),
-                    tokenRequest.toJsonStringNoNull(),
-                    new HttpHeaderMap(Map.of("Content-Type", "application/json")),
-                    httpRequestTimeout,
-                    maxRetries);
+            tokenRequest = new TokenRevokeRequest(clientId, clientSecret, tokenInfo.refreshToken, tokenHint);
         } else {
-            TokenRevokeRequest tokenRequest = new TokenRevokeRequest(clientId, clientSecret, tokenInfo.refreshToken);
-
-            tokenResponse = post(
-                    TokenResponse.class,
-                    getUri("revoke"),
-                    tokenRequest.toJsonStringNoNull(),
-                    new HttpHeaderMap(Map.of(
-                            "Content-Type", "application/json",
-                            "Authorization", "Bearer " + getToken())),
-                    httpRequestTimeout,
-                    maxRetries);
+            tokenRequest = new TokenRevokeRequest(clientId, clientSecret, tokenInfo.refreshToken);
         }
+
+        TokenResponse tokenResponse = post(
+                TokenResponse.class,
+                getUri("revoke"),
+                tokenRequest.toJsonStringNoNull(),
+                new HttpHeaderMap(Map.of(
+                        "Content-Type", "application/json",
+                        "Authorization", "Bearer " + getToken())),
+                httpRequestTimeout,
+                maxRetries);
 
         this.tokenInfo.parse(tokenResponse);
     }
