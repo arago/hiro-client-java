@@ -1,7 +1,5 @@
 package co.arago.hiro.client.util.httpclient;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -97,31 +95,27 @@ public class MultiValueMap {
     }
 
     /**
-     * Add an entry in the map to the list named by key unless the value is null or blank.
+     * Add an entry in the map to the list named by key unless the value is null.
      *
      * @param key   The key for the list in the map.
      * @param value The value to be appended.
      * @throws ClassCastException When the value is not null, not of type String nor Collection&lt;String&gt;.
      */
     private void appendAtKey(String key, Object value) {
-        List<String> valueList = new ArrayList<>();
+        List<String> valueList = map.computeIfAbsent(key, k -> new ArrayList<>());
 
         if (value instanceof String) {
-            if (StringUtils.isNotBlank((String) value))
-                valueList.add((String) value);
+            valueList.add((String) value);
         } else if (value instanceof Collection) {
             ((Collection<?>) value).forEach(collectionValue -> {
                 if (!(collectionValue instanceof String))
                     throw new ClassCastException("Values in Collection need to be of String type.");
-                if (StringUtils.isNotBlank((String) collectionValue))
-                    valueList.add((String) collectionValue);
+                valueList.add((String) collectionValue);
             });
         } else if (value != null) {
             throw new ClassCastException("Value needs to be of String or Collection<String> type.");
         }
 
-        if (!valueList.isEmpty())
-            map.put(key, valueList);
     }
 
     @Override
