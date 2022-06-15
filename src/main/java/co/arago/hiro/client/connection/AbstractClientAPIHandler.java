@@ -29,7 +29,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
 
     final static Logger log = LoggerFactory.getLogger(AbstractClientAPIHandler.class);
 
-    protected final static Long DEFAULT_SHUTDOWN_TIMEOUT = 3000L;
+    protected final static long DEFAULT_SHUTDOWN_TIMEOUT = 3000;
     protected final static int DEFAULT_MAX_BINARY_LOG_LENGTH = 1024;
     protected final static int DEFAULT_MAX_CONNECTION_POOL = 8;
 
