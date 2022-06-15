@@ -183,7 +183,8 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
             throws IOException, InterruptedException, HiroException {
 
         if (StringUtils.isBlank(code))
-            throw new TokenUnauthorizedException("unauthorized", 401, null);
+            throw new TokenUnauthorizedException("parameter \"code\" has either been used before or never been set.", 401,
+                    null);
 
         if (organization != null)
             this.organization = organization;
@@ -225,7 +226,7 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
     @Override
     public synchronized void refreshToken() throws HiroException, IOException, InterruptedException {
         if (!hasRefreshToken())
-            throw new AuthenticationTokenException("unauthorized", 401, null);
+            throw new AuthenticationTokenException("no refresh token available", 401, null);
 
         super.refreshToken();
     }

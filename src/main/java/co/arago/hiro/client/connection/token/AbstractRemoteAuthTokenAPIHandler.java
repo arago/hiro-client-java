@@ -500,7 +500,7 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
      */
     public synchronized void revokeToken(String tokenHint) throws IOException, InterruptedException, HiroException {
         if (!hasToken() || !hasRefreshToken()) {
-            throw new TokenUnauthorizedException("unauthorized", 401, null);
+            throw new TokenUnauthorizedException("no token provided", 401, null);
         }
 
         float authApiVersion = Float.parseFloat(getVersionMap().getVersionEntryOf("auth").version);
