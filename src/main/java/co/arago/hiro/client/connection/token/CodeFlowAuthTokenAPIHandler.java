@@ -171,9 +171,12 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
      *
      * @param organization   : Optional organization name. May be null.
      * @param organizationId : Optional organization id. May be null.
-     * @throws InterruptedException When call gets interrupted.
-     * @throws IOException          When call has IO errors.
-     * @throws HiroException        On Hiro protocol / handling errors.
+     * @throws InterruptedException       When call gets interrupted.
+     * @throws IOException                When call has IO errors.
+     * @throws HiroException              On Hiro protocol / handling errors.
+     * @throws TokenUnauthorizedException When {@link #code} is blank, i.e. the code has never been submitted via
+     *                                    {@link #handleAuthorizeCallback(String state, String code)} or has already
+     *                                    been used.
      */
     @Override
     protected void requestToken(String organization, String organizationId)
@@ -214,9 +217,10 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
      * <p>
      * Uses the internal values of organization and organizationId if present.
      *
-     * @throws InterruptedException When call gets interrupted.
-     * @throws IOException          When call has IO errors.
-     * @throws HiroException        On Hiro protocol / handling errors.
+     * @throws InterruptedException       When call gets interrupted.
+     * @throws IOException                When call has IO errors.
+     * @throws HiroException              On Hiro protocol / handling errors.
+     * @throws TokenUnauthorizedException When no refresh_token exists.
      */
     @Override
     public synchronized void refreshToken() throws HiroException, IOException, InterruptedException {
