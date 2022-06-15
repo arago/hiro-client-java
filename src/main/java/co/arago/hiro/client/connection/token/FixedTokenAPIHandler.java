@@ -36,14 +36,26 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
 
     public static final class Builder extends Conf<Builder> {
 
+        private final AbstractVersionAPIHandler versionAPIHandler;
+
+        public Builder() {
+            versionAPIHandler = null;
+        }
+
+        public Builder(AbstractVersionAPIHandler versionAPIHandler) {
+            this.versionAPIHandler = versionAPIHandler;
+        }
+
         @Override
         protected Builder self() {
             return this;
         }
 
         public FixedTokenAPIHandler build() {
-            return new FixedTokenAPIHandler(this);
+            return versionAPIHandler != null ? new FixedTokenAPIHandler(versionAPIHandler, this)
+                    : new FixedTokenAPIHandler(this);
         }
+
     }
 
     // ###############################################################################################
@@ -63,18 +75,28 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
     }
 
     /**
-     * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
+     * Constructor
      *
      * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     * @param token             The token to use with this connection.
+     * @param builder           The builder to use for all specific data for this class.
      */
-    public FixedTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler, String token) {
+    protected FixedTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler, Conf<Builder> builder) {
         super(versionAPIHandler);
-        this.token = notNull(token, "token");
+        this.token = notNull(builder.getToken(), "token");
     }
 
     public static Conf<?> newBuilder() {
         return new Builder();
+    }
+
+    /**
+     * Special Copy Constructor Builder. Uses the connection of another existing AbstractVersionAPIHandler.
+     *
+     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
+     * @return A new builder
+     */
+    public static Conf<?> newBuilder(AbstractVersionAPIHandler versionAPIHandler) {
+        return new Builder(versionAPIHandler);
     }
 
     /**

@@ -347,53 +347,13 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param builder The builder to use.
      */
     protected AuthenticatedAPIHandler(Conf<?> builder) {
-        super(makeHandlerConf(builder, builder.getTokenApiHandler()));
+        super(builder.getTokenApiHandler());
         this.apiName = builder.getApiName();
         this.apiPath = builder.getApiPath();
         this.tokenAPIHandler = notNull(builder.getTokenApiHandler(), "tokenApiHandler");
 
         if (StringUtils.isBlank(this.apiName) && StringUtils.isBlank(this.apiPath))
             anyError("Either 'apiName' or 'apiPath' have to be set.");
-    }
-
-    /**
-     * Construct an AbstractAPIHandler.GetterConf from the values of this Conf and the supplied tokenAPIHandler.
-     * This ensures, that some values ({@link #apiUrl} and {@link #userAgent}) are always set via the tokenAPIHandler
-     * and some others use default values from there ({@link #httpRequestTimeout} and {@link #maxRetries}) unless set
-     * in the builder for this Handler.
-     *
-     * @param builder         The builder of this handler.
-     * @param tokenAPIHandler The tokenApiHandler for this Handler.
-     * @return An AbstractAPIHandler.GetterConf for the parent class.
-     */
-    protected static AbstractAPIHandler.GetterConf makeHandlerConf(Conf<?> builder, AbstractTokenAPIHandler tokenAPIHandler) {
-        return new AbstractAPIHandler.GetterConf() {
-            @Override
-            public URL getApiUrl() {
-                return tokenAPIHandler.getApiUrl();
-            }
-
-            @Override
-            public URI getWebSocketUri() {
-                return tokenAPIHandler.getWebSocketUri();
-            }
-
-            @Override
-            public Long getHttpRequestTimeout() {
-                return builder.getHttpRequestTimeout() != null ? builder.getHttpRequestTimeout()
-                        : tokenAPIHandler.getHttpRequestTimeout();
-            }
-
-            @Override
-            public int getMaxRetries() {
-                return builder.getMaxRetries() > 0 ? builder.getMaxRetries() : tokenAPIHandler.getMaxRetries();
-            }
-
-            @Override
-            public String getUserAgent() {
-                return tokenAPIHandler.getUserAgent();
-            }
-        };
     }
 
     /**

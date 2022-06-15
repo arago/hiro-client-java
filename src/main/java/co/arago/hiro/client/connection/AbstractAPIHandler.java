@@ -44,36 +44,22 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
     // ## Conf and Builder ##
     // ###############################################################################################
 
-    public interface GetterConf {
-        URL getApiUrl();
-
-        URI getWebSocketUri();
-
-        Long getHttpRequestTimeout();
-
-        int getMaxRetries();
-
-        String getUserAgent();
-    }
-
     /**
      * The basic configuration for all APIHAndler
      *
      * @param <T> The type of the Builder
      */
-    public static abstract class Conf<T extends Conf<T>> implements GetterConf {
+    public static abstract class Conf<T extends Conf<T>> {
         private URL apiUrl;
         private URI webSocketUri;
         private String userAgent;
         private Long httpRequestTimeout;
         private int maxRetries;
 
-        @Override
         public URL getApiUrl() {
             return apiUrl;
         }
 
-        @Override
         public URI getWebSocketUri() {
             return webSocketUri;
         }
@@ -117,7 +103,6 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             return self();
         }
 
-        @Override
         public String getUserAgent() {
             return userAgent;
         }
@@ -133,7 +118,6 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             return self();
         }
 
-        @Override
         public Long getHttpRequestTimeout() {
             return httpRequestTimeout;
         }
@@ -147,7 +131,6 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             return self();
         }
 
-        @Override
         public int getMaxRetries() {
             return maxRetries;
         }
@@ -190,7 +173,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      *
      * @param builder The builder to use.
      */
-    protected AbstractAPIHandler(GetterConf builder) {
+    protected AbstractAPIHandler(Conf<?> builder) {
         this.apiUrl = notNull(builder.getApiUrl(), "apiUrl");
         this.webSocketUri = builder.getWebSocketUri();
         this.maxRetries = builder.getMaxRetries();

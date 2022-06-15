@@ -34,13 +34,24 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
 
     public static final class Builder extends Conf<Builder> {
 
+        private final AbstractVersionAPIHandler versionAPIHandler;
+
+        public Builder() {
+            versionAPIHandler = null;
+        }
+
+        public Builder(AbstractVersionAPIHandler versionAPIHandler) {
+            this.versionAPIHandler = versionAPIHandler;
+        }
+
         @Override
         protected Builder self() {
             return this;
         }
 
         public EnvironmentTokenAPIHandler build() {
-            return new EnvironmentTokenAPIHandler(this);
+            return versionAPIHandler != null ? new EnvironmentTokenAPIHandler(versionAPIHandler, this)
+                    : new EnvironmentTokenAPIHandler(this);
         }
 
     }
@@ -67,15 +78,25 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
      * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
      *
      * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     * @param tokenEnv          The name of the environment variable.
+     * @param builder           The builder with the configuration data for this specific class.
      */
-    public EnvironmentTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler, String tokenEnv) {
+    protected EnvironmentTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler, Conf<?> builder) {
         super(versionAPIHandler);
-        this.tokenEnv = StringUtils.isBlank(tokenEnv) ? DEFAULT_ENV : tokenEnv;
+        this.tokenEnv = StringUtils.isBlank(builder.getTokenEnv()) ? DEFAULT_ENV : builder.getTokenEnv();
     }
 
     public static Conf<?> newBuilder() {
         return new Builder();
+    }
+
+    /**
+     * Special Copy Constructor Builder. Uses the connection of another existing AbstractVersionAPIHandler.
+     *
+     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
+     * @return A new builder
+     */
+    public static Conf<?> newBuilder(AbstractVersionAPIHandler versionAPIHandler) {
+        return new Builder(versionAPIHandler);
     }
 
     /**

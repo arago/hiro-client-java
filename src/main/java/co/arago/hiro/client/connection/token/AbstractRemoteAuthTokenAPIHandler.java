@@ -260,10 +260,10 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
      * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
      *
      * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     * @param builder           Only configuration specific to a PasswordAuthTokenAPIHandler, see {@link Conf}, will
+     * @param builder           Only configuration specific to this TokenAPIHandler, see {@link Conf}, will
      *                          be copied from the builder. The AbstractVersionAPIHandler overwrites everything else.
      */
-    public AbstractRemoteAuthTokenAPIHandler(
+    protected AbstractRemoteAuthTokenAPIHandler(
             AbstractVersionAPIHandler versionAPIHandler,
             Conf<?> builder) {
         super(versionAPIHandler);
