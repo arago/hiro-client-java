@@ -40,7 +40,7 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         public EnvironmentTokenAPIHandler build() {
-            return sharedConnectionHandler != null ? new EnvironmentTokenAPIHandler(sharedConnectionHandler, this)
+            return getSharedConnectionHandler() != null ? new EnvironmentTokenAPIHandler(getSharedConnectionHandler(), this)
                     : new EnvironmentTokenAPIHandler(this);
         }
 

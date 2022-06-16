@@ -26,7 +26,8 @@ public class GraphConnectionHandler extends AbstractVersionAPIHandler {
         }
 
         public GraphConnectionHandler build() {
-            return new GraphConnectionHandler(this);
+            return (getSharedConnectionHandler() != null) ? new GraphConnectionHandler(getSharedConnectionHandler())
+                    : new GraphConnectionHandler(this);
         }
 
     }

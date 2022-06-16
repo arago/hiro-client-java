@@ -77,7 +77,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
         }
 
         public PasswordAuthTokenAPIHandler build() {
-            return sharedConnectionHandler != null ? new PasswordAuthTokenAPIHandler(sharedConnectionHandler, this)
+            return getSharedConnectionHandler() != null ? new PasswordAuthTokenAPIHandler(getSharedConnectionHandler(), this)
                     : new PasswordAuthTokenAPIHandler(this);
         }
     }

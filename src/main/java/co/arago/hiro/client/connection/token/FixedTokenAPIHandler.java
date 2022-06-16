@@ -42,7 +42,7 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         public FixedTokenAPIHandler build() {
-            return sharedConnectionHandler != null ? new FixedTokenAPIHandler(sharedConnectionHandler, this)
+            return getSharedConnectionHandler() != null ? new FixedTokenAPIHandler(getSharedConnectionHandler(), this)
                     : new FixedTokenAPIHandler(this);
         }
 

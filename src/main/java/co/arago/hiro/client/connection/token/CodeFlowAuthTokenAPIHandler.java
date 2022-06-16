@@ -84,7 +84,7 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
         }
 
         public CodeFlowAuthTokenAPIHandler build() {
-            return sharedConnectionHandler != null ? new CodeFlowAuthTokenAPIHandler(sharedConnectionHandler, this)
+            return getSharedConnectionHandler() != null ? new CodeFlowAuthTokenAPIHandler(getSharedConnectionHandler(), this)
                     : new CodeFlowAuthTokenAPIHandler(this);
         }
     }

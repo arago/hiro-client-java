@@ -17,7 +17,7 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
 
     public static abstract class Conf<T extends Conf<T>> extends AbstractClientAPIHandler.Conf<T> {
 
-        protected AbstractVersionAPIHandler sharedConnectionHandler;
+        private AbstractVersionAPIHandler sharedConnectionHandler;
 
         public AbstractVersionAPIHandler getSharedConnectionHandler() {
             return sharedConnectionHandler;

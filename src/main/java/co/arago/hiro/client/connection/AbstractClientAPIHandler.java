@@ -38,18 +38,18 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     // ###############################################################################################
 
     public static abstract class Conf<T extends Conf<T>> extends AbstractAPIHandler.Conf<T> {
-        protected AbstractClientAPIHandler.ProxySpec proxy;
-        protected boolean followRedirects = true;
-        protected Boolean acceptAllCerts;
-        protected Long connectTimeout;
+        private AbstractClientAPIHandler.ProxySpec proxy;
+        private boolean followRedirects = true;
+        private Boolean acceptAllCerts;
+        private Long connectTimeout;
 
-        protected long shutdownTimeout = DEFAULT_SHUTDOWN_TIMEOUT;
-        protected SSLParameters sslParameters;
-        protected HttpClient httpClient;
-        protected CookieManager cookieManager;
-        protected SSLContext sslContext;
-        protected int maxConnectionPool = DEFAULT_MAX_CONNECTION_POOL;
-        protected int maxBinaryLogLength = DEFAULT_MAX_BINARY_LOG_LENGTH;
+        private long shutdownTimeout = DEFAULT_SHUTDOWN_TIMEOUT;
+        private SSLParameters sslParameters;
+        private HttpClient httpClient;
+        private CookieManager cookieManager;
+        private SSLContext sslContext;
+        private int maxConnectionPool = DEFAULT_MAX_CONNECTION_POOL;
+        private int maxBinaryLogLength = DEFAULT_MAX_BINARY_LOG_LENGTH;
 
         ProxySpec getProxy() {
             return proxy;
@@ -274,10 +274,11 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     protected final boolean followRedirects;
     protected final Long connectTimeout;
     protected final SSLParameters sslParameters;
-    private HttpClient httpClient;
-    protected SSLContext sslContext;
+    protected final SSLContext sslContext;
     protected final int maxConnectionPool;
     protected final CookieManager cookieManager;
+
+    private HttpClient httpClient;
 
     protected final HttpLogger httpLogger;
     protected boolean externalConnection;
@@ -315,7 +316,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
                     this.sslContext = SSLContext.getInstance("TLS");
                     this.sslContext.init(null, trustAllCerts, new SecureRandom());
                 } catch (NoSuchAlgorithmException | KeyManagementException e) {
-                    // ignore
+                    throw new RuntimeException(e);
                 }
             } else {
                 this.sslContext = null;
