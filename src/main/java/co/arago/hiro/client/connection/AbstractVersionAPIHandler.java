@@ -16,6 +16,25 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
     // ###############################################################################################
 
     public static abstract class Conf<T extends Conf<T>> extends AbstractClientAPIHandler.Conf<T> {
+
+        protected AbstractVersionAPIHandler sharedConnectionHandler;
+
+        public AbstractVersionAPIHandler getSharedConnectionHandler() {
+            return sharedConnectionHandler;
+        }
+
+        /**
+         * Set a shared connection handler. The fields of this class and its parents will be copied from this
+         * shared handler, overriding other settings. This is used to share a connection between several handlers.
+         *
+         * @param sharedConnectionHandler The shared connection handler.
+         * @return {@link #self()}
+         */
+        public T setSharedConnectionHandler(AbstractVersionAPIHandler sharedConnectionHandler) {
+            this.sharedConnectionHandler = sharedConnectionHandler;
+            return self();
+        }
+
         @Override
         public abstract AbstractVersionAPIHandler build();
     }
@@ -26,6 +45,8 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
 
     private VersionResponse versionMap;
 
+    private final AbstractVersionAPIHandler sharedConnectionHandler;
+
     /**
      * Constructor
      *
@@ -33,16 +54,18 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
      */
     protected AbstractVersionAPIHandler(Conf<?> builder) {
         super(builder);
+        this.sharedConnectionHandler = null;
     }
 
     /**
-     * Protected Copy Constructor. Attributes shall be copied from another AbstractVersionAPIHandler.
+     * Protected Copy Constructor. Fields shall be copied from another AbstractVersionAPIHandler.
      *
      * @param other The source AbstractVersionAPIHandler.
      */
     protected AbstractVersionAPIHandler(AbstractVersionAPIHandler other) {
         super(other);
         this.versionMap = other.versionMap;
+        this.sharedConnectionHandler = other;
     }
 
     /**
@@ -73,9 +96,13 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
      * @throws InterruptedException When interrupted.
      */
     public VersionResponse getVersionMap() throws HiroException, IOException, InterruptedException {
-        if (versionMap == null)
-            versionMap = requestVersionMap();
+        if (versionMap != null)
+            return versionMap;
 
+        if (sharedConnectionHandler != null)
+            return sharedConnectionHandler.getVersionMap();
+
+        versionMap = requestVersionMap();
         return versionMap;
     }
 

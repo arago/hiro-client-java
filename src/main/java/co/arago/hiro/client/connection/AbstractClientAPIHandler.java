@@ -58,6 +58,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         /**
          * @param proxy Simple proxy with one address and port
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setProxy(ProxySpec proxy) {
             this.proxy = proxy;
@@ -71,6 +72,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         /**
          * @param followRedirects Enable Redirect.NORMAL. Default is true.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setFollowRedirects(boolean followRedirects) {
             this.followRedirects = followRedirects;
@@ -84,6 +86,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         /**
          * @param connectTimeout Connect timeout in milliseconds.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setConnectTimeout(Long connectTimeout) {
             this.connectTimeout = connectTimeout;
@@ -99,6 +102,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          *                        If this is set to a value too low, you might need to wait elsewhere for the HttpClient
          *                        to shut down properly. Default is 3000ms.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setShutdownTimeout(long shutdownTimeout) {
             this.shutdownTimeout = shutdownTimeout;
@@ -115,6 +119,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          *
          * @param acceptAllCerts the toggle
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setAcceptAllCerts(Boolean acceptAllCerts) {
             this.acceptAllCerts = acceptAllCerts;
@@ -128,6 +133,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         /**
          * @param sslContext The specific SSLContext to use.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          * @see #setAcceptAllCerts(Boolean)
          */
         public T setSslContext(SSLContext sslContext) {
@@ -142,6 +148,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         /**
          * @param sslParameters The specific SSLParameters to use.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setSslParameters(SSLParameters sslParameters) {
             this.sslParameters = sslParameters;
@@ -158,6 +165,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          *
          * @param httpClient Instance of an HttpClient.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setHttpClient(HttpClient httpClient) {
             this.httpClient = httpClient;
@@ -174,6 +182,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          *
          * @param cookieManager Instance of a CookieManager.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setCookieManager(CookieManager cookieManager) {
             this.cookieManager = cookieManager;
@@ -190,6 +199,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          *
          * @param maxConnectionPool Maximum size of the pool. Default is 8.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setMaxConnectionPool(int maxConnectionPool) {
             this.maxConnectionPool = maxConnectionPool;
@@ -205,6 +215,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          *
          * @param maxBinaryLogLength Size in bytes
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setMaxBinaryLogLength(int maxBinaryLogLength) {
             this.maxBinaryLogLength = maxBinaryLogLength;
@@ -313,7 +324,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     }
 
     /**
-     * Protected Copy Constructor. Attributes shall be copied from another AbstractClientAPIHandler.
+     * Protected Copy Constructor. Fields shall be copied from another AbstractClientAPIHandler.
      *
      * @param other The source AbstractClientAPIHandler.
      */
@@ -339,7 +350,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     // ###############################################################################################
 
     /**
-     * Return {@link #httpClient} or the httpClient of {@link #sharedConnectionHandler} if available.
+     * Return {@link #httpClient} or the httpClient of a sharedConnectionHandler if available.
      * Build a new client if necessary.
      *
      * @return The cached HttpClient

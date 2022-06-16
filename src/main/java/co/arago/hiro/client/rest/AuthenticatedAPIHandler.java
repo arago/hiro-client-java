@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
@@ -152,7 +151,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @param query Set query parameters.
          * @return {@link #self()}
          */
-        public T setUrlQuery(Map<String, ?> query) {
+        public T setUrlQuery(UriEncodedMap query) {
             this.query.putAll(query);
             return self();
         }
@@ -161,7 +160,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @param headers Set headers.
          * @return {@link #self()}
          */
-        public T setHttpHeaders(Map<String, ?> headers) {
+        public T setHttpHeaders(HttpHeaderMap headers) {
             this.headers.putAll(headers);
             return self();
         }
@@ -316,15 +315,12 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @return {@link #self()}
          */
         @Override
-        public T setHttpHeaders(Map<String, ?> headers) {
+        public T setHttpHeaders(HttpHeaderMap headers) {
 
             if (headers != null) {
-                for (Map.Entry<String, ?> entry : headers.entrySet()) {
-                    if (StringUtils.equalsIgnoreCase("Content-Type", entry.getKey())) {
-                        setContentType(String.valueOf(entry.getValue()));
-                        break;
-                    }
-                }
+                String contentType = headers.getFirstIgnoreCase("Content-Type");
+                if (StringUtils.isNotBlank(contentType))
+                    setContentType(contentType);
             }
 
             return super.setHttpHeaders(headers);
@@ -347,12 +343,12 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param builder The builder to use.
      */
     protected AuthenticatedAPIHandler(Conf<?> builder) {
-        super(builder.getTokenApiHandler());
+        super(notNull(builder.getTokenApiHandler(), "tokenApiHandler"));
         this.apiName = builder.getApiName();
         this.apiPath = builder.getApiPath();
-        this.tokenAPIHandler = notNull(builder.getTokenApiHandler(), "tokenApiHandler");
+        this.tokenAPIHandler = builder.getTokenApiHandler();
 
-        if (StringUtils.isBlank(this.apiName) && StringUtils.isBlank(this.apiPath))
+        if (StringUtils.isAllBlank(this.apiName, this.apiPath))
             anyError("Either 'apiName' or 'apiPath' have to be set.");
     }
 

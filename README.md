@@ -205,13 +205,15 @@ class Example {
                 .setApiUrl(API_URL)
                 .build()
         ) {
-            GraphAPI graphAPI_user1 =
-                    GraphAPI.newBuilder(FixedTokenAPIHandler.newBuilder(connectionHandler).setToken("TOKEN_1"))
-                            .build();
+            GraphAPI graphAPI_user1 = GraphAPI.newBuilder(FixedTokenAPIHandler.newBuilder()
+                            .setSharedConnectionHandler(connectionHandler)
+                            .setToken("TOKEN_1"))
+                    .build();
 
-            GraphAPI graphAPI_user2 =
-                    GraphAPI.newBuilder(FixedTokenAPIHandler.newBuilder(connectionHandler).setToken("TOKEN_2"))
-                            .build();
+            GraphAPI graphAPI_user2 = GraphAPI.newBuilder(FixedTokenAPIHandler.newBuilder()
+                            .setSharedConnectionHandler(connectionHandler)
+                            .setToken("TOKEN_2"))
+                    .build();
         }
 
     }

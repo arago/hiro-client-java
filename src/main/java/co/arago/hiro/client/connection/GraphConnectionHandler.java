@@ -45,7 +45,7 @@ public class GraphConnectionHandler extends AbstractVersionAPIHandler {
     }
 
     /**
-     * Protected Copy Constructor. Attributes shall be copied from another AbstractVersionAPIHandler.
+     * Protected Copy Constructor. Fields shall be copied from another AbstractVersionAPIHandler.
      *
      * @param other The source AbstractVersionAPIHandler.
      */

@@ -1,5 +1,7 @@
 package co.arago.hiro.client.util.httpclient;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -30,17 +32,40 @@ public class MultiValueMap {
         initialValues.forEach(this::appendAtKey);
     }
 
+    public MultiValueMap(MultiValueMap other) {
+        map.putAll(other.map);
+    }
+
     /**
      * Clear list and set values.
      *
      * @param initialValues A map of initial values. The values need to be either String or Collection&lt;String&gt;.
+     *                      If this is null, the map will be just cleared.
      *                      ATTENTION: If a key with a value == null is encountered, all values under this key will be
      *                      removed.
      */
     public void putAll(Map<String, ?> initialValues) {
         map.clear();
 
+        if (initialValues == null)
+            return;
+
         initialValues.forEach(this::appendAtKey);
+    }
+
+    /**
+     * Clear list and set values.
+     *
+     * @param other Data will be copied over from here.
+     *              If this is null, the map will be just cleared.
+     */
+    public void putAll(MultiValueMap other) {
+        map.clear();
+
+        if (other == null)
+            return;
+
+        map.putAll(other.map);
     }
 
     /**
@@ -57,10 +82,25 @@ public class MultiValueMap {
     /**
      * Add values. These will be appended to the lists of existing values if possible.
      *
+     * @param other Data will be copied over from here.
+     */
+    public void addAll(MultiValueMap other) {
+        if (other == null)
+            return;
+
+        other.map.forEach(this::appendAtKey);
+    }
+
+    /**
+     * Add values. These will be appended to the lists of existing values if possible.
+     *
      * @param values A map of values. The values need to be either String or Collection&lt;String&gt;.
      *               ATTENTION: If a key with a value == null is encountered, all values under this key will be removed.
      */
     public void addAll(Map<String, ?> values) {
+        if (values == null)
+            return;
+
         values.forEach(this::appendAtKey);
     }
 
@@ -81,7 +121,21 @@ public class MultiValueMap {
      * @return The first value found.
      */
     public String getFirst(String key) {
-        return getAll(key).iterator().next();
+        List<String> found = getAll(key);
+
+        return found != null ? found.iterator().next() : null;
+    }
+
+    /**
+     * Obtain the first value for a key. Ignore case of key.
+     *
+     * @param key Key for a value.
+     * @return The first value found.
+     */
+    public String getFirstIgnoreCase(String key) {
+        List<String> found = getAllIgnoreCase(key);
+
+        return found != null ? found.iterator().next() : null;
     }
 
     /**
@@ -95,13 +149,31 @@ public class MultiValueMap {
     }
 
     /**
+     * Obtain all values for a key. Ignore case of key.
+     *
+     * @param key Key for a value list.
+     * @return List of all values under that key.
+     */
+    public List<String> getAllIgnoreCase(String key) {
+        Map.Entry<String, List<String>> found = map.entrySet().stream()
+                .filter(entry -> StringUtils.equalsIgnoreCase(key, entry.getKey()))
+                .findFirst().orElse(null);
+
+        return found != null ? found.getValue() : null;
+    }
+
+    /**
      * Add an entry in the map to the list named by key unless the value is null.
      *
      * @param key   The key for the list in the map.
-     * @param value The value to be appended.
+     * @param value The value to be appended. Must be String, Collection&lt;String&gt; or null. null values will be
+     *              ignored silently.
      * @throws ClassCastException When the value is not null, not of type String nor Collection&lt;String&gt;.
      */
     private void appendAtKey(String key, Object value) {
+        if (key == null)
+            return;
+
         List<String> valueList = map.computeIfAbsent(key, k -> new ArrayList<>());
 
         if (value instanceof String) {
@@ -116,6 +188,8 @@ public class MultiValueMap {
             throw new ClassCastException("Value needs to be of String or Collection<String> type.");
         }
 
+        if (valueList.isEmpty())
+            map.remove(key);
     }
 
     @Override

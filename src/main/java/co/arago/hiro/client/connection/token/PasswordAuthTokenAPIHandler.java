@@ -71,23 +71,13 @@ public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
 
     public static final class Builder extends Conf<Builder> {
 
-        private final AbstractVersionAPIHandler versionAPIHandler;
-
-        public Builder() {
-            versionAPIHandler = null;
-        }
-
-        public Builder(AbstractVersionAPIHandler versionAPIHandler) {
-            this.versionAPIHandler = versionAPIHandler;
-        }
-
         @Override
         protected Builder self() {
             return this;
         }
 
         public PasswordAuthTokenAPIHandler build() {
-            return versionAPIHandler != null ? new PasswordAuthTokenAPIHandler(versionAPIHandler, this)
+            return sharedConnectionHandler != null ? new PasswordAuthTokenAPIHandler(sharedConnectionHandler, this)
                     : new PasswordAuthTokenAPIHandler(this);
         }
     }
@@ -124,16 +114,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
 
     public static Conf<?> newBuilder() {
         return new Builder();
-    }
-
-    /**
-     * Special Copy Constructor Builder. Uses the connection of another existing AbstractVersionAPIHandler.
-     *
-     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     * @return A new builder
-     */
-    public static Conf<?> newBuilder(AbstractVersionAPIHandler versionAPIHandler) {
-        return new Builder(versionAPIHandler);
     }
 
     /**

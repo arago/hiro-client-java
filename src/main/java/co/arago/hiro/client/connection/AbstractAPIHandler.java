@@ -68,6 +68,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
          * @param apiUrl The root url for the API
          * @return {@link #self()}
          * @throws MalformedURLException When the apiUrl is a malformed URL.
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setApiUrl(String apiUrl) throws MalformedURLException {
             this.apiUrl = new URL(RegExUtils.removePattern(apiUrl, "/+$") + "/");
@@ -77,6 +78,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
         /**
          * @param apiUrl The root url for the API
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setApiUrl(URL apiUrl) {
             this.apiUrl = apiUrl;
@@ -88,6 +90,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
          *                     from an apiUrl.
          * @return {@link #self()}
          * @throws URISyntaxException When the webSocketUri is a malformed URI.
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setWebSocketUri(String webSocketUri) throws URISyntaxException {
             this.webSocketUri = new URI(RegExUtils.removePattern(webSocketUri, "/+$") + "/");
@@ -97,6 +100,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
         /**
          * @param apiUrl The root url for the WebSockets
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setWebSocketUrl(URL apiUrl) {
             this.apiUrl = apiUrl;
@@ -112,6 +116,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
          *
          * @param userAgent The line for the User-Agent header.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setUserAgent(String userAgent) {
             this.userAgent = userAgent;
@@ -125,6 +130,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
         /**
          * @param httpRequestTimeout Request timeout in ms.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setHttpRequestTimeout(Long httpRequestTimeout) {
             this.httpRequestTimeout = httpRequestTimeout;
@@ -138,6 +144,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
         /**
          * @param maxRetries Max amount of retries when http errors are received. The default is 0.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setMaxRetries(int maxRetries) {
             this.maxRetries = maxRetries;

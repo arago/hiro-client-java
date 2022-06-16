@@ -36,23 +36,13 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
 
     public static final class Builder extends Conf<Builder> {
 
-        private final AbstractVersionAPIHandler versionAPIHandler;
-
-        public Builder() {
-            versionAPIHandler = null;
-        }
-
-        public Builder(AbstractVersionAPIHandler versionAPIHandler) {
-            this.versionAPIHandler = versionAPIHandler;
-        }
-
         @Override
         protected Builder self() {
             return this;
         }
 
         public FixedTokenAPIHandler build() {
-            return versionAPIHandler != null ? new FixedTokenAPIHandler(versionAPIHandler, this)
+            return sharedConnectionHandler != null ? new FixedTokenAPIHandler(sharedConnectionHandler, this)
                     : new FixedTokenAPIHandler(this);
         }
 
@@ -87,16 +77,6 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
 
     public static Conf<?> newBuilder() {
         return new Builder();
-    }
-
-    /**
-     * Special Copy Constructor Builder. Uses the connection of another existing AbstractVersionAPIHandler.
-     *
-     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     * @return A new builder
-     */
-    public static Conf<?> newBuilder(AbstractVersionAPIHandler versionAPIHandler) {
-        return new Builder(versionAPIHandler);
     }
 
     /**
