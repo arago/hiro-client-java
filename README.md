@@ -93,6 +93,16 @@ TokenApiHandler (so far) that automatically tries to renew a token from the back
 
 ---
 
+### CodeFlowAuthTokenAPIHandler
+
+This TokenApiHandler can be used to handle OAuth2 `authorization_code` flow. It automatically creates an
+Authorization-URI for a web-browser (which usually leads to a login page of the Authorization Server) and handles the
+incoming values `code` and `state` from the redirection of the Authorization Server. It then uses these values to obtain
+the final access_token. This access_token will be refreshed automatically via refresh_token when the access_token
+expires.
+
+---
+
 All code examples in this documentation can use these TokenApiHandlers interchangeably, depending on how such a token is
 provided.
 
