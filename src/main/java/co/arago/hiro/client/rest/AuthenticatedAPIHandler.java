@@ -11,7 +11,7 @@ import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import co.arago.hiro.client.util.httpclient.URIPath;
-import co.arago.hiro.client.util.httpclient.UriEncodedMap;
+import co.arago.hiro.client.util.httpclient.UriEncodedData;
 import co.arago.util.json.JsonUtil;
 import co.arago.util.validation.RequiredFieldChecks;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -133,7 +133,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> extends RequiredFieldChecks {
 
         protected final URIPath path;
-        protected UriEncodedMap query = new UriEncodedMap();
+        protected UriEncodedData query = new UriEncodedData();
         protected HttpHeaderMap headers = new HttpHeaderMap();
         protected String fragment;
 
@@ -151,8 +151,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @param query Set query parameters.
          * @return {@link #self()}
          */
-        public T setUrlQuery(UriEncodedMap query) {
-            this.query.putAll(query);
+        public T setUrlQuery(UriEncodedData query) {
+            this.query.setAll(query);
             return self();
         }
 
@@ -161,7 +161,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @return {@link #self()}
          */
         public T setHttpHeaders(HttpHeaderMap headers) {
-            this.headers.putAll(headers);
+            this.headers.setAll(headers);
             return self();
         }
 
@@ -204,7 +204,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          */
         public SendBodyAPIRequestConf(String... pathParts) {
             super(pathParts);
-            headers.put("Content-Type", "application/json;encoding=UTF-8");
+            headers.set("Content-Type", "application/json;encoding=UTF-8");
         }
 
         /**
@@ -364,7 +364,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @throws InterruptedException Call got interrupted
      * @throws HiroException        When calling /api/version responds with an error
      */
-    public URI getEndpointUri(URIPath path, UriEncodedMap query, String fragment)
+    public URI getEndpointUri(URIPath path, UriEncodedData query, String fragment)
             throws IOException, InterruptedException, HiroException {
         if (apiUri == null)
             apiUri = (apiPath != null ? buildApiURI(apiPath) : tokenAPIHandler.getApiUriOf(apiName));
@@ -381,8 +381,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      */
     @Override
     public void addToHeaders(HttpHeaderMap headers) throws InterruptedException, IOException, HiroException {
-        headers.put("User-Agent", userAgent);
-        headers.put("Authorization", "Bearer " + tokenAPIHandler.getToken());
+        headers.set("User-Agent", userAgent);
+        headers.set("Authorization", "Bearer " + tokenAPIHandler.getToken());
     }
 
     /**

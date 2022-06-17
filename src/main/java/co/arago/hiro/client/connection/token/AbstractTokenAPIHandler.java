@@ -53,7 +53,7 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      */
     @Override
     public void addToHeaders(HttpHeaderMap headers) {
-        headers.put("User-Agent", userAgent);
+        headers.set("User-Agent", userAgent);
     }
 
     /**

@@ -11,7 +11,7 @@ import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import co.arago.hiro.client.util.httpclient.URLPartEncoder;
-import co.arago.hiro.client.util.httpclient.UriEncodedMap;
+import co.arago.hiro.client.util.httpclient.UriEncodedData;
 import co.arago.util.json.JsonUtil;
 import co.arago.util.validation.RequiredFieldChecks;
 import org.apache.commons.lang3.RegExUtils;
@@ -291,7 +291,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * @param fragment URI Fragment. Can be null for no fragment, otherwise uri must not have a fragment already.
      * @return The constructed URI
      */
-    public static URI addQueryFragmentAndNormalize(URI uri, UriEncodedMap query, String fragment) {
+    public static URI addQueryFragmentAndNormalize(URI uri, UriEncodedData query, String fragment) {
 
         String sourceUri = uri.toASCIIString();
 
@@ -316,7 +316,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
         try {
             return new URI(sourceUri).normalize();
         } catch (URISyntaxException e) {
-            return uri;
+            throw new IllegalArgumentException(e);
         }
     }
 
@@ -379,7 +379,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
             Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
 
         if (body != null && body.hasContentType()) {
-            headers.put("Content-Type", body.getContentType());
+            headers.set("Content-Type", body.getContentType());
         }
 
         HttpRequest httpRequest = getRequestBuilder(uri, headers, httpRequestTimeout)
@@ -500,7 +500,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
         HttpHeaderMap initialHeaders = (headers == null) ? new HttpHeaderMap() : headers;
 
         if (bodyContainer != null && bodyContainer.hasContentType())
-            initialHeaders.put("Content-Type", bodyContainer.getContentType());
+            initialHeaders.set("Content-Type", bodyContainer.getContentType());
 
         return initialHeaders;
     }
@@ -533,7 +533,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
 
         HttpHeaderMap initialHeaders = startHeaders(body, headers);
 
-        initialHeaders.put("Accept", "application/json");
+        initialHeaders.set("Accept", "application/json");
 
         HttpRequest httpRequest = createStringRequest(
                 uri,
@@ -575,7 +575,7 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
 
         HttpHeaderMap initialHeaders = startHeaders(bodyContainer, headers);
 
-        initialHeaders.put("Accept", "application/json");
+        initialHeaders.set("Accept", "application/json");
 
         HttpRequest httpRequest = createStreamRequest(
                 uri,

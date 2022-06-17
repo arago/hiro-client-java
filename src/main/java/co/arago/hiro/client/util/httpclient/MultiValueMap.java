@@ -15,7 +15,7 @@ import java.util.Objects;
  */
 public class MultiValueMap {
 
-    protected final LinkedHashMap<String, List<String>> map = new LinkedHashMap<>();
+    protected final Map<String, List<String>> map = new LinkedHashMap<>();
 
     /**
      * Constructor without data.
@@ -37,14 +37,14 @@ public class MultiValueMap {
     }
 
     /**
-     * Clear list and set values.
+     * Clear map and set values.
      *
      * @param initialValues A map of initial values. The values need to be either String or Collection&lt;String&gt;.
      *                      If this is null, the map will be just cleared.
      *                      ATTENTION: If a key with a value == null is encountered, all values under this key will be
      *                      removed.
      */
-    public void putAll(Map<String, ?> initialValues) {
+    public void setAll(Map<String, ?> initialValues) {
         map.clear();
 
         if (initialValues == null)
@@ -54,12 +54,12 @@ public class MultiValueMap {
     }
 
     /**
-     * Clear list and set values.
+     * Clear map and set values.
      *
      * @param other Data will be copied over from here.
      *              If this is null, the map will be just cleared.
      */
-    public void putAll(MultiValueMap other) {
+    public void setAll(MultiValueMap other) {
         map.clear();
 
         if (other == null)
@@ -74,9 +74,20 @@ public class MultiValueMap {
      * @param key   The key for the value. Overwrites all previous values of that key.
      * @param value The value itself. ATTENTION: If this is null, the key and its values will be removed from the map.
      */
-    public void put(String key, String value) {
+    public void set(String key, String value) {
         map.remove(key);
         appendAtKey(key, value);
+    }
+
+    /**
+     * Put a list of values into the map or remove it.
+     *
+     * @param key    The key for the values. Overwrites all previous values of that key.
+     * @param values The values themselves. ATTENTION: If this is null, the key and its values will be removed from the map.
+     */
+    public void set(String key, Collection<String> values) {
+        map.remove(key);
+        appendAtKey(key, values);
     }
 
     /**
@@ -84,7 +95,7 @@ public class MultiValueMap {
      *
      * @param other Data will be copied over from here.
      */
-    public void addAll(MultiValueMap other) {
+    public void appendAll(MultiValueMap other) {
         if (other == null)
             return;
 
@@ -97,7 +108,7 @@ public class MultiValueMap {
      * @param values A map of values. The values need to be either String or Collection&lt;String&gt;.
      *               ATTENTION: If a key with a value == null is encountered, all values under this key will be removed.
      */
-    public void addAll(Map<String, ?> values) {
+    public void appendAll(Map<String, ?> values) {
         if (values == null)
             return;
 
@@ -110,8 +121,18 @@ public class MultiValueMap {
      * @param key   The key for the value. If the key already has values, the value is appended.
      * @param value The value itself. ATTENTION: If this is null, the key and its values will be removed from the map.
      */
-    public void add(String key, String value) {
+    public void append(String key, String value) {
         appendAtKey(key, value);
+    }
+
+    /**
+     * Add a multiple values into the map or remove it.
+     *
+     * @param key    The key for the values. If the key already has values, the values are appended.
+     * @param values The values themselves. ATTENTION: If this is null, the key and its values will be removed from the map.
+     */
+    public void append(String key, Collection<String> values) {
+        appendAtKey(key, values);
     }
 
     /**

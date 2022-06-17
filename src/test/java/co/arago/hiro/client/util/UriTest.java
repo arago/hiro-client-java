@@ -2,7 +2,7 @@ package co.arago.hiro.client.util;
 
 import co.arago.hiro.client.connection.AbstractAPIHandler;
 import co.arago.hiro.client.util.httpclient.URIPath;
-import co.arago.hiro.client.util.httpclient.UriEncodedMap;
+import co.arago.hiro.client.util.httpclient.UriEncodedData;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +27,7 @@ public class UriTest {
                 "complex", "http://www.google.de?attr=16#final",
                 "weird param", "Oh+my+stuff?some&more");
 
-        UriEncodedMap uriQueryMap = new UriEncodedMap(checkQueryMap);
+        UriEncodedData uriQueryMap = new UriEncodedData(checkQueryMap);
 
         String fragment = "This is a fragment";
 

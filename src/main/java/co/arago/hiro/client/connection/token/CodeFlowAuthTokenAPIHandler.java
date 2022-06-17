@@ -10,7 +10,7 @@ import co.arago.hiro.client.model.token.CodeFlowTokenRequest;
 import co.arago.hiro.client.model.token.TokenResponse;
 import co.arago.hiro.client.util.PkceUtil;
 import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
-import co.arago.hiro.client.util.httpclient.UriEncodedMap;
+import co.arago.hiro.client.util.httpclient.UriEncodedData;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,7 +141,7 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
         try {
             return addQueryFragmentAndNormalize(
                     getUri("authorize"),
-                    new UriEncodedMap(new AuthorizeRequest(
+                    new UriEncodedData(new AuthorizeRequest(
                             clientId,
                             redirectUri,
                             pkceUtil.getCodeChallenge(),
@@ -205,7 +205,7 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
         tokenResponse = post(
                 TokenResponse.class,
                 getUri("token"),
-                tokenRequest.toEncodedString(),
+                tokenRequest.toUriEncodedStringRemoveBlanks(),
                 new HttpHeaderMap(Map.of("Content-Type", "application/x-www-form-urlencoded")),
                 httpRequestTimeout,
                 maxRetries);

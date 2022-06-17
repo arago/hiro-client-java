@@ -66,7 +66,7 @@ public class GraphConnectionHandler extends AbstractVersionAPIHandler {
      */
     @Override
     public void addToHeaders(HttpHeaderMap headers) {
-        headers.put("User-Agent", userAgent);
+        headers.set("User-Agent", userAgent);
     }
 
 }
