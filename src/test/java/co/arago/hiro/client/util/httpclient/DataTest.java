@@ -13,7 +13,6 @@ public class DataTest {
 
     final static Logger log = LoggerFactory.getLogger(DataTest.class);
 
-
     @Test
     public void testMultiValues() {
         UriEncodedData uriEncodedData = new UriEncodedData();
@@ -24,9 +23,7 @@ public class DataTest {
                 "blank", "",
                 "hello", "world",
                 "key", "value",
-                "nice", "weather"
-        ));
-
+                "nice", "weather"));
 
         uriEncodedData.setAll(initialMap);
 

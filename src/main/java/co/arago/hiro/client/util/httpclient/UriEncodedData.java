@@ -50,10 +50,10 @@ public class UriEncodedData extends MultiValueMap {
     public String toStringRemoveBlanks() {
         return map.entrySet().stream()
                 .map(entry -> entry.getValue().stream()
+                        .map(value -> StringUtils.isBlank(value) ? ""
+                                : URLPartEncoder.encodeNoPlus(entry.getKey(), StandardCharsets.UTF_8) + "="
+                                        + URLPartEncoder.encodeNoPlus(value, StandardCharsets.UTF_8))
                         .filter(StringUtils::isNotBlank)
-                        .map(value -> URLPartEncoder.encodeNoPlus(entry.getKey(), StandardCharsets.UTF_8) +
-                                "=" +
-                                URLPartEncoder.encodeNoPlus(value, StandardCharsets.UTF_8))
                         .collect(Collectors.joining("&")))
                 .filter(StringUtils::isNotBlank)
                 .collect(Collectors.joining("&"));
