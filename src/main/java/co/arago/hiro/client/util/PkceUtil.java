@@ -48,6 +48,6 @@ public class PkceUtil {
     }
 
     private static String urlSafeBase64(byte[] bytes) {
-        Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }
