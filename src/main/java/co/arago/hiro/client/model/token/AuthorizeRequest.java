@@ -22,7 +22,7 @@ public class AuthorizeRequest implements EncodedUriMessage {
     public String codeChallenge;
 
     @JsonProperty("code_challenge_method")
-    public String codeChallengeMethod = "S256";
+    public String codeChallengeMethod;
 
     public String state;
 
@@ -32,11 +32,13 @@ public class AuthorizeRequest implements EncodedUriMessage {
             String clientId,
             String redirectUri,
             String codeChallenge,
+            String codeChallengeMethod,
             String state,
             String scope) {
         this.clientId = clientId;
         this.redirectUri = redirectUri;
         this.codeChallenge = codeChallenge;
+        this.codeChallengeMethod = codeChallengeMethod;
         this.state = state;
         this.scope = scope;
     }

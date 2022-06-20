@@ -101,7 +101,7 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
 
     protected String code;
 
-    protected String state = PkceUtil.generateRandomBase64(16);
+    protected String state;
 
     protected CodeFlowAuthTokenAPIHandler(Conf<?> builder) {
         super(builder);
@@ -139,12 +139,17 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
      */
     public URI getAuthorizeUri() throws HiroException, IOException, InterruptedException {
         try {
+            // Create new state and code_verifier with each call.
+            state = PkceUtil.generateRandomBase64(16);
+            pkceUtil.initialize();
+
             return addQueryFragmentAndNormalize(
                     getUri("authorize"),
                     new UriEncodedData(new AuthorizeRequest(
                             clientId,
                             redirectUri,
                             pkceUtil.getCodeChallenge(),
+                            pkceUtil.getCodeChallengeMethod(),
                             state,
                             scope).toMap()),
                     null);

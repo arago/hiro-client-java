@@ -11,10 +11,12 @@ public class PkceUtil {
     private String codeVerifier;
 
     public PkceUtil() {
-        renew();
     }
 
     public String getCodeVerifier() {
+        if (codeVerifier == null)
+            initialize();
+
         return codeVerifier;
     }
 
@@ -23,22 +25,29 @@ public class PkceUtil {
     }
 
     public String getCodeChallenge() throws NoSuchAlgorithmException {
+        if (codeVerifier == null)
+            initialize();
+
         byte[] bytes = codeVerifier.getBytes(StandardCharsets.US_ASCII);
         MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         byte[] digest = messageDigest.digest(bytes);
 
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(digest);
+        return urlSafeBase64(digest);
     }
 
-    public void renew() {
+    public void initialize() {
         codeVerifier = generateRandomBase64(64);
     }
 
     public static String generateRandomBase64(int size) {
-        byte[] codeVerifier = new byte[size];
+        byte[] randomBytes = new byte[size];
 
-        new SecureRandom().nextBytes(codeVerifier);
+        new SecureRandom().nextBytes(randomBytes);
 
-        return Base64.getUrlEncoder().withoutPadding().encodeToString(codeVerifier);
+        return urlSafeBase64(randomBytes);
+    }
+
+    private static String urlSafeBase64(byte[] bytes) {
+        Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 }
