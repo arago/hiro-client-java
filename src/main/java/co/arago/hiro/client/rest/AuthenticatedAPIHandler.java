@@ -26,8 +26,8 @@ import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
 import java.util.Map;
 
-import static co.arago.util.validation.RequiredFieldChecks.anyError;
-import static co.arago.util.validation.RequiredFieldChecks.notNull;
+import static co.arago.util.validation.ValueChecks.anyError;
+import static co.arago.util.validation.ValueChecks.notNull;
 
 /**
  * This class is the basis of all authenticated API handlers that make use of the different sections of the HIRO API.

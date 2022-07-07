@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Map;
 
-import static co.arago.util.validation.RequiredFieldChecks.notBlank;
+import static co.arago.util.validation.ValueChecks.notBlank;
 
 public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandler {
 

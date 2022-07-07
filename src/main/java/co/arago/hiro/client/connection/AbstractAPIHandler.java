@@ -32,7 +32,7 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
-import static co.arago.util.validation.RequiredFieldChecks.notNull;
+import static co.arago.util.validation.ValueChecks.notNull;
 
 /**
  * Root class with fields and tool methods for all API Handlers

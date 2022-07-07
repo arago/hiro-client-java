@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.time.Instant;
 
-import static co.arago.util.validation.RequiredFieldChecks.notNull;
+import static co.arago.util.validation.ValueChecks.notNull;
 
 public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
 

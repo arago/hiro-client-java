@@ -10,7 +10,7 @@ import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.VersionResponse;
 import co.arago.util.json.JsonUtil;
-import co.arago.util.validation.RequiredFieldChecks;
+import co.arago.util.validation.ValueChecks;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -32,8 +32,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static co.arago.util.validation.RequiredFieldChecks.anyError;
-import static co.arago.util.validation.RequiredFieldChecks.notNull;
+import static co.arago.util.validation.ValueChecks.anyError;
+import static co.arago.util.validation.ValueChecks.notNull;
 
 /**
  * Handles websockets. Tries to renew any aborted connection until the websocket gets closed from this side.

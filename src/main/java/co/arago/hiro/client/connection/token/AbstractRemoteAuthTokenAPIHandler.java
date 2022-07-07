@@ -22,7 +22,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
-import static co.arago.util.validation.RequiredFieldChecks.notBlank;
+import static co.arago.util.validation.ValueChecks.notBlank;
 
 public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 

@@ -15,7 +15,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import static co.arago.util.validation.RequiredFieldChecks.notBlank;
+import static co.arago.util.validation.ValueChecks.notBlank;
 
 public class GraphAPI extends AuthenticatedAPIHandler {
 

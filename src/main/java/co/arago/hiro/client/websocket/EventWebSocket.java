@@ -31,7 +31,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static co.arago.util.validation.RequiredFieldChecks.notNull;
+import static co.arago.util.validation.ValueChecks.notNull;
 
 /**
  * The handler for Event WebSocket.

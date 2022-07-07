@@ -20,7 +20,7 @@ import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
-import static co.arago.util.validation.RequiredFieldChecks.notBlank;
+import static co.arago.util.validation.ValueChecks.notBlank;
 
 public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandler {
 

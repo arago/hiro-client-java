@@ -14,7 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-import static co.arago.util.validation.RequiredFieldChecks.notBlank;
+import static co.arago.util.validation.ValueChecks.notBlank;
 
 public class AuthAPI extends AuthenticatedAPIHandler {
 
