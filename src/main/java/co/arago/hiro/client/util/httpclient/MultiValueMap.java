@@ -4,6 +4,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -227,4 +228,15 @@ public class MultiValueMap {
     public int hashCode() {
         return Objects.hashCode(map);
     }
+
+    public Map<String, List<String>> getMap() {
+        return map;
+    }
+
+    public Map<String, String> toSingleValueMap() {
+        Map<String, String> singleValueMap = new HashMap<>();
+        map.forEach((key, value) -> singleValueMap.put(key, value.iterator().next()));
+        return singleValueMap;
+    }
+
 }

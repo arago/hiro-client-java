@@ -100,7 +100,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -150,7 +150,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -203,7 +203,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
         @Override
         public HttpResponseParser execute() throws HiroException, IOException, InterruptedException {
             return getBinary(
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -257,7 +257,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -307,7 +307,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexListMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);

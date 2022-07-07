@@ -71,7 +71,7 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
     /**
      * Get API Versions
      * <p>
-     * <i>HIRO REST query API: `GET {@link #apiUrl} + '/api/version'`</i>
+     * <i>HIRO REST query API: `GET {@link #rootApiURI} + '/api/version'`</i>
      *
      * @return A map with the api versions
      * @throws HiroException        When the request fails.
@@ -115,7 +115,7 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
      * @throws IOException          When the connection fails.
      * @throws InterruptedException When interrupted.
      */
-    public URI getApiUriOf(String apiName) throws IOException, InterruptedException, HiroException {
+    public URI getApiURIOf(String apiName) throws IOException, InterruptedException, HiroException {
         return buildApiURI(getVersionMap().getVersionEntryOf(apiName).endpoint);
     }
 

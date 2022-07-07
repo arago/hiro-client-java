@@ -1,13 +1,13 @@
 package co.arago.hiro.client.model.token;
 
-import co.arago.hiro.client.model.EncodedUriMessage;
+import co.arago.hiro.client.model.EncodedURIMessage;
 import co.arago.util.json.JsonUtil;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.Map;
 
-public class AuthorizeRequest implements EncodedUriMessage {
+public class AuthorizeRequest implements EncodedURIMessage {
 
     @JsonProperty("response_type")
     public String responseType = "code";
@@ -16,7 +16,7 @@ public class AuthorizeRequest implements EncodedUriMessage {
     public String clientId;
 
     @JsonProperty("redirect_uri")
-    public String redirectUri;
+    public String redirectURI;
 
     @JsonProperty("code_challenge")
     public String codeChallenge;
@@ -30,13 +30,13 @@ public class AuthorizeRequest implements EncodedUriMessage {
 
     public AuthorizeRequest(
             String clientId,
-            String redirectUri,
+            String redirectURI,
             String codeChallenge,
             String codeChallengeMethod,
             String state,
             String scope) {
         this.clientId = clientId;
-        this.redirectUri = redirectUri;
+        this.redirectURI = redirectURI;
         this.codeChallenge = codeChallenge;
         this.codeChallengeMethod = codeChallengeMethod;
         this.state = state;

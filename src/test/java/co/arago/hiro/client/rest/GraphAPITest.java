@@ -8,15 +8,17 @@ import co.arago.hiro.client.model.vertex.HiroVertexMessage;
 import co.arago.util.json.JsonUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.util.Map;
 
+@Disabled
 class GraphAPITest {
 
     public static PasswordAuthTokenAPIHandler handler;
@@ -30,7 +32,7 @@ class GraphAPITest {
                     Config.class);
 
             handler = PasswordAuthTokenAPIHandler.newBuilder()
-                    .setApiUrl(config.api_url)
+                    .setRootApiURI(config.api_url)
                     .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                     .setAcceptAllCerts(config.accept_all_certs)
                     .setForceLogging(config.force_logging)
@@ -38,7 +40,7 @@ class GraphAPITest {
                     .build();
 
             graphAPI = GraphAPI.newBuilder(handler).build();
-        } catch (FileNotFoundException e) {
+        } catch (URISyntaxException e) {
             log.warn("Skipping tests: {}.", e.getMessage());
         }
     }

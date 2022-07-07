@@ -4,9 +4,9 @@ import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.DefaultHiroItemListMessage;
 import co.arago.hiro.client.model.HiroMessage;
-import co.arago.hiro.client.model.vertex.timeseries.HiroTimeseriesListMessage;
 import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
 import co.arago.hiro.client.model.vertex.HiroVertexMessage;
+import co.arago.hiro.client.model.vertex.timeseries.HiroTimeseriesListMessage;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 
@@ -214,7 +214,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -272,7 +272,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -328,7 +328,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -382,7 +382,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -482,7 +482,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexListMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     createBody(),
                     headers,
                     httpRequestTimeout,
@@ -571,7 +571,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return get(HiroVertexMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -665,7 +665,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     notBlank(body, "body with entity (vertex) data"),
                     headers,
                     httpRequestTimeout,
@@ -732,7 +732,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return delete(HiroVertexMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -810,7 +810,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     notBlank(body, "body with entity (vertex) data"),
                     headers,
                     httpRequestTimeout,
@@ -886,7 +886,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroVertexMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
@@ -959,7 +959,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         public HttpResponseParser execute() throws HiroException, IOException, InterruptedException {
             return getBinary(
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -1021,7 +1021,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             notBlank(streamContainer.getContentType(), "contentType");
             return postBinary(HiroMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     streamContainer,
                     headers,
                     httpRequestTimeout,
@@ -1174,7 +1174,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         public DefaultHiroItemListMessage execute() throws HiroException, IOException, InterruptedException {
             return get(DefaultHiroItemListMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -1288,7 +1288,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         public HiroTimeseriesListMessage execute() throws HiroException, IOException, InterruptedException {
             return get(HiroTimeseriesListMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -1350,7 +1350,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             return get(HiroMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -1412,7 +1412,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         @Override
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             return post(HiroMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     notBlank(body, "body for timeseries data"),
                     headers,
                     httpRequestTimeout,

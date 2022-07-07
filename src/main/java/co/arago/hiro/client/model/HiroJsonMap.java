@@ -100,7 +100,7 @@ public class HiroJsonMap implements JsonMessage, ToMap {
      * @return The map of the remaining fields.
      */
     @JsonAnyGetter
-    public Map<String, Object> getMap() {
+    public Map<String, ?> getMap() {
         return fieldsMap;
     }
 

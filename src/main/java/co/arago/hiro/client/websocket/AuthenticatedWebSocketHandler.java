@@ -10,7 +10,6 @@ import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.VersionResponse;
 import co.arago.util.json.JsonUtil;
-import co.arago.util.validation.ValueChecks;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -464,7 +463,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
     protected final boolean reconnectOnFailedSend;
     protected final long webSocketRequestTimeout;
 
-    protected URI webSocketUri;
+    protected URI webSocketURI;
 
     private WebSocket webSocket;
     protected InternalListener internalListener;
@@ -518,8 +517,8 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
                 endpoint = versionEntry.endpoint;
         }
 
-        if (webSocketUri == null)
-            webSocketUri = tokenAPIHandler.buildWebSocketURI(endpoint);
+        if (webSocketURI == null)
+            webSocketURI = tokenAPIHandler.buildWebSocketURI(endpoint);
 
         try {
             try {
@@ -528,7 +527,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
                 this.webSocket = tokenAPIHandler.getOrBuildClient()
                         .newWebSocketBuilder()
                         .subprotocols(protocol, "token-" + tokenAPIHandler.getToken())
-                        .buildAsync(webSocketUri, internalListener)
+                        .buildAsync(webSocketURI, internalListener)
                         .get();
 
                 if (status.get() == Status.FAILED) {
@@ -541,11 +540,11 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
 
             } catch (ExecutionException e) {
                 if (e.getCause() instanceof ConnectException)
-                    throw new ConnectException("Cannot create webSocket " + webSocketUri + ".");
+                    throw new ConnectException("Cannot create webSocket " + webSocketURI + ".");
                 else if (e.getCause() instanceof IOException)
-                    throw new IOException("Cannot create webSocket " + webSocketUri + ".", e);
+                    throw new IOException("Cannot create webSocket " + webSocketURI + ".", e);
                 else
-                    throw new HiroException("Cannot create webSocket " + webSocketUri + ".", e);
+                    throw new HiroException("Cannot create webSocket " + webSocketURI + ".", e);
             }
         } catch (Exception e) {
             closeWebSocket(1006, "Error at startup: " + e.getMessage());

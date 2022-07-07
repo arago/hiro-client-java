@@ -1,5 +1,6 @@
 package co.arago.hiro.client.model.token;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -30,13 +31,14 @@ public class PasswordTokenRequest extends AbstractTokenRequest {
     @JsonProperty("password")
     public String password;
 
+    @JsonCreator
     public PasswordTokenRequest(
-            String username,
-            String password,
-            String clientId,
-            String clientSecret,
-            String organization,
-            String organizationId) {
+            @JsonProperty("username") String username,
+            @JsonProperty("password") String password,
+            @JsonProperty("clientId") String clientId,
+            @JsonProperty("clientSecret") String clientSecret,
+            @JsonProperty("organization") String organization,
+            @JsonProperty("organizationId") String organizationId) {
         super("password", clientId, clientSecret, organization, organizationId);
         this.username = username;
         this.password = password;

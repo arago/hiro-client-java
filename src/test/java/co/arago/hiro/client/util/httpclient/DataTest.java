@@ -15,9 +15,17 @@ public class DataTest {
 
     @Test
     public void testMultiValues() {
-        UriEncodedData uriEncodedData = new UriEncodedData();
+        URIEncodedData uriEncodedData = new URIEncodedData();
 
         assertEquals(uriEncodedData.toString(), "");
+
+        final String compareWithBlank = "blank=&hello=world&key=value&nice=weather";
+        final String compareWithoutBlank = "hello=world&key=value&nice=weather";
+
+        uriEncodedData.set(compareWithBlank);
+
+        assertEquals(uriEncodedData.toString(), compareWithBlank);
+        assertEquals(uriEncodedData.toStringRemoveBlanks(), compareWithoutBlank);
 
         Map<String, String> initialMap = new TreeMap<>(Map.of(
                 "blank", "",
@@ -30,8 +38,8 @@ public class DataTest {
         String withBlank = uriEncodedData.toString();
         String withoutBlank = uriEncodedData.toStringRemoveBlanks();
 
-        assertEquals(withBlank, "blank=&hello=world&key=value&nice=weather");
-        assertEquals(withoutBlank, "hello=world&key=value&nice=weather");
+        assertEquals(withBlank, compareWithBlank);
+        assertEquals(withoutBlank, compareWithoutBlank);
 
         uriEncodedData.append("nice", (String) null);
 

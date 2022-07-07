@@ -45,6 +45,11 @@ public class VersionResponse extends HiroMessage {
 
     protected final Map<String, VersionEntry> versionEntryMap = new LinkedHashMap<>();
 
+    @Override
+    public Map<String, ?> getMap() {
+        return versionEntryMap;
+    }
+
     /**
      * Jackson Setter that transforms incoming maps into VersionEntries.
      *

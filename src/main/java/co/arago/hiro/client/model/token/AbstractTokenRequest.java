@@ -1,8 +1,9 @@
 package co.arago.hiro.client.model.token;
 
-import co.arago.hiro.client.model.EncodedUriMessage;
+import co.arago.hiro.client.model.EncodedURIMessage;
 import co.arago.hiro.client.model.JsonMessage;
 import co.arago.util.json.JsonUtil;
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.type.TypeReference;
 
@@ -22,7 +23,7 @@ import java.util.Map;
  * }
  * </pre>
  */
-public abstract class AbstractTokenRequest implements JsonMessage, EncodedUriMessage {
+public abstract class AbstractTokenRequest implements JsonMessage, EncodedURIMessage {
 
     // Match the JSON structure for the request.
 
@@ -49,12 +50,13 @@ public abstract class AbstractTokenRequest implements JsonMessage, EncodedUriMes
     @JsonProperty("organization_id")
     public String organizationId;
 
+    @JsonCreator
     public AbstractTokenRequest(
-            String grantType,
-            String clientId,
-            String clientSecret,
-            String organization,
-            String organizationId) {
+            @JsonProperty("grantType") String grantType,
+            @JsonProperty("clientId") String clientId,
+            @JsonProperty("clientSecret") String clientSecret,
+            @JsonProperty("organization") String organization,
+            @JsonProperty("organizationId") String organizationId) {
         this.grantType = grantType;
         this.clientId = clientId;
         this.clientSecret = clientSecret;

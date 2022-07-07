@@ -241,7 +241,7 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
 
     protected final TokenInfo tokenInfo = new TokenInfo();
 
-    protected URI apiUri;
+    protected URI apiURI;
 
     protected AbstractRemoteAuthTokenAPIHandler(Conf<?> builder) {
         super(builder);
@@ -284,10 +284,10 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
 
     private void configureLogging() {
         try {
-            httpLogger.addFilter(getUri("token"));
-            httpLogger.addFilter(getUri("app"));
-            httpLogger.addFilter(getUri("refresh"));
-            httpLogger.addFilter(getUri("revoke"));
+            httpLogger.addFilter(getURI("token"));
+            httpLogger.addFilter(getURI("app"));
+            httpLogger.addFilter(getURI("refresh"));
+            httpLogger.addFilter(getURI("revoke"));
         } catch (IOException | InterruptedException | HiroException e) {
             log.error("Cannot get apiPath URI. Disable logging of http bodies.", e);
             httpLogger.setLogBody(false);
@@ -315,11 +315,11 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
      * @throws InterruptedException Call got interrupted
      * @throws HiroException        When calling /api/version responds with an error
      */
-    public URI getUri(String path) throws IOException, InterruptedException, HiroException {
-        if (apiUri == null)
-            apiUri = (apiPath != null ? buildApiURI(apiPath) : getApiUriOf(apiName));
+    public URI getURI(String path) throws IOException, InterruptedException, HiroException {
+        if (apiURI == null)
+            apiURI = (apiPath != null ? buildApiURI(apiPath) : getApiURIOf(apiName));
 
-        return apiUri.resolve(RegExUtils.removePattern(path, "^/+"));
+        return apiURI.resolve(RegExUtils.removePattern(path, "^/+"));
     }
 
     /**
@@ -457,15 +457,15 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
             if (authApiVersion >= 6.6f) {
                 tokenResponse = post(
                         TokenResponse.class,
-                        getUri("token"),
-                        tokenRequest.toUriEncodedStringRemoveBlanks(),
+                        getURI("token"),
+                        tokenRequest.toURIEncodedStringRemoveBlanks(),
                         new HttpHeaderMap(Map.of("Content-Type", "application/x-www-form-urlencoded")),
                         httpRequestTimeout,
                         maxRetries);
             } else {
                 tokenResponse = post(
                         TokenResponse.class,
-                        getUri("refresh"),
+                        getURI("refresh"),
                         tokenRequest.toJsonStringNoNull(),
                         new HttpHeaderMap(Map.of("Content-Type", "application/json")),
                         httpRequestTimeout,
@@ -517,7 +517,7 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
 
         TokenResponse tokenResponse = post(
                 TokenResponse.class,
-                getUri("revoke"),
+                getURI("revoke"),
                 tokenRequest.toJsonStringNoNull(),
                 new HttpHeaderMap(Map.of(
                         "Content-Type", "application/json",
