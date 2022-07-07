@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.net.http.WebSocket;
 import java.util.Map;
 
+import static co.arago.util.validation.RequiredFieldChecks.notNull;
+
 /**
  * The handler for Action WebSocket.
  *

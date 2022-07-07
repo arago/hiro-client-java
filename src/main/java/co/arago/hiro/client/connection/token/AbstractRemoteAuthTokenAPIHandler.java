@@ -22,6 +22,8 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
+import static co.arago.util.validation.RequiredFieldChecks.notBlank;
+
 public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPIHandler {
 
     final static Logger log = LoggerFactory.getLogger(AbstractRemoteAuthTokenAPIHandler.class);

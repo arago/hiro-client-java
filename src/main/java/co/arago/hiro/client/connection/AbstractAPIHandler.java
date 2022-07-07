@@ -13,7 +13,6 @@ import co.arago.hiro.client.util.httpclient.StreamContainer;
 import co.arago.hiro.client.util.httpclient.URLPartEncoder;
 import co.arago.hiro.client.util.httpclient.UriEncodedData;
 import co.arago.util.json.JsonUtil;
-import co.arago.util.validation.RequiredFieldChecks;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -33,10 +32,12 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import static co.arago.util.validation.RequiredFieldChecks.notNull;
+
 /**
  * Root class with fields and tool methods for all API Handlers
  */
-public abstract class AbstractAPIHandler extends RequiredFieldChecks {
+public abstract class AbstractAPIHandler {
 
     final static Logger log = LoggerFactory.getLogger(AbstractAPIHandler.class);
 

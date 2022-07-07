@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Map;
 
+import static co.arago.util.validation.RequiredFieldChecks.notBlank;
+
 public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandler {
 
     final static Logger log = LoggerFactory.getLogger(PasswordAuthTokenAPIHandler.class);

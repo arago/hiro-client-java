@@ -13,7 +13,6 @@ import co.arago.hiro.client.util.httpclient.StreamContainer;
 import co.arago.hiro.client.util.httpclient.URIPath;
 import co.arago.hiro.client.util.httpclient.UriEncodedData;
 import co.arago.util.json.JsonUtil;
-import co.arago.util.validation.RequiredFieldChecks;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -26,6 +25,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
 import java.util.Map;
+
+import static co.arago.util.validation.RequiredFieldChecks.anyError;
+import static co.arago.util.validation.RequiredFieldChecks.notNull;
 
 /**
  * This class is the basis of all authenticated API handlers that make use of the different sections of the HIRO API.
@@ -130,7 +132,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param <T> The Builder type
      * @param <R> The type of the result expected from {@link #execute()}
      */
-    public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> extends RequiredFieldChecks {
+    public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> {
 
         protected final URIPath path;
         protected UriEncodedData query = new UriEncodedData();

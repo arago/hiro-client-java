@@ -4,7 +4,7 @@ import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.DefaultHiroItemListMessage;
 import co.arago.hiro.client.model.HiroMessage;
-import co.arago.hiro.client.model.timeseries.HiroTimeseriesListMessage;
+import co.arago.hiro.client.model.vertex.timeseries.HiroTimeseriesListMessage;
 import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
 import co.arago.hiro.client.model.vertex.HiroVertexMessage;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+
+import static co.arago.util.validation.RequiredFieldChecks.notBlank;
 
 public class GraphAPI extends AuthenticatedAPIHandler {
 

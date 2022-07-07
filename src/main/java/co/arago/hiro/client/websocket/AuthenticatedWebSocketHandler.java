@@ -32,10 +32,13 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static co.arago.util.validation.RequiredFieldChecks.anyError;
+import static co.arago.util.validation.RequiredFieldChecks.notNull;
+
 /**
  * Handles websockets. Tries to renew any aborted connection until the websocket gets closed from this side.
  */
-public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks implements AutoCloseable {
+public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
 
     final static Logger log = LoggerFactory.getLogger(AuthenticatedWebSocketHandler.class);
 

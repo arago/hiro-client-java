@@ -9,6 +9,9 @@ import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 
 import java.io.IOException;
 
+import static co.arago.util.validation.RequiredFieldChecks.notBlank;
+import static co.arago.util.validation.RequiredFieldChecks.notEmpty;
+
 public class AppAPI extends AuthenticatedAPIHandler {
 
     // ###############################################################################################
