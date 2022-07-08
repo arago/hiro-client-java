@@ -1,3 +1,8 @@
+# v0.4.0
+
+* Code Auth and Org switch.
+* Improved integration tests.
+
 # v0.3.5
 
 * Changes for compatibility with auth api 6.6 of HIRO graph.
