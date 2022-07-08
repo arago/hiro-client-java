@@ -29,21 +29,27 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
 
     final static Logger log = LoggerFactory.getLogger(AbstractClientAPIHandler.class);
 
+    protected final static long DEFAULT_SHUTDOWN_TIMEOUT = 3000;
+    protected final static int DEFAULT_MAX_BINARY_LOG_LENGTH = 1024;
+    protected final static int DEFAULT_MAX_CONNECTION_POOL = 8;
+
     // ###############################################################################################
     // ## Conf and Builder ##
     // ###############################################################################################
 
     public static abstract class Conf<T extends Conf<T>> extends AbstractAPIHandler.Conf<T> {
-        protected AbstractClientAPIHandler.ProxySpec proxy;
-        protected boolean followRedirects = true;
-        protected Boolean acceptAllCerts;
-        protected Long connectTimeout;
-        protected SSLParameters sslParameters;
-        protected HttpClient httpClient;
-        protected CookieManager cookieManager;
-        protected SSLContext sslContext;
-        protected int maxConnectionPool = 8;
-        protected int maxBinaryLogLength = 1024;
+        private AbstractClientAPIHandler.ProxySpec proxy;
+        private boolean followRedirects = true;
+        private Boolean acceptAllCerts;
+        private Long connectTimeout;
+
+        private long shutdownTimeout = DEFAULT_SHUTDOWN_TIMEOUT;
+        private SSLParameters sslParameters;
+        private HttpClient httpClient;
+        private CookieManager cookieManager;
+        private SSLContext sslContext;
+        private int maxConnectionPool = DEFAULT_MAX_CONNECTION_POOL;
+        private int maxBinaryLogLength = DEFAULT_MAX_BINARY_LOG_LENGTH;
 
         ProxySpec getProxy() {
             return proxy;
@@ -52,6 +58,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         /**
          * @param proxy Simple proxy with one address and port
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setProxy(ProxySpec proxy) {
             this.proxy = proxy;
@@ -65,6 +72,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         /**
          * @param followRedirects Enable Redirect.NORMAL. Default is true.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setFollowRedirects(boolean followRedirects) {
             this.followRedirects = followRedirects;
@@ -78,9 +86,26 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         /**
          * @param connectTimeout Connect timeout in milliseconds.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setConnectTimeout(Long connectTimeout) {
             this.connectTimeout = connectTimeout;
+            return self();
+        }
+
+        public long getShutdownTimeout() {
+            return shutdownTimeout;
+        }
+
+        /**
+         * @param shutdownTimeout Time to wait in milliseconds for a complete shutdown of the Java 11 HttpClientImpl.
+         *                        If this is set to a value too low, you might need to wait elsewhere for the HttpClient
+         *                        to shut down properly. Default is 3000ms.
+         * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
+         */
+        public T setShutdownTimeout(long shutdownTimeout) {
+            this.shutdownTimeout = shutdownTimeout;
             return self();
         }
 
@@ -94,6 +119,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          *
          * @param acceptAllCerts the toggle
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setAcceptAllCerts(Boolean acceptAllCerts) {
             this.acceptAllCerts = acceptAllCerts;
@@ -107,6 +133,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         /**
          * @param sslContext The specific SSLContext to use.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          * @see #setAcceptAllCerts(Boolean)
          */
         public T setSslContext(SSLContext sslContext) {
@@ -121,6 +148,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         /**
          * @param sslParameters The specific SSLParameters to use.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setSslParameters(SSLParameters sslParameters) {
             this.sslParameters = sslParameters;
@@ -137,6 +165,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          *
          * @param httpClient Instance of an HttpClient.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setHttpClient(HttpClient httpClient) {
             this.httpClient = httpClient;
@@ -153,6 +182,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          *
          * @param cookieManager Instance of a CookieManager.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setCookieManager(CookieManager cookieManager) {
             this.cookieManager = cookieManager;
@@ -169,6 +199,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          *
          * @param maxConnectionPool Maximum size of the pool. Default is 8.
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setMaxConnectionPool(int maxConnectionPool) {
             this.maxConnectionPool = maxConnectionPool;
@@ -184,6 +215,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
          *
          * @param maxBinaryLogLength Size in bytes
          * @return {@link #self()}
+         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setMaxBinaryLogLength(int maxBinaryLogLength) {
             this.maxBinaryLogLength = maxBinaryLogLength;
@@ -242,13 +274,18 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     protected final boolean followRedirects;
     protected final Long connectTimeout;
     protected final SSLParameters sslParameters;
-    protected HttpClient httpClient;
-    protected SSLContext sslContext;
+    protected final SSLContext sslContext;
     protected final int maxConnectionPool;
     protected final CookieManager cookieManager;
 
+    private HttpClient httpClient;
+
     protected final HttpLogger httpLogger;
     protected boolean externalConnection;
+
+    protected final Long shutdownTimeout;
+
+    private final AbstractClientAPIHandler sharedConnectionHandler;
 
     /**
      * Protected Constructor. Attributes shall be filled via builders.
@@ -260,6 +297,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         this.proxy = builder.getProxy();
         this.followRedirects = builder.isFollowRedirects();
         this.connectTimeout = builder.getConnectTimeout();
+        this.shutdownTimeout = builder.getShutdownTimeout();
         Boolean acceptAllCerts = builder.getAcceptAllCerts();
         this.sslParameters = builder.getSslParameters();
         this.httpClient = builder.getHttpClient();
@@ -268,6 +306,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         this.httpLogger = new HttpLogger(builder.getMaxBinaryLogLength());
 
         this.externalConnection = (this.httpClient != null);
+        this.sharedConnectionHandler = null;
 
         if (acceptAllCerts == null) {
             this.sslContext = builder.getSslContext();
@@ -277,7 +316,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
                     this.sslContext = SSLContext.getInstance("TLS");
                     this.sslContext.init(null, trustAllCerts, new SecureRandom());
                 } catch (NoSuchAlgorithmException | KeyManagementException e) {
-                    // ignore
+                    throw new RuntimeException(e);
                 }
             } else {
                 this.sslContext = null;
@@ -286,7 +325,7 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     }
 
     /**
-     * Protected Copy Constructor. Attributes shall be copied from another AbstractClientAPIHandler.
+     * Protected Copy Constructor. Fields shall be copied from another AbstractClientAPIHandler.
      *
      * @param other The source AbstractClientAPIHandler.
      */
@@ -295,15 +334,16 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         this.proxy = other.proxy;
         this.followRedirects = other.followRedirects;
         this.connectTimeout = other.connectTimeout;
+        this.shutdownTimeout = other.shutdownTimeout;
         this.sslContext = other.sslContext;
         this.sslParameters = other.sslParameters;
-        this.httpClient = other.httpClient;
         this.maxConnectionPool = other.maxConnectionPool;
         this.cookieManager = other.cookieManager;
         this.httpLogger = other.httpLogger;
         // Always set externalClient to true, so a call to close() does not close the external connection.
         // External connections have to be closed on their own.
         this.externalConnection = true;
+        this.sharedConnectionHandler = other;
     }
 
     // ###############################################################################################
@@ -311,7 +351,8 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     // ###############################################################################################
 
     /**
-     * Return {@link #httpClient}. Build a new client if necessary.
+     * Return {@link #httpClient} or the httpClient of a sharedConnectionHandler if available.
+     * Build a new client if necessary.
      *
      * @return The cached HttpClient
      */
@@ -319,6 +360,9 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
     public HttpClient getOrBuildClient() {
         if (httpClient != null)
             return httpClient;
+
+        if (sharedConnectionHandler != null)
+            return sharedConnectionHandler.getOrBuildClient();
 
         HttpClient.Builder builder = HttpClient.newBuilder();
 
@@ -343,37 +387,53 @@ public abstract class AbstractClientAPIHandler extends AbstractAPIHandler implem
         builder.executor(Executors.newFixedThreadPool(maxConnectionPool));
 
         httpClient = builder.build();
+
+        log.debug("HttpClient created");
+
         return httpClient;
     }
 
     /**
+     * <p>
      * Shut the {@link #httpClient} down by shutting down its ExecutorService. This call will be ignored if
      * {@link #externalConnection} is set to true (this happens, when {@link #httpClient} has been provided externally
-     * or this ClientAPIHandler has been created via its connection copy constructor
-     * {@link AbstractClientAPIHandler#AbstractClientAPIHandler(AbstractClientAPIHandler)}.
+     * or this ClientAPIHandler has been created via its connection copy constructor.
+     * </p>
+     * <p>
+     * Be aware, that there is a shutdown timeout so the Java 11 HttpClient can clean itself up properly. See
+     * {@link Conf#setShutdownTimeout(long)}.
+     * </p>
      */
     @Override
     public void close() {
-        if (externalConnection || httpClient == null || httpClient.executor().isEmpty())
-            return;
+        try {
+            if (externalConnection || httpClient == null || httpClient.executor().isEmpty())
+                return;
 
-        Executor executor = httpClient.executor().orElse(null);
+            Executor executor = httpClient.executor().orElse(null);
 
-        if (executor instanceof ExecutorService) {
-            ExecutorService executorService = (ExecutorService) httpClient.executor().get();
+            if (executor instanceof ExecutorService) {
+                ExecutorService executorService = (ExecutorService) executor;
 
-            executorService.shutdown();
-            try {
-                if (!executorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                executorService.shutdown();
+                try {
+                    if (!executorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
+                        executorService.shutdownNow();
+                    }
+                } catch (InterruptedException e) {
                     executorService.shutdownNow();
                 }
-            } catch (InterruptedException e) {
-                executorService.shutdownNow();
             }
-        }
 
-        httpClient = null;
-        System.gc();
+            httpClient = null;
+            System.gc();
+
+            Thread.sleep(shutdownTimeout);
+
+            log.debug("HttpClient closed");
+        } catch (Throwable t) {
+            log.error("Error closing HttpClient.", t);
+        }
     }
 
     /**

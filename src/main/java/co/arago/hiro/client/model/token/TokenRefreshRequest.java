@@ -1,6 +1,5 @@
 package co.arago.hiro.client.model.token;
 
-import co.arago.hiro.client.model.JsonMessage;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -9,33 +8,31 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  *
  * <pre>
  * {
+ *     "grant_type": "...",
  *     "client_id": "...",
  *     "client_secret": "...",
- *     "refresh_token": "..."
+ *     "refresh_token": "...",
+ *     "organization": "...",
+ *     "organization_id: "..."
  * }
  * </pre>
  */
-public class TokenRefreshRequest implements JsonMessage {
+public class TokenRefreshRequest extends AbstractTokenRequest {
 
     // Match the JSON structure for the request.
 
     private static final long serialVersionUID = -4492202824089449055L;
 
-    @JsonProperty("client_id")
-    public String clientId;
-
-    @JsonProperty("client_secret")
-    public String clientSecret;
-
     @JsonProperty("refresh_token")
     public String refreshToken;
 
-    public TokenRefreshRequest() {
-    }
-
-    public TokenRefreshRequest(String clientId, String clientSecret, String refreshToken) {
-        this.clientId = clientId;
-        this.clientSecret = clientSecret;
+    public TokenRefreshRequest(
+            String clientId,
+            String clientSecret,
+            String refreshToken,
+            String organization,
+            String organizationId) {
+        super("refresh_token", clientId, clientSecret, organization, organizationId);
         this.refreshToken = refreshToken;
     }
 

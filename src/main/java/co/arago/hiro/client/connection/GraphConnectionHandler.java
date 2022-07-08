@@ -26,7 +26,8 @@ public class GraphConnectionHandler extends AbstractVersionAPIHandler {
         }
 
         public GraphConnectionHandler build() {
-            return new GraphConnectionHandler(this);
+            return (getSharedConnectionHandler() != null) ? new GraphConnectionHandler(getSharedConnectionHandler())
+                    : new GraphConnectionHandler(this);
         }
 
     }
@@ -45,7 +46,7 @@ public class GraphConnectionHandler extends AbstractVersionAPIHandler {
     }
 
     /**
-     * Protected Copy Constructor. Attributes shall be copied from another AbstractVersionAPIHandler.
+     * Protected Copy Constructor. Fields shall be copied from another AbstractVersionAPIHandler.
      *
      * @param other The source AbstractVersionAPIHandler.
      */
@@ -65,7 +66,7 @@ public class GraphConnectionHandler extends AbstractVersionAPIHandler {
      */
     @Override
     public void addToHeaders(HttpHeaderMap headers) {
-        headers.put("User-Agent", userAgent);
+        headers.set("User-Agent", userAgent);
     }
 
 }

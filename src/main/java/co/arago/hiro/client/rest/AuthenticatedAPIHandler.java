@@ -11,7 +11,7 @@ import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import co.arago.hiro.client.util.httpclient.URIPath;
-import co.arago.hiro.client.util.httpclient.UriQueryMap;
+import co.arago.hiro.client.util.httpclient.UriEncodedData;
 import co.arago.util.json.JsonUtil;
 import co.arago.util.validation.RequiredFieldChecks;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
@@ -134,7 +133,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> extends RequiredFieldChecks {
 
         protected final URIPath path;
-        protected UriQueryMap query = new UriQueryMap();
+        protected UriEncodedData query = new UriEncodedData();
         protected HttpHeaderMap headers = new HttpHeaderMap();
         protected String fragment;
 
@@ -152,8 +151,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @param query Set query parameters.
          * @return {@link #self()}
          */
-        public T setUrlQuery(Map<String, ?> query) {
-            this.query.putAll(query);
+        public T setUrlQuery(UriEncodedData query) {
+            this.query.setAll(query);
             return self();
         }
 
@@ -161,8 +160,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @param headers Set headers.
          * @return {@link #self()}
          */
-        public T setHttpHeaders(Map<String, ?> headers) {
-            this.headers.putAll(headers);
+        public T setHttpHeaders(HttpHeaderMap headers) {
+            this.headers.setAll(headers);
             return self();
         }
 
@@ -205,7 +204,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          */
         public SendBodyAPIRequestConf(String... pathParts) {
             super(pathParts);
-            headers.put("Content-Type", "application/json;encoding=UTF-8");
+            headers.set("Content-Type", "application/json;encoding=UTF-8");
         }
 
         /**
@@ -316,15 +315,12 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @return {@link #self()}
          */
         @Override
-        public T setHttpHeaders(Map<String, ?> headers) {
+        public T setHttpHeaders(HttpHeaderMap headers) {
 
             if (headers != null) {
-                for (Map.Entry<String, ?> entry : headers.entrySet()) {
-                    if (StringUtils.equalsIgnoreCase("Content-Type", entry.getKey())) {
-                        setContentType(String.valueOf(entry.getValue()));
-                        break;
-                    }
-                }
+                String contentType = headers.getFirstIgnoreCase("Content-Type");
+                if (StringUtils.isNotBlank(contentType))
+                    setContentType(contentType);
             }
 
             return super.setHttpHeaders(headers);
@@ -347,53 +343,13 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param builder The builder to use.
      */
     protected AuthenticatedAPIHandler(Conf<?> builder) {
-        super(makeHandlerConf(builder, builder.getTokenApiHandler()));
+        super(notNull(builder.getTokenApiHandler(), "tokenApiHandler"));
         this.apiName = builder.getApiName();
         this.apiPath = builder.getApiPath();
-        this.tokenAPIHandler = notNull(builder.getTokenApiHandler(), "tokenApiHandler");
+        this.tokenAPIHandler = builder.getTokenApiHandler();
 
-        if (StringUtils.isBlank(this.apiName) && StringUtils.isBlank(this.apiPath))
+        if (StringUtils.isAllBlank(this.apiName, this.apiPath))
             anyError("Either 'apiName' or 'apiPath' have to be set.");
-    }
-
-    /**
-     * Construct an AbstractAPIHandler.GetterConf from the values of this Conf and the supplied tokenAPIHandler.
-     * This ensures, that some values ({@link #apiUrl} and {@link #userAgent}) are always set via the tokenAPIHandler
-     * and some others use default values from there ({@link #httpRequestTimeout} and {@link #maxRetries}) unless set
-     * in the builder for this Handler.
-     *
-     * @param builder         The builder of this handler.
-     * @param tokenAPIHandler The tokenApiHandler for this Handler.
-     * @return An AbstractAPIHandler.GetterConf for the parent class.
-     */
-    protected static AbstractAPIHandler.GetterConf makeHandlerConf(Conf<?> builder, AbstractTokenAPIHandler tokenAPIHandler) {
-        return new AbstractAPIHandler.GetterConf() {
-            @Override
-            public URL getApiUrl() {
-                return tokenAPIHandler.getApiUrl();
-            }
-
-            @Override
-            public URI getWebSocketUri() {
-                return tokenAPIHandler.getWebSocketUri();
-            }
-
-            @Override
-            public Long getHttpRequestTimeout() {
-                return builder.getHttpRequestTimeout() != null ? builder.getHttpRequestTimeout()
-                        : tokenAPIHandler.getHttpRequestTimeout();
-            }
-
-            @Override
-            public int getMaxRetries() {
-                return builder.getMaxRetries() > 0 ? builder.getMaxRetries() : tokenAPIHandler.getMaxRetries();
-            }
-
-            @Override
-            public String getUserAgent() {
-                return tokenAPIHandler.getUserAgent();
-            }
-        };
     }
 
     /**
@@ -408,7 +364,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @throws InterruptedException Call got interrupted
      * @throws HiroException        When calling /api/version responds with an error
      */
-    public URI getEndpointUri(URIPath path, UriQueryMap query, String fragment)
+    public URI getEndpointUri(URIPath path, UriEncodedData query, String fragment)
             throws IOException, InterruptedException, HiroException {
         if (apiUri == null)
             apiUri = (apiPath != null ? buildApiURI(apiPath) : tokenAPIHandler.getApiUriOf(apiName));
@@ -425,8 +381,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      */
     @Override
     public void addToHeaders(HttpHeaderMap headers) throws InterruptedException, IOException, HiroException {
-        headers.put("User-Agent", userAgent);
-        headers.put("Authorization", "Bearer " + tokenAPIHandler.getToken());
+        headers.set("User-Agent", userAgent);
+        headers.set("Authorization", "Bearer " + tokenAPIHandler.getToken());
     }
 
     /**

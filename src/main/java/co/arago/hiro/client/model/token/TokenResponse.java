@@ -12,7 +12,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * {
  *     "access_token" or "_TOKEN": "...",
  *     "refresh_token": "...",
- *     "expires-at": 1234567890,
+ *     "expires_in": 3600,
  *     "_IDENTITY": "...",
  *     "_IDENTITY_ID": "...",
  *     "_APPLICATION": "...",
@@ -31,7 +31,11 @@ public class TokenResponse extends HiroMessage {
     @JsonProperty("refresh_token")
     public String refreshToken;
 
+    @JsonProperty("expires_in")
+    public Long expiresIn;
+
     @JsonProperty("expires-at")
+    @Deprecated
     public Long expiresAt;
 
     @JsonProperty("_IDENTITY")

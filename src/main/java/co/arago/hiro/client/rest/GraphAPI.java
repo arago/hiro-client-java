@@ -426,7 +426,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public QueryTimeseriesCommand setFrom(long from) {
-            query.put("from", String.valueOf(from));
+            query.set("from", String.valueOf(from));
             return this;
         }
 
@@ -435,7 +435,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public QueryTimeseriesCommand setTo(long to) {
-            query.put("to", String.valueOf(to));
+            query.set("to", String.valueOf(to));
             return this;
         }
 
@@ -444,7 +444,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public QueryTimeseriesCommand setLimit(Integer limit) {
-            query.put("limit", (limit != null) ? limit.toString() : null);
+            query.set("limit", (limit != null) ? limit.toString() : null);
             return this;
         }
 
@@ -453,7 +453,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public QueryTimeseriesCommand setOrder(String order) {
-            query.put("order", order);
+            query.set("order", order);
             return this;
         }
 
@@ -462,7 +462,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public QueryTimeseriesCommand setAggregate(String aggregate) {
-            query.put("aggregate", aggregate);
+            query.set("aggregate", aggregate);
             return this;
         }
 
@@ -524,7 +524,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetEntityCommand setFields(String fields) {
-            query.put("fields", fields);
+            query.set("fields", fields);
             return this;
         }
 
@@ -533,7 +533,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetEntityCommand setIncludeDeleted(boolean includeDeleted) {
-            query.put("includeDeleted", String.valueOf(includeDeleted));
+            query.set("includeDeleted", String.valueOf(includeDeleted));
             return this;
         }
 
@@ -542,7 +542,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetEntityCommand setListMeta(boolean listMeta) {
-            query.put("listMeta", String.valueOf(listMeta));
+            query.set("listMeta", String.valueOf(listMeta));
             return this;
         }
 
@@ -551,7 +551,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetEntityCommand setVid(String vid) {
-            query.put("vid", vid);
+            query.set("vid", vid);
             return this;
         }
 
@@ -636,7 +636,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public UpdateEntityCommand setFullResponse(boolean fullResponse) {
-            query.put("fullResponse", String.valueOf(fullResponse));
+            query.set("fullResponse", String.valueOf(fullResponse));
             return this;
         }
 
@@ -645,7 +645,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public UpdateEntityCommand setListMeta(boolean listMeta) {
-            query.put("listMeta", String.valueOf(listMeta));
+            query.set("listMeta", String.valueOf(listMeta));
             return this;
         }
 
@@ -930,7 +930,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetBlobCommand setContentId(String contentId) {
-            query.put("contentId", contentId);
+            query.set("contentId", contentId);
             return this;
         }
 
@@ -939,7 +939,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetBlobCommand setIncludeDeleted(boolean includeDeleted) {
-            query.put("includeDeleted", String.valueOf(includeDeleted));
+            query.set("includeDeleted", String.valueOf(includeDeleted));
             return this;
         }
 
@@ -1078,7 +1078,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setIncludeDeleted(boolean includeDeleted) {
-            query.put("includeDeleted", String.valueOf(includeDeleted));
+            query.set("includeDeleted", String.valueOf(includeDeleted));
             return this;
         }
 
@@ -1087,7 +1087,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setFrom(long from) {
-            query.put("from", String.valueOf(from));
+            query.set("from", String.valueOf(from));
             return this;
         }
 
@@ -1096,7 +1096,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setTo(long to) {
-            query.put("to", String.valueOf(to));
+            query.set("to", String.valueOf(to));
             return this;
         }
 
@@ -1105,7 +1105,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setLimit(Integer limit) {
-            query.put("limit", (limit != null) ? limit.toString() : null);
+            query.set("limit", (limit != null) ? limit.toString() : null);
             return this;
         }
 
@@ -1114,7 +1114,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setOffset(Integer offset) {
-            query.put("offset", (offset != null) ? offset.toString() : null);
+            query.set("offset", (offset != null) ? offset.toString() : null);
             return this;
         }
 
@@ -1123,7 +1123,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setListMeta(boolean listMeta) {
-            query.put("listMeta", String.valueOf(listMeta));
+            query.set("listMeta", String.valueOf(listMeta));
             return this;
         }
 
@@ -1137,7 +1137,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setType(String type) {
-            query.put("type", type);
+            query.set("type", type);
             return this;
         }
 
@@ -1146,7 +1146,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setVersion(Integer version) {
-            query.put("version", (version != null) ? version.toString() : null);
+            query.set("version", (version != null) ? version.toString() : null);
             return this;
         }
 
@@ -1155,7 +1155,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetHistoryCommand setVid(String vid) {
-            query.put("vid", vid);
+            query.set("vid", vid);
             return this;
         }
 
@@ -1215,7 +1215,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetTimeseriesCommand setIncludeDeleted(boolean includeDeleted) {
-            query.put("includeDeleted", String.valueOf(includeDeleted));
+            query.set("includeDeleted", String.valueOf(includeDeleted));
             return this;
         }
 
@@ -1224,7 +1224,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetTimeseriesCommand setFrom(long from) {
-            query.put("from", String.valueOf(from));
+            query.set("from", String.valueOf(from));
             return this;
         }
 
@@ -1233,7 +1233,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetTimeseriesCommand setTo(long to) {
-            query.put("to", String.valueOf(to));
+            query.set("to", String.valueOf(to));
             return this;
         }
 
@@ -1242,7 +1242,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetTimeseriesCommand setLimit(Integer limit) {
-            query.put("limit", (limit != null) ? limit.toString() : null);
+            query.set("limit", (limit != null) ? limit.toString() : null);
             return this;
         }
 
@@ -1251,7 +1251,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetTimeseriesCommand setOrder(String order) {
-            query.put("order", order);
+            query.set("order", order);
             return this;
         }
 
@@ -1260,7 +1260,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetTimeseriesCommand setWith(String with) {
-            query.put("with", with);
+            query.set("with", with);
             return this;
         }
 
@@ -1269,7 +1269,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetTimeseriesCommand setAggregate(String aggregate) {
-            query.put("aggregate", aggregate);
+            query.set("aggregate", aggregate);
             return this;
         }
 
@@ -1323,7 +1323,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          */
         protected GetTimeseriesHistoryCommand(String ogitId, long timestamp) {
             super(notBlank(ogitId, "ogitId"), "values", "history");
-            query.put("timestamp", String.valueOf(timestamp));
+            query.set("timestamp", String.valueOf(timestamp));
         }
 
         /**
@@ -1331,7 +1331,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
          * @return this
          */
         public GetTimeseriesHistoryCommand setIncludeDeleted(boolean includeDeleted) {
-            query.put("includeDeleted", String.valueOf(includeDeleted));
+            query.set("includeDeleted", String.valueOf(includeDeleted));
             return this;
         }
 

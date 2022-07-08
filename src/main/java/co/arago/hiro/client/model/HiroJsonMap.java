@@ -14,7 +14,7 @@ import java.util.Map;
  * The keys need to be strings. Derived children will specify specific fields for JSON data, while all remaining
  * data will be collected in this map.
  */
-public class HiroJsonMap implements JsonMessage {
+public class HiroJsonMap implements JsonMessage, ToMap {
 
     private static final long serialVersionUID = 2435046646890203816L;
 

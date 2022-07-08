@@ -40,7 +40,8 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         public EnvironmentTokenAPIHandler build() {
-            return new EnvironmentTokenAPIHandler(this);
+            return getSharedConnectionHandler() != null ? new EnvironmentTokenAPIHandler(getSharedConnectionHandler(), this)
+                    : new EnvironmentTokenAPIHandler(this);
         }
 
     }
@@ -67,11 +68,11 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
      * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
      *
      * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     * @param tokenEnv          The name of the environment variable.
+     * @param builder           The builder with the configuration data for this specific class.
      */
-    public EnvironmentTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler, String tokenEnv) {
+    protected EnvironmentTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler, Conf<?> builder) {
         super(versionAPIHandler);
-        this.tokenEnv = StringUtils.isBlank(tokenEnv) ? DEFAULT_ENV : tokenEnv;
+        this.tokenEnv = StringUtils.isBlank(builder.getTokenEnv()) ? DEFAULT_ENV : builder.getTokenEnv();
     }
 
     public static Conf<?> newBuilder() {

@@ -6,7 +6,7 @@
 
     <groupId>co.arago.hiro.client</groupId>
     <artifactId>hiro-client-java</artifactId>
-    <version>0.3.5</version>
+    <version>0.4.0-SNAPSHOT</version>
 
     <organization>
         <name>arago GmbH</name>
@@ -202,6 +202,23 @@
                 <configuration>
                     <javadocExecutable>${java.home}/bin/javadoc</javadocExecutable>
                     <quiet>true</quiet>
+                    <tags>
+                        <tag>
+                            <name>apiNote</name>
+                            <placement>a</placement>
+                            <head>API Note:</head>
+                        </tag>
+                        <tag>
+                            <name>implSpec</name>
+                            <placement>a</placement>
+                            <head>Implementation Requirements:</head>
+                        </tag>
+                        <tag>
+                            <name>implNote</name>
+                            <placement>a</placement>
+                            <head>Implementation Note:</head>
+                        </tag>
+                    </tags>
                 </configuration>
                 <executions>
                     <execution>
@@ -235,11 +252,11 @@
                     </execution>
                 </executions>
             </plugin>
-<!--
-            This plugin is needed to collect all dependencies for the AWS layer. It is called
-            directly via commandline and not part of any other build phase.
-            See the Makefile for more info.
--->
+            <!--
+                        This plugin is needed to collect all dependencies for the AWS layer. It is called
+                        directly via commandline and not part of any other build phase.
+                        See the Makefile for more info.
+            -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>

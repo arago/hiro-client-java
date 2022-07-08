@@ -70,6 +70,7 @@ public class EventWebSocketTest {
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                 .setAcceptAllCerts(config.accept_all_certs)
                 .setForceLogging(config.force_logging)
+                .setShutdownTimeout(0)
                 .build()) {
 
             DecodedToken decodedToken = handler.decodeToken();
@@ -94,6 +95,7 @@ public class EventWebSocketTest {
                 .setApiUrl(config.api_url)
                 .setToken("Invalid")
                 .setAcceptAllCerts(config.accept_all_certs)
+                .setShutdownTimeout(0)
                 .build()) {
             try (EventWebSocket eventWebSocket = EventWebSocket.newBuilder(handler, listener)
                     .setName("events-ws-test")
@@ -121,6 +123,7 @@ public class EventWebSocketTest {
                 .setApiUrl("http://nothing.here")
                 .setToken("Invalid")
                 .setAcceptAllCerts(config.accept_all_certs)
+                .setShutdownTimeout(0)
                 .build()) {
 
             try (EventWebSocket eventWebSocket = EventWebSocket.newBuilder(handler, listener)

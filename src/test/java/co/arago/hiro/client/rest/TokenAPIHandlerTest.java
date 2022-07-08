@@ -15,7 +15,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Paths;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
@@ -35,6 +34,7 @@ class TokenAPIHandlerTest {
                     .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                     .setAcceptAllCerts(config.accept_all_certs)
                     .setForceLogging(config.force_logging)
+                    .setShutdownTimeout(0)
                     .build();
         } catch (FileNotFoundException e) {
             log.warn("Skipping tests: {}.", e.getMessage());

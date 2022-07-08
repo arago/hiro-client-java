@@ -42,8 +42,10 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         public FixedTokenAPIHandler build() {
-            return new FixedTokenAPIHandler(this);
+            return getSharedConnectionHandler() != null ? new FixedTokenAPIHandler(getSharedConnectionHandler(), this)
+                    : new FixedTokenAPIHandler(this);
         }
+
     }
 
     // ###############################################################################################
@@ -63,14 +65,14 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
     }
 
     /**
-     * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
+     * Constructor
      *
      * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     * @param token             The token to use with this connection.
+     * @param builder           The builder to use for all specific data for this class.
      */
-    public FixedTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler, String token) {
+    protected FixedTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler, Conf<Builder> builder) {
         super(versionAPIHandler);
-        this.token = notNull(token, "token");
+        this.token = notNull(builder.getToken(), "token");
     }
 
     public static Conf<?> newBuilder() {
