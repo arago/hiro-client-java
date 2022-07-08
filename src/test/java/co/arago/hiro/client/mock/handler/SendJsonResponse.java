@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 
-public class JsonHandler {
+public abstract class SendJsonResponse {
     public void sendJsonResponse(HttpExchange exchange, int rCode, String responseString) throws IOException {
         byte[] response = responseString.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().put("Content-Type", Collections.singletonList("application/json"));

@@ -201,11 +201,7 @@ public class MultiValueMap {
         if (value instanceof String) {
             valueList.add((String) value);
         } else if (value instanceof Collection) {
-            ((Collection<?>) value).forEach(collectionValue -> {
-                if (!(collectionValue instanceof String))
-                    throw new ClassCastException("Values in Collection need to be of String type.");
-                valueList.add((String) collectionValue);
-            });
+            ((Collection<?>) value).forEach(collectionValue -> valueList.add((String) collectionValue));
         } else if (value != null) {
             throw new ClassCastException("Value needs to be of String or Collection<String> type.");
         }
@@ -229,10 +225,18 @@ public class MultiValueMap {
         return Objects.hashCode(map);
     }
 
-    public Map<String, List<String>> getMap() {
-        return map;
+    /**
+     * @return A deep copy of the internal map.
+     */
+    public Map<String, List<String>> getCopy() {
+        Map<String, List<String>> clone = new LinkedHashMap<>();
+        map.forEach((key, value) -> clone.put(key, new ArrayList<>(value)));
+        return clone;
     }
 
+    /**
+     * @return Create a map with keys and only the first value of the arrays behind those keys.
+     */
     public Map<String, String> toSingleValueMap() {
         Map<String, String> singleValueMap = new HashMap<>();
         map.forEach((key, value) -> singleValueMap.put(key, value.iterator().next()));

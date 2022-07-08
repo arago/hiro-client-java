@@ -14,42 +14,55 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.concurrent.Executors;
 
+/**
+ * A simple HttpServer which mocks the Graphit API Backend.
+ * Used only for tests.
+ */
 public class MockGraphitServer implements AutoCloseable {
 
     private final VersionResponse versionResponse;
 
     private final HttpServer httpServer;
 
+    /**
+     * Create the HttpServer and register all paths that are used across all tests.
+     * Loads a static version map from the resources.
+     *
+     * @throws IOException When the Server cannot be created.
+     */
     public MockGraphitServer() throws IOException {
         try {
+
             versionResponse = JsonUtil.DEFAULT.toObject(
-                    MockGraphitServer.class.getClassLoader().getResourceAsStream("responses/version.json"),
+                    getClass().getClassLoader().getResourceAsStream("responses/version.json"),
                     VersionResponse.class);
 
             this.httpServer = HttpServer.create(new InetSocketAddress(8000), 0);
             this.httpServer.setExecutor(Executors.newCachedThreadPool());
 
             addContext("/api/version", new VersionHttpHandler(versionResponse));
-            addContext(versionResponse.getVersionEntryOf("auth").endpoint + "token", new TokenHandler());
-            addContext(versionResponse.getVersionEntryOf("graph").endpoint + "", new BadRequestHandler());
+            addAPIContext("auth", "token", new TokenHandler());
+            addAPIContext("auth", "me", new BadRequestHandler());
+            addAPIContext("graph", "", new BadRequestHandler());
             addContext("/timeout", new DelayHandler(2000));
-        } catch (Exception e) {
+
+            this.httpServer.start();
+        } catch (HiroException e) {
             throw new IOException("Unexpected HiroException", e);
         }
     }
 
-    public void addContext(String path, HttpHandler handler) {
+    private void addContext(String path, HttpHandler handler) {
         this.httpServer.createContext(path, handler);
     }
 
-    public void addContext(String apiName, String endpoint, HttpHandler handler) throws HiroException {
+    private void addAPIContext(String apiName, String endpoint, HttpHandler handler) throws HiroException {
         addContext(versionResponse.getVersionEntryOf(apiName).endpoint + endpoint, handler);
     }
 
-    public void start() {
-        this.httpServer.start();
-    }
-
+    /**
+     * Stop the httpServer immediately.
+     */
     @Override
     public void close() {
         httpServer.stop(0);

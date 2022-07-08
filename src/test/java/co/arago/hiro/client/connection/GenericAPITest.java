@@ -1,11 +1,11 @@
 package co.arago.hiro.client.connection;
 
-import co.arago.hiro.client.Config;
+import co.arago.hiro.client.ConfigModel;
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
-import co.arago.hiro.client.mock.MockGraphitServer;
+import co.arago.hiro.client.mock.MockGraphitServerExtension;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.VersionResponse;
 import co.arago.hiro.client.rest.AuthenticatedAPIHandler;
@@ -14,6 +14,7 @@ import co.arago.util.json.JsonUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,22 +27,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@ExtendWith(MockGraphitServerExtension.class)
 public class GenericAPITest {
     public static AbstractTokenAPIHandler handler;
     public static AuthenticatedAPIHandler apiHandler;
     final static Logger log = LoggerFactory.getLogger(GenericAPITest.class);
 
-    static MockGraphitServer mockingServer;
-
     @BeforeAll
     static void init() throws IOException {
         try {
-            Config config = JsonUtil.DEFAULT.toObject(
+            ConfigModel config = JsonUtil.DEFAULT.toObject(
                     GenericAPITest.class.getClassLoader().getResourceAsStream("config.json"),
-                    Config.class);
-
-            mockingServer = new MockGraphitServer();
-            mockingServer.start();
+                    ConfigModel.class);
 
             handler = PasswordAuthTokenAPIHandler.newBuilder()
                     .setRootApiURI(config.api_url)
@@ -61,8 +58,6 @@ public class GenericAPITest {
     static void shutdown() {
         if (handler != null)
             handler.close();
-        if (mockingServer != null)
-            mockingServer.close();
     }
 
     @Test

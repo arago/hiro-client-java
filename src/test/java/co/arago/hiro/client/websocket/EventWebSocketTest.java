@@ -1,6 +1,6 @@
 package co.arago.hiro.client.websocket;
 
-import co.arago.hiro.client.Config;
+import co.arago.hiro.client.ConfigModel;
 import co.arago.hiro.client.connection.token.FixedTokenAPIHandler;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
@@ -15,11 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ConnectException;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -28,7 +26,7 @@ public class EventWebSocketTest {
 
     final static Logger log = LoggerFactory.getLogger(EventWebSocketTest.class);
 
-    public static Config config;
+    public static ConfigModel config;
 
     public static class EventListener implements EventWebSocketListener {
         public Throwable innerError;
@@ -56,11 +54,8 @@ public class EventWebSocketTest {
 
     @BeforeAll
     static void init() throws IOException {
-        try {
-            config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
-        } catch (FileNotFoundException e) {
-            log.warn("Skipping tests: {}.", e.getMessage());
-        }
+        config = JsonUtil.DEFAULT.toObject(EventWebSocket.class.getClassLoader().getResourceAsStream("config.json"),
+                ConfigModel.class);
     }
 
     @Test

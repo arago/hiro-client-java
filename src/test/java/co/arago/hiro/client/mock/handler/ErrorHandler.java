@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Map;
 
-public class ErrorHandler extends JsonHandler implements HttpHandler {
+public class ErrorHandler extends SendJsonResponse implements HttpHandler {
     final static Logger log = LoggerFactory.getLogger(ErrorHandler.class);
 
     int rCode;

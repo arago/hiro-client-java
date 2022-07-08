@@ -1,6 +1,6 @@
 package co.arago.hiro.client.rest;
 
-import co.arago.hiro.client.Config;
+import co.arago.hiro.client.ConfigModel;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
@@ -28,8 +28,9 @@ class GraphAPITest {
     @BeforeAll
     static void init() throws IOException {
         try {
-            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(),
-                    Config.class);
+            ConfigModel config = JsonUtil.DEFAULT.toObject(
+                    GraphAPI.class.getClassLoader().getResourceAsStream("config.json"),
+                    ConfigModel.class);
 
             handler = PasswordAuthTokenAPIHandler.newBuilder()
                     .setRootApiURI(config.api_url)

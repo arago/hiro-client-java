@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
-public class VersionHttpHandler extends JsonHandler implements HttpHandler {
+public class VersionHttpHandler extends SendJsonResponse implements HttpHandler {
 
     final static Logger log = LoggerFactory.getLogger(VersionHttpHandler.class);
 

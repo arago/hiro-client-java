@@ -16,7 +16,7 @@ import java.net.HttpURLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
-public class TokenHandler extends JsonHandler implements HttpHandler {
+public class TokenHandler extends SendJsonResponse implements HttpHandler {
 
     final static Logger log = LoggerFactory.getLogger(TokenHandler.class);
 

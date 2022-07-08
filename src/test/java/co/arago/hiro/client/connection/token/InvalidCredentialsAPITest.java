@@ -1,16 +1,13 @@
 package co.arago.hiro.client.connection.token;
 
-import co.arago.hiro.client.Config;
-import co.arago.hiro.client.exceptions.HiroException;
+import co.arago.hiro.client.ConfigModel;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
-import co.arago.hiro.client.mock.MockGraphitServer;
-import co.arago.hiro.client.mock.handler.BadRequestHandler;
+import co.arago.hiro.client.mock.MockGraphitServerExtension;
 import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.util.json.JsonUtil;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,34 +19,17 @@ import java.net.URISyntaxException;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@ExtendWith(MockGraphitServerExtension.class)
 public class InvalidCredentialsAPITest {
-    public static Config config;
+    public static ConfigModel config;
 
     final static Logger log = LoggerFactory.getLogger(InvalidCredentialsAPITest.class);
 
-    static MockGraphitServer mockingServer;
-
     @BeforeAll
     static void init() throws IOException {
-        try {
-            config = JsonUtil.DEFAULT.toObject(
-                    InvalidCredentialsAPITest.class.getClassLoader().getResourceAsStream("config.json"),
-                    Config.class);
-
-            mockingServer = new MockGraphitServer();
-
-            mockingServer.addContext("auth", "me", new BadRequestHandler());
-            mockingServer.start();
-
-        } catch (HiroException e) {
-            log.warn("Skipping tests: {}.", e.getMessage());
-        }
-    }
-
-    @AfterAll
-    static void shutdown() {
-        if (mockingServer != null)
-            mockingServer.close();
+        config = JsonUtil.DEFAULT.toObject(
+                InvalidCredentialsAPITest.class.getClassLoader().getResourceAsStream("config.json"),
+                ConfigModel.class);
     }
 
     @Test
@@ -109,7 +89,6 @@ public class InvalidCredentialsAPITest {
     }
 
     @Test
-    @Disabled
     void wrongUrl() throws MalformedURLException {
         if (config == null)
             return;
