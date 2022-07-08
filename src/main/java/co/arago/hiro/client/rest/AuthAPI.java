@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+import static co.arago.util.validation.ValueChecks.notBlank;
+
 public class AuthAPI extends AuthenticatedAPIHandler {
 
     // ###############################################################################################
@@ -108,7 +110,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -157,7 +159,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         @Override
         public HttpResponseParser execute() throws HiroException, IOException, InterruptedException {
             return getBinary(
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -211,7 +213,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public String execute() throws HiroException, IOException, InterruptedException {
             notBlank(streamContainer.getContentType(), "contentType");
             return executeBinary(
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     "PUT",
                     streamContainer,
                     headers,
@@ -287,7 +289,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return put(
                     HiroVertexMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
@@ -337,7 +339,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -386,7 +388,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexMessage execute() throws HiroException, IOException, InterruptedException {
             return post(
                     HiroVertexMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     notBlank(body, "body"),
                     headers,
                     httpRequestTimeout,
@@ -436,7 +438,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);
@@ -494,7 +496,7 @@ public class AuthAPI extends AuthenticatedAPIHandler {
         public HiroVertexListMessage execute() throws HiroException, IOException, InterruptedException {
             return get(
                     HiroVertexListMessage.class,
-                    getEndpointUri(path, query, fragment),
+                    getEndpointURI(path, query, fragment),
                     headers,
                     httpRequestTimeout,
                     maxRetries);

@@ -10,10 +10,9 @@ import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.hiro.client.util.httpclient.HttpResponseParser;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
+import co.arago.hiro.client.util.httpclient.URIEncodedData;
 import co.arago.hiro.client.util.httpclient.URLPartEncoder;
-import co.arago.hiro.client.util.httpclient.UriEncodedData;
 import co.arago.util.json.JsonUtil;
-import co.arago.util.validation.RequiredFieldChecks;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -21,10 +20,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -33,10 +30,12 @@ import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
+import static co.arago.util.validation.ValueChecks.notNull;
+
 /**
  * Root class with fields and tool methods for all API Handlers
  */
-public abstract class AbstractAPIHandler extends RequiredFieldChecks {
+public abstract class AbstractAPIHandler {
 
     final static Logger log = LoggerFactory.getLogger(AbstractAPIHandler.class);
 
@@ -50,60 +49,60 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * @param <T> The type of the Builder
      */
     public static abstract class Conf<T extends Conf<T>> {
-        private URL apiUrl;
-        private URI webSocketUri;
+        private URI rootApiURI;
+        private URI webSocketURI;
         private String userAgent;
         private Long httpRequestTimeout;
         private int maxRetries;
 
-        public URL getApiUrl() {
-            return apiUrl;
+        public URI getRootApiURI() {
+            return rootApiURI;
         }
 
-        public URI getWebSocketUri() {
-            return webSocketUri;
+        public URI getWebSocketURI() {
+            return webSocketURI;
         }
 
         /**
-         * @param apiUrl The root url for the API
+         * @param rootApiURI The root url for the API
          * @return {@link #self()}
-         * @throws MalformedURLException When the apiUrl is a malformed URL.
+         * @throws URISyntaxException When the rootApiURI is malformed.
          * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
-        public T setApiUrl(String apiUrl) throws MalformedURLException {
-            this.apiUrl = new URL(RegExUtils.removePattern(apiUrl, "/+$") + "/");
+        public T setRootApiURI(String rootApiURI) throws URISyntaxException {
+            this.rootApiURI = new URI(RegExUtils.removePattern(rootApiURI, "/+$") + "/");
             return self();
         }
 
         /**
-         * @param apiUrl The root url for the API
+         * @param rootApiURI The root uri for the API
          * @return {@link #self()}
          * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
-        public T setApiUrl(URL apiUrl) {
-            this.apiUrl = apiUrl;
+        public T setRootApiURI(URI rootApiURI) {
+            this.rootApiURI = rootApiURI;
             return self();
         }
 
         /**
-         * @param webSocketUri The root uri for the WebSockets. If this is missing, the uri will be constructed
+         * @param webSocketURI The root uri for the WebSockets. If this is missing, the uri will be constructed
          *                     from an apiUrl.
          * @return {@link #self()}
-         * @throws URISyntaxException When the webSocketUri is a malformed URI.
+         * @throws URISyntaxException When the webSocketURI is a malformed URI.
          * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
-        public T setWebSocketUri(String webSocketUri) throws URISyntaxException {
-            this.webSocketUri = new URI(RegExUtils.removePattern(webSocketUri, "/+$") + "/");
+        public T setWebSocketURI(String webSocketURI) throws URISyntaxException {
+            this.webSocketURI = new URI(RegExUtils.removePattern(webSocketURI, "/+$") + "/");
             return self();
         }
 
         /**
-         * @param apiUrl The root url for the WebSockets
+         * @param apiURI The root url for the WebSockets
          * @return {@link #self()}
          * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
-        public T setWebSocketUrl(URL apiUrl) {
-            this.apiUrl = apiUrl;
+        public T setWebSocketURI(URI apiURI) {
+            this.rootApiURI = apiURI;
             return self();
         }
 
@@ -169,8 +168,8 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
         title = (t != null ? t : "hiro-client-java");
     }
 
-    protected final URL apiUrl;
-    protected final URI webSocketUri;
+    protected final URI rootApiURI;
+    protected final URI webSocketURI;
     protected final String userAgent;
     protected final Long httpRequestTimeout;
     protected int maxRetries;
@@ -181,8 +180,8 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * @param builder The builder to use.
      */
     protected AbstractAPIHandler(Conf<?> builder) {
-        this.apiUrl = notNull(builder.getApiUrl(), "apiUrl");
-        this.webSocketUri = builder.getWebSocketUri();
+        this.rootApiURI = notNull(builder.getRootApiURI(), "rootApiURI");
+        this.webSocketURI = builder.getWebSocketURI();
         this.maxRetries = builder.getMaxRetries();
         this.httpRequestTimeout = builder.getHttpRequestTimeout();
         this.userAgent = builder.getUserAgent() != null ? builder.getUserAgent()
@@ -195,28 +194,28 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * @param other The object to copy the data from.
      */
     protected AbstractAPIHandler(AbstractAPIHandler other) {
-        this.apiUrl = other.apiUrl;
-        this.webSocketUri = other.webSocketUri;
+        this.rootApiURI = other.rootApiURI;
+        this.webSocketURI = other.webSocketURI;
         this.maxRetries = other.maxRetries;
         this.httpRequestTimeout = other.httpRequestTimeout;
         this.userAgent = other.userAgent;
     }
 
-    public URL getApiUrl() {
-        return apiUrl;
+    public URI getRootApiURI() {
+        return rootApiURI;
     }
 
     /**
-     * Get the {@link #webSocketUri} or, if it is missing, construct one from {@link #apiUrl}.
+     * Get the {@link #webSocketURI} or, if it is missing, construct one from {@link #rootApiURI}.
      *
      * @return The URI for the webSocket.
      */
-    public URI getWebSocketUri() {
+    public URI getWebSocketURI() {
         try {
-            return (webSocketUri != null ? webSocketUri
-                    : new URI(RegExUtils.replaceFirst(getApiUrl().toString(), "^http", "ws")));
+            return (webSocketURI != null ? webSocketURI
+                    : new URI(RegExUtils.replaceFirst(getRootApiURI().toString(), "^http", "ws")));
         } catch (URISyntaxException e) {
-            throw new IllegalArgumentException("Cannot create webSocketUri from apiUrl.", e);
+            throw new IllegalArgumentException("Cannot create webSocketURI from rootApiURI.", e);
         }
     }
 
@@ -235,39 +234,31 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
     /**
      * Build a complete uri from the apiUrl and path. Appends a '/'.
      *
-     * @param path The path to append to {@link #apiUrl}.
+     * @param path The path to append to {@link #rootApiURI}.
      * @return The constructed URI
      */
     public URI buildApiURI(String path) {
-        try {
-            return buildURI(getApiUrl().toURI(), path, true);
-        } catch (URISyntaxException e) {
-            throw new IllegalArgumentException("Cannot create URI using path '" + path + "'", e);
-        }
+        return buildURI(getRootApiURI(), path, true);
     }
 
     /**
      * Build a complete uri from the apiUrl and path. Does not append a '/'
      *
-     * @param path The path to append to {@link #apiUrl}.
+     * @param path The path to append to {@link #rootApiURI}.
      * @return The constructed URI
      */
     public URI buildEndpointURI(String path) {
-        try {
-            return buildURI(getApiUrl().toURI(), path, false);
-        } catch (URISyntaxException e) {
-            throw new IllegalArgumentException("Cannot create URI using path '" + path + "'", e);
-        }
+        return buildURI(getRootApiURI(), path, false);
     }
 
     /**
      * Build a complete uri from the webSocketApi and path.
      *
-     * @param path The path to append to {@link #webSocketUri}.
+     * @param path The path to append to {@link #webSocketURI}.
      * @return The constructed URI
      */
     public URI buildWebSocketURI(String path) {
-        return buildURI(getWebSocketUri(), path, false);
+        return buildURI(getWebSocketURI(), path, false);
     }
 
     /**
@@ -291,30 +282,30 @@ public abstract class AbstractAPIHandler extends RequiredFieldChecks {
      * @param fragment URI Fragment. Can be null for no fragment, otherwise uri must not have a fragment already.
      * @return The constructed URI
      */
-    public static URI addQueryFragmentAndNormalize(URI uri, UriEncodedData query, String fragment) {
+    public static URI addQueryFragmentAndNormalize(URI uri, URIEncodedData query, String fragment) {
 
-        String sourceUri = uri.toASCIIString();
+        String sourceURI = uri.toASCIIString();
 
         if (query != null) {
             String encodedQueryString = query.toString();
 
             if (StringUtils.isNotBlank(encodedQueryString)) {
-                if (sourceUri.contains("?")) {
+                if (sourceURI.contains("?")) {
                     throw new IllegalArgumentException("Given uri must not have a query part already.");
                 }
-                sourceUri += "?" + encodedQueryString;
+                sourceURI += "?" + encodedQueryString;
             }
         }
 
         if (StringUtils.isNotBlank(fragment)) {
-            if (sourceUri.contains("#")) {
+            if (sourceURI.contains("#")) {
                 throw new IllegalArgumentException("Given uri must not have a fragment part already.");
             }
-            sourceUri += "#" + URLPartEncoder.encodeNoPlus(fragment, StandardCharsets.UTF_8);
+            sourceURI += "#" + URLPartEncoder.encodeNoPlus(fragment, StandardCharsets.UTF_8);
         }
 
         try {
-            return new URI(sourceUri).normalize();
+            return new URI(sourceURI).normalize();
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
         }

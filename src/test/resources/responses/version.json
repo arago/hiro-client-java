@@ -1,0 +1,155 @@
+{
+  "iam": {
+    "endpoint": "/api/iam/6.1/",
+    "version": "6.1",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "specs": "iam.yaml",
+    "protocols": "",
+    "lifecycle": "internal"
+  },
+  "authz": {
+    "endpoint": "/api/authz/6.1/",
+    "version": "6.1",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "specs": "authz.yaml",
+    "protocols": "",
+    "lifecycle": "internal"
+  },
+  "app-admin": {
+    "endpoint": "/api/app-admin/1.2/",
+    "version": "1.2",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "specs": "app-admin.yaml",
+    "protocols": "",
+    "lifecycle": "internal"
+  },
+  "events-ws": {
+    "endpoint": "/api/events-ws/6.2/",
+    "version": "6.2",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "specs": "events-ws.yaml",
+    "protocols": "events-1.0.0",
+    "lifecycle": "deprecated"
+  },
+  "graph": {
+    "endpoint": "/api/graph/7.4/",
+    "version": "7.4",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "specs": "graph.yaml",
+    "protocols": "",
+    "lifecycle": "stable"
+  },
+  "app": {
+    "endpoint": "/api/app/7.0/",
+    "version": "7.0",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "specs": "app.yaml",
+    "protocols": "",
+    "lifecycle": "stable"
+  },
+  "action-ws": {
+    "endpoint": "/api/action-ws/1.0/",
+    "version": "1.0",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "specs": "action-ws.yaml",
+    "protocols": "action-1.0.0",
+    "lifecycle": "stable"
+  },
+  "auth": {
+    "endpoint": "/api/auth/6.6/",
+    "version": "6.6",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "specs": "auth.yaml",
+    "protocols": "",
+    "lifecycle": "stable"
+  },
+  "device": {
+    "endpoint": "/api/device/1.1/",
+    "version": "1.1",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "specs": "device.yaml",
+    "protocols": "",
+    "lifecycle": "experimental"
+  },
+  "objects": {
+    "endpoint": "/api/objects/1.0/",
+    "version": "1.0",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "specs": "objects.yaml",
+    "protocols": "",
+    "lifecycle": "experimental"
+  },
+  "health": {
+    "endpoint": "/api/health/7.0/",
+    "version": "7.0",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "specs": "health.yaml",
+    "protocols": "",
+    "lifecycle": "stable"
+  },
+  "audit": {
+    "endpoint": "/api/audit/1.0/",
+    "version": "1.0",
+    "docs": "",
+    "support": "supported",
+    "specs": "audit.yaml",
+    "protocols": "",
+    "lifecycle": "stable"
+  },
+  "action": {
+    "endpoint": "/api/action/1.0/",
+    "version": "1.0",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "specs": "action.yaml",
+    "protocols": "",
+    "lifecycle": "stable"
+  },
+  "ki": {
+    "endpoint": "/api/ki/6/",
+    "version": "6",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "unsupported",
+    "specs": "ki.yaml",
+    "protocols": "",
+    "lifecycle": "stable"
+  },
+  "config": {
+    "endpoint": "/api/config/1.0/",
+    "version": "1.0",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "lifecycle": "stable",
+    "protocols": "",
+    "specs": "config.yaml"
+  },
+  "variables": {
+    "endpoint": "/api/variables/6/",
+    "version": "6",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "unsupported",
+    "specs": "variables.yaml",
+    "protocols": "",
+    "lifecycle": "stable"
+  },
+  "graph-ws": {
+    "endpoint": "/api/graph-ws/6.1/",
+    "version": "6.1",
+    "docs": "https://developer.hiro.arago.co/api",
+    "support": "supported",
+    "specs": "graph-ws.yaml",
+    "protocols": "graph-2.0.0",
+    "lifecycle": "stable"
+  }
+}

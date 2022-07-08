@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.Map;
 
+import static co.arago.util.validation.ValueChecks.notBlank;
+
 public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandler {
 
     final static Logger log = LoggerFactory.getLogger(PasswordAuthTokenAPIHandler.class);
@@ -143,15 +145,15 @@ public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
         if (authApiVersion >= 6.6f) {
             tokenResponse = post(
                     TokenResponse.class,
-                    getUri("token"),
-                    tokenRequest.toUriEncodedStringRemoveBlanks(),
+                    getURI("token"),
+                    tokenRequest.toURIEncodedStringRemoveBlanks(),
                     new HttpHeaderMap(Map.of("Content-Type", "application/x-www-form-urlencoded")),
                     httpRequestTimeout,
                     maxRetries);
         } else {
             tokenResponse = post(
                     TokenResponse.class,
-                    getUri("app"),
+                    getURI("app"),
                     tokenRequest.toJsonStringNoNull(),
                     new HttpHeaderMap(Map.of("Content-Type", "application/json")),
                     httpRequestTimeout,

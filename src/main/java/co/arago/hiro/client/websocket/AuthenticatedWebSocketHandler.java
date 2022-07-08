@@ -10,7 +10,6 @@ import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.VersionResponse;
 import co.arago.util.json.JsonUtil;
-import co.arago.util.validation.RequiredFieldChecks;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -32,10 +31,13 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static co.arago.util.validation.ValueChecks.anyError;
+import static co.arago.util.validation.ValueChecks.notNull;
+
 /**
  * Handles websockets. Tries to renew any aborted connection until the websocket gets closed from this side.
  */
-public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks implements AutoCloseable {
+public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
 
     final static Logger log = LoggerFactory.getLogger(AuthenticatedWebSocketHandler.class);
 
@@ -461,7 +463,7 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
     protected final boolean reconnectOnFailedSend;
     protected final long webSocketRequestTimeout;
 
-    protected URI webSocketUri;
+    protected URI webSocketURI;
 
     private WebSocket webSocket;
     protected InternalListener internalListener;
@@ -515,8 +517,8 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
                 endpoint = versionEntry.endpoint;
         }
 
-        if (webSocketUri == null)
-            webSocketUri = tokenAPIHandler.buildWebSocketURI(endpoint);
+        if (webSocketURI == null)
+            webSocketURI = tokenAPIHandler.buildWebSocketURI(endpoint);
 
         try {
             try {
@@ -525,7 +527,7 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
                 this.webSocket = tokenAPIHandler.getOrBuildClient()
                         .newWebSocketBuilder()
                         .subprotocols(protocol, "token-" + tokenAPIHandler.getToken())
-                        .buildAsync(webSocketUri, internalListener)
+                        .buildAsync(webSocketURI, internalListener)
                         .get();
 
                 if (status.get() == Status.FAILED) {
@@ -538,11 +540,11 @@ public abstract class AuthenticatedWebSocketHandler extends RequiredFieldChecks 
 
             } catch (ExecutionException e) {
                 if (e.getCause() instanceof ConnectException)
-                    throw new ConnectException("Cannot create webSocket " + webSocketUri + ".");
+                    throw new ConnectException("Cannot create webSocket " + webSocketURI + ".");
                 else if (e.getCause() instanceof IOException)
-                    throw new IOException("Cannot create webSocket " + webSocketUri + ".", e);
+                    throw new IOException("Cannot create webSocket " + webSocketURI + ".", e);
                 else
-                    throw new HiroException("Cannot create webSocket " + webSocketUri + ".", e);
+                    throw new HiroException("Cannot create webSocket " + webSocketURI + ".", e);
             }
         } catch (Exception e) {
             closeWebSocket(1006, "Error at startup: " + e.getMessage());

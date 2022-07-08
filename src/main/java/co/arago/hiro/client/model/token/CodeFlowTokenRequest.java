@@ -31,12 +31,12 @@ public class CodeFlowTokenRequest extends AbstractTokenRequest {
     public String codeVerifier;
 
     @JsonProperty("redirect_uri")
-    public String redirectUri;
+    public String redirectURI;
 
     public CodeFlowTokenRequest(
             String code,
             String codeVerifier,
-            String redirectUri,
+            String redirectURI,
             String clientId,
             String clientSecret,
             String organization,
@@ -44,7 +44,7 @@ public class CodeFlowTokenRequest extends AbstractTokenRequest {
         super("authorization_code", clientId, clientSecret, organization, organizationId);
         this.code = code;
         this.codeVerifier = codeVerifier;
-        this.redirectUri = redirectUri;
+        this.redirectURI = redirectURI;
     }
 
 }

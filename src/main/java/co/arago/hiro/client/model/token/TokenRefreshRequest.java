@@ -1,5 +1,6 @@
 package co.arago.hiro.client.model.token;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
@@ -26,12 +27,13 @@ public class TokenRefreshRequest extends AbstractTokenRequest {
     @JsonProperty("refresh_token")
     public String refreshToken;
 
+    @JsonCreator
     public TokenRefreshRequest(
-            String clientId,
-            String clientSecret,
-            String refreshToken,
-            String organization,
-            String organizationId) {
+            @JsonProperty("clientId") String clientId,
+            @JsonProperty("clientSecret") String clientSecret,
+            @JsonProperty("refreshToken") String refreshToken,
+            @JsonProperty("organization") String organization,
+            @JsonProperty("organizationId") String organizationId) {
         super("refresh_token", clientId, clientSecret, organization, organizationId);
         this.refreshToken = refreshToken;
     }

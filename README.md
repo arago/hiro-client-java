@@ -42,7 +42,7 @@ class Example {
 
         // Build an API handler which takes care of API paths via /api/versions and security tokens.
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setApiUrl(API_URL)
+                .setRootApiUri(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
                 .build()
         ) {
@@ -121,7 +121,7 @@ class Example {
 
         // Build an API handler which takes care of API paths via /api/versions and security tokens.
         try (EnvironmentTokenAPIHandler handler = EnvironmentTokenAPIHandler.newBuilder()
-                .setApiUrl(API_URL)
+                .setRootApiUri(API_URL)
                 .build()
         ) {
 
@@ -167,7 +167,6 @@ import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.rest.GraphAPI;
-import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
 
 import java.io.IOException;
 
@@ -176,7 +175,7 @@ class Example {
 
         // Build an API handler which takes care of API paths via /api/versions and security tokens.
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setApiUrl(API_URL)
+                .setRootApiUri(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
                 .build()
         ) {
@@ -212,7 +211,7 @@ class Example {
 
         // Build a connection without any token handling
         try (GraphConnectionHandler connectionHandler = GraphConnectionHandler.newBuilder()
-                .setApiUrl(API_URL)
+                .setRootApiUri(API_URL)
                 .build()
         ) {
             GraphAPI graphAPI_user1 = GraphAPI.newBuilder(FixedTokenAPIHandler.newBuilder()
@@ -244,11 +243,9 @@ import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.rest.GraphAPI;
 import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
-import co.arago.util.json.JsonUtil;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
-import java.nio.file.Paths;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -267,7 +264,7 @@ class Example {
             // Use an external httpClient.
             PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                     .setHttpClient(httpClient)
-                    .setApiUrl(API_URL)
+                    .setRootApiUri(API_URL)
                     .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
                     .build();
 
@@ -342,21 +339,17 @@ import co.arago.hiro.client.Config;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.websocket.events.impl.EventsMessage;
-import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.websocket.EventWebSocket;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
-import co.arago.util.json.JsonUtil;
-import co.arago.hiro.client.model.token.DecodedToken;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 
 class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
 
         // Build an API handler which takes care of API paths via /api/versions and security tokens.
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setApiUrl(API_URL)
+                .setRootApiUri(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
                 .build()
         ) {
@@ -404,21 +397,18 @@ import co.arago.hiro.client.Config;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.websocket.events.impl.EventsMessage;
-import co.arago.hiro.client.rest.AuthAPI;
 import co.arago.hiro.client.websocket.EventWebSocket;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
-import co.arago.util.json.JsonUtil;
 import co.arago.hiro.client.model.token.DecodedToken;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 
 class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
 
         // Build an API handler which takes care of API paths via /api/versions and security tokens.
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setApiUrl(API_URL)
+                .setRootApiUri(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
                 .build()
         ) {
@@ -487,10 +477,8 @@ import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.websocket.action.impl.ActionHandlerSubmit;
 import co.arago.hiro.client.websocket.ActionWebSocket;
 import co.arago.hiro.client.websocket.listener.ActionWebSocketListener;
-import co.arago.util.json.JsonUtil;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 
 class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
@@ -498,7 +486,7 @@ class Example {
 
         // Build an API handler which takes care of API paths via /api/versions and security tokens.
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setApiUrl(API_URL)
+                .setRootApiUri(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
                 .setAcceptAllCerts(config.accept_all_certs)
                 .build()

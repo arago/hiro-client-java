@@ -1,23 +1,25 @@
 package co.arago.hiro.client.rest;
 
-import co.arago.hiro.client.Config;
+import co.arago.hiro.client.ConfigModel;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.util.json.JsonUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
+@Disabled
 class TokenAPIHandlerTest {
 
     public static PasswordAuthTokenAPIHandler handler;
@@ -26,17 +28,18 @@ class TokenAPIHandlerTest {
     @BeforeAll
     static void init() throws IOException {
         try {
-            Config config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(),
-                    Config.class);
+            ConfigModel config = JsonUtil.DEFAULT.toObject(
+                    TokenAPIHandlerTest.class.getClassLoader().getResourceAsStream("config.json"),
+                    ConfigModel.class);
 
             handler = PasswordAuthTokenAPIHandler.newBuilder()
-                    .setApiUrl(config.api_url)
+                    .setRootApiURI(config.api_url)
                     .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                     .setAcceptAllCerts(config.accept_all_certs)
                     .setForceLogging(config.force_logging)
                     .setShutdownTimeout(0)
                     .build();
-        } catch (FileNotFoundException e) {
+        } catch (URISyntaxException e) {
             log.warn("Skipping tests: {}.", e.getMessage());
         }
     }

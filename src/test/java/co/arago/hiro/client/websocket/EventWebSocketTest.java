@@ -1,6 +1,6 @@
 package co.arago.hiro.client.websocket;
 
-import co.arago.hiro.client.Config;
+import co.arago.hiro.client.ConfigModel;
 import co.arago.hiro.client.connection.token.FixedTokenAPIHandler;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
@@ -10,22 +10,23 @@ import co.arago.hiro.client.model.websocket.events.impl.EventsMessage;
 import co.arago.hiro.client.websocket.listener.EventWebSocketListener;
 import co.arago.util.json.JsonUtil;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ConnectException;
-import java.nio.file.Paths;
+import java.net.URISyntaxException;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@Disabled
 public class EventWebSocketTest {
 
     final static Logger log = LoggerFactory.getLogger(EventWebSocketTest.class);
 
-    public static Config config;
+    public static ConfigModel config;
 
     public static class EventListener implements EventWebSocketListener {
         public Throwable innerError;
@@ -53,11 +54,8 @@ public class EventWebSocketTest {
 
     @BeforeAll
     static void init() throws IOException {
-        try {
-            config = JsonUtil.DEFAULT.toObject(Paths.get("src", "test", "resources", "config.json").toFile(), Config.class);
-        } catch (FileNotFoundException e) {
-            log.warn("Skipping tests: {}.", e.getMessage());
-        }
+        config = JsonUtil.DEFAULT.toObject(EventWebSocket.class.getClassLoader().getResourceAsStream("config.json"),
+                ConfigModel.class);
     }
 
     @Test
@@ -66,7 +64,7 @@ public class EventWebSocketTest {
             return;
 
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setApiUrl(config.api_url)
+                .setRootApiURI(config.api_url)
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                 .setAcceptAllCerts(config.accept_all_certs)
                 .setForceLogging(config.force_logging)
@@ -81,6 +79,8 @@ public class EventWebSocketTest {
                 eventWebSocket.start();
                 Thread.sleep(1000);
             }
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -92,7 +92,7 @@ public class EventWebSocketTest {
         EventListener listener = new EventListener();
 
         try (FixedTokenAPIHandler handler = FixedTokenAPIHandler.newBuilder()
-                .setApiUrl(config.api_url)
+                .setRootApiURI(config.api_url)
                 .setToken("Invalid")
                 .setAcceptAllCerts(config.accept_all_certs)
                 .setShutdownTimeout(0)
@@ -103,6 +103,8 @@ public class EventWebSocketTest {
                 eventWebSocket.start();
                 Thread.sleep(1000);
             }
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
 
         assertThrows(
@@ -120,7 +122,7 @@ public class EventWebSocketTest {
         EventListener listener = new EventListener();
 
         try (FixedTokenAPIHandler handler = FixedTokenAPIHandler.newBuilder()
-                .setApiUrl("http://nothing.here")
+                .setRootApiURI("http://nothing.here")
                 .setToken("Invalid")
                 .setAcceptAllCerts(config.accept_all_certs)
                 .setShutdownTimeout(0)
@@ -134,6 +136,8 @@ public class EventWebSocketTest {
                         ConnectException.class,
                         eventWebSocket::start);
             }
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
     }
 }

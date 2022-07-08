@@ -1,4 +1,4 @@
-package co.arago.hiro.client.model.timeseries;
+package co.arago.hiro.client.model.vertex.timeseries;
 
 import co.arago.hiro.client.model.HiroItemListMessage;
 import co.arago.hiro.client.model.HiroMessage;

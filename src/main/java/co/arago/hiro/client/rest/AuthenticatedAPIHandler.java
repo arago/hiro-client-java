@@ -10,10 +10,9 @@ import co.arago.hiro.client.model.JsonMessage;
 import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
+import co.arago.hiro.client.util.httpclient.URIEncodedData;
 import co.arago.hiro.client.util.httpclient.URIPath;
-import co.arago.hiro.client.util.httpclient.UriEncodedData;
 import co.arago.util.json.JsonUtil;
-import co.arago.util.validation.RequiredFieldChecks;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -26,6 +25,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
 import java.util.Map;
+
+import static co.arago.util.validation.ValueChecks.anyError;
+import static co.arago.util.validation.ValueChecks.notNull;
 
 /**
  * This class is the basis of all authenticated API handlers that make use of the different sections of the HIRO API.
@@ -130,10 +132,10 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @param <T> The Builder type
      * @param <R> The type of the result expected from {@link #execute()}
      */
-    public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> extends RequiredFieldChecks {
+    public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> {
 
         protected final URIPath path;
-        protected UriEncodedData query = new UriEncodedData();
+        protected URIEncodedData query = new URIEncodedData();
         protected HttpHeaderMap headers = new HttpHeaderMap();
         protected String fragment;
 
@@ -151,7 +153,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @param query Set query parameters.
          * @return {@link #self()}
          */
-        public T setUrlQuery(UriEncodedData query) {
+        public T setUrlQuery(URIEncodedData query) {
             this.query.setAll(query);
             return self();
         }
@@ -335,7 +337,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     protected final String apiName;
     protected final String apiPath;
     protected final AbstractTokenAPIHandler tokenAPIHandler;
-    protected URI apiUri;
+    protected URI apiURI;
 
     /**
      * Create this APIHandler by using its Builder.
@@ -364,14 +366,14 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * @throws InterruptedException Call got interrupted
      * @throws HiroException        When calling /api/version responds with an error
      */
-    public URI getEndpointUri(URIPath path, UriEncodedData query, String fragment)
+    public URI getEndpointURI(URIPath path, URIEncodedData query, String fragment)
             throws IOException, InterruptedException, HiroException {
-        if (apiUri == null)
-            apiUri = (apiPath != null ? buildApiURI(apiPath) : tokenAPIHandler.getApiUriOf(apiName));
+        if (apiURI == null)
+            apiURI = (apiPath != null ? buildApiURI(apiPath) : tokenAPIHandler.getApiURIOf(apiName));
 
-        URI pathUri = buildURI(apiUri, path.build(), false);
+        URI pathURI = buildURI(apiURI, path.build(), false);
 
-        return addQueryFragmentAndNormalize(pathUri, query, fragment);
+        return addQueryFragmentAndNormalize(pathURI, query, fragment);
     }
 
     /**

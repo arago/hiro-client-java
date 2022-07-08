@@ -3,6 +3,7 @@ package co.arago.hiro.client.model;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.util.json.JsonUtil;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -30,9 +31,6 @@ public class VersionResponse extends HiroMessage {
     private static final long serialVersionUID = 2903834856447071619L;
 
     public static class VersionEntry extends HiroJsonMap {
-        /**
-         * 
-         */
         private static final long serialVersionUID = -5055749186188400575L;
         public String endpoint;
         public String version;
@@ -44,6 +42,16 @@ public class VersionResponse extends HiroMessage {
     }
 
     protected final Map<String, VersionEntry> versionEntryMap = new LinkedHashMap<>();
+
+    /**
+     * @return A merged map of {@link #versionEntryMap} and {@link #fieldsMap}. This is a shallow copy of both.
+     */
+    @Override
+    public Map<String, ?> getMap() {
+        Map<String, Object> mergedMap = new HashMap<>(versionEntryMap);
+        mergedMap.putAll(fieldsMap);
+        return mergedMap;
+    }
 
     /**
      * Jackson Setter that transforms incoming maps into VersionEntries.

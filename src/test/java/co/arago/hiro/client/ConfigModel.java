@@ -1,6 +1,6 @@
 package co.arago.hiro.client;
 
-public class Config {
+public class ConfigModel {
     public String api_url;
     public String username;
     public String password;
