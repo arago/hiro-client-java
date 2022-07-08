@@ -1,0 +1,9 @@
+{
+  "api_url": "http://localhost:8000",
+  "username": "test",
+  "password": "dummy",
+  "client_id": "test_id",
+  "client_secret": "test_secret",
+  "accept_all_certs": true,
+  "force_logging": true
+}
