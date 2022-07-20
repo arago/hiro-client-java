@@ -2,6 +2,7 @@
 
 * Code Auth and Org switch.
 * Improved integration tests.
+* Event-ws handling debugged (query and fragment were missing before).
 
 # v0.3.5
 

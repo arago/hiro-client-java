@@ -32,29 +32,34 @@ public class EventWebSocketTest {
         public Throwable innerError;
 
         @Override
+        public void onOpen() {
+            log.info("Websocket open");
+        }
+
+        @Override
         public void onError(Throwable t) {
             innerError = t;
         }
 
         @Override
         public void onCreate(EventsMessage eventsMessage) {
-
+            log.info("Create event {}", eventsMessage.id);
         }
 
         @Override
         public void onUpdate(EventsMessage eventsMessage) {
-
+            log.info("Update event {}", eventsMessage.id);
         }
 
         @Override
         public void onDelete(EventsMessage eventsMessage) {
-
+            log.info("Delete event {}", eventsMessage.id);
         }
     }
 
     @BeforeAll
     static void init() throws IOException {
-        config = JsonUtil.DEFAULT.toObject(EventWebSocket.class.getClassLoader().getResourceAsStream("config.json"),
+        config = JsonUtil.DEFAULT.toObject(EventWebSocket.class.getClassLoader().getResourceAsStream("config_remote.json"),
                 ConfigModel.class);
     }
 
@@ -75,9 +80,13 @@ public class EventWebSocketTest {
 
             try (EventWebSocket eventWebSocket = EventWebSocket.newBuilder(handler, new EventListener())
                     .addScope(decodedToken.data.defaultScope)
+                    .addEventsFilter("testfilter", "(element.ogit/_type=ogit/MARS/Machine)")
                     .build()) {
                 eventWebSocket.start();
-                Thread.sleep(1000);
+                Thread.sleep(2000);
+//                synchronized (this) {
+//                    wait();
+//                }
             }
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);

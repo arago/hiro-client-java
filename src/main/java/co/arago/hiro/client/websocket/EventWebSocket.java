@@ -18,13 +18,10 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.http.WebSocket;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -49,14 +46,14 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
 
     public static abstract class Conf<T extends Conf<T>> extends AuthenticatedWebSocketHandler.Conf<T> {
 
-        private Set<String> scopes = new HashSet<>();
-        private Map<String, EventsFilter> eventsFilterMap = new LinkedHashMap<>();
+        private final Set<String> scopes = new HashSet<>();
+        private final Map<String, EventsFilter> eventsFilterMap = new LinkedHashMap<>();
         private EventWebSocketListener eventWebSocketListener;
 
         public Conf() {
             setName(API_NAME);
             setApiName(API_NAME);
-            setQuery("allscopes", "false");
+            setQueryParam("allscopes", "false");
         }
 
         /**
@@ -67,7 +64,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
          * @see <a href="https://core.arago.co/help/specs/?url=definitions/events-ws.yaml#/[Connect]/get__connect_">API Documentation</a>
          */
         public T setDelta(boolean delta) {
-            setQuery("delta", String.valueOf(delta));
+            setQueryParam("delta", String.valueOf(delta));
             return self();
         }
 
@@ -79,7 +76,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
          * @see <a href="https://core.arago.co/help/specs/?url=definitions/events-ws.yaml#/[Connect]/get__connect_">API Documentation</a>
          */
         public T setGroupId(String groupId) {
-            setQuery("groupId", groupId);
+            setQueryParam("groupId", groupId);
             return self();
         }
 
@@ -91,7 +88,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
          * @see <a href="https://core.arago.co/help/specs/?url=definitions/events-ws.yaml#/[Connect]/get__connect_">API Documentation</a>
          */
         public T setOffset(String offset) {
-            setQuery("offset", offset);
+            setQueryParam("offset", offset);
             return self();
         }
 
@@ -103,7 +100,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
          * @see <a href="https://core.arago.co/help/specs/?url=definitions/events-ws.yaml#/[Connect]/get__connect_">API Documentation</a>
          */
         public T setAllScopes(boolean allScopes) {
-            setQuery("allscopes", String.valueOf(allScopes));
+            setQueryParam("allscopes", String.valueOf(allScopes));
             return self();
         }
 
@@ -118,7 +115,18 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
          * @return {@link #self()}
          */
         public T setScopes(Set<String> scopes) {
-            this.scopes = scopes;
+            this.scopes.clear();
+            return addScopes(scopes);
+        }
+
+        /**
+         * Add a list of scopes for the events.
+         *
+         * @param scopes List of scopes (ogit - ids of the scopes).
+         * @return {@link #self()}
+         */
+        public T addScopes(Set<String> scopes) {
+            this.scopes.addAll(scopes);
             return self();
         }
 
@@ -145,7 +153,30 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
          * @return {@link #self()}
          */
         public T setEventsFilterMap(Map<String, EventsFilter> eventsFilterMap) {
-            this.eventsFilterMap = eventsFilterMap;
+            this.eventsFilterMap.clear();
+            return addEventsFilterMap(eventsFilterMap);
+        }
+
+        /**
+         * Add filters
+         *
+         * @param eventsFilterMap A map of filters to use. The keys are the
+         *                        {@link EventsFilter#id}.
+         * @return {@link #self()}
+         */
+        public T addEventsFilterMap(Map<String, EventsFilter> eventsFilterMap) {
+            this.eventsFilterMap.putAll(eventsFilterMap);
+            return self();
+        }
+
+        /**
+         * Add a single filter to the map of event filters.
+         *
+         * @param eventsFilter: The filter to add.
+         * @return {@link #self()}
+         */
+        public T addEventsFilter(EventsFilter eventsFilter) {
+            this.eventsFilterMap.put(eventsFilter.id, eventsFilter);
             return self();
         }
 
@@ -157,8 +188,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
          * @return {@link #self()}
          */
         public T addEventsFilter(String id, String content) {
-            this.eventsFilterMap.put(id, new EventsFilter(id, content));
-            return self();
+            return addEventsFilter(new EventsFilter(id, content));
         }
 
         /**
@@ -170,8 +200,7 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
          * @return {@link #self()}
          */
         public T addEventsFilter(String id, String content, String type) {
-            this.eventsFilterMap.put(id, new EventsFilter(id, content, type));
-            return self();
+            return addEventsFilter(new EventsFilter(id, content, type));
         }
 
         public EventWebSocketListener getEventWebSocketListener() {
@@ -244,18 +273,16 @@ public class EventWebSocket extends AuthenticatedWebSocketHandler {
          */
         @Override
         public void onOpen(WebSocket webSocket) throws IOException, ExecutionException, InterruptedException, TimeoutException {
-            List<CompletableFuture<WebSocket>> futures = new ArrayList<>();
 
             for (String scopeId : scopes) {
-                futures.add(webSocket.sendText(new SubscribeScopeMessage(scopeId).toJsonString(), true));
+                webSocket.sendText(new SubscribeScopeMessage(scopeId).toJsonString(), true)
+                        .get(webSocketRequestTimeout, TimeUnit.MILLISECONDS);
             }
 
             for (Map.Entry<String, EventsFilter> filterEntry : eventsFilterMap.entrySet()) {
-                futures.add(webSocket.sendText(new EventRegisterMessage(filterEntry.getValue()).toJsonString(), true));
+                webSocket.sendText(new EventRegisterMessage(filterEntry.getValue()).toJsonString(), true)
+                        .get(webSocketRequestTimeout, TimeUnit.MILLISECONDS);
             }
-
-            CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).get(webSocketRequestTimeout,
-                    TimeUnit.MILLISECONDS);
 
             eventWebSocketListener.onOpen();
 

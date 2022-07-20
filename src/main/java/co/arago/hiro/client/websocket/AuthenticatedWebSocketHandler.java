@@ -1,5 +1,6 @@
 package co.arago.hiro.client.websocket;
 
+import co.arago.hiro.client.connection.AbstractAPIHandler;
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.RefreshTokenWebSocketException;
@@ -9,6 +10,8 @@ import co.arago.hiro.client.exceptions.WebSocketMessageException;
 import co.arago.hiro.client.model.HiroError;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.VersionResponse;
+import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
+import co.arago.hiro.client.util.httpclient.URIEncodedData;
 import co.arago.util.json.JsonUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.commons.lang3.StringUtils;
@@ -20,7 +23,6 @@ import java.net.ConnectException;
 import java.net.URI;
 import java.net.http.WebSocket;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -54,8 +56,8 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
         private String apiName;
         private String endpoint;
         private String protocol;
-        private Map<String, String> query = new HashMap<>();
-        private Map<String, String> headers = new HashMap<>();
+        private final URIEncodedData query = new URIEncodedData();
+        private final HttpHeaderMap headers = new HttpHeaderMap();
         private String fragment;
         private long webSocketMessageTimeout = 60000L;
         private AbstractTokenAPIHandler tokenAPIHandler;
@@ -118,7 +120,18 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
          * @return {@link #self()}
          */
         public T setQuery(Map<String, String> query) {
-            this.query = query;
+            this.query.setAll(query);
+            return self();
+        }
+
+        /**
+         * For initial connection to the WebSocket.
+         *
+         * @param query URIEncodedData of query fields.
+         * @return {@link #self()}
+         */
+        public T setQuery(URIEncodedData query) {
+            this.query.setAll(query);
             return self();
         }
 
@@ -129,8 +142,8 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
          * @param value Value of the query parameter
          * @return {@link #self()}
          */
-        public T setQuery(String key, String value) {
-            this.query.put(key, value);
+        public T setQueryParam(String key, String value) {
+            this.query.set(key, value);
             return self();
         }
 
@@ -141,7 +154,30 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
          * @return {@link #self()}
          */
         public T setHeaders(Map<String, String> headers) {
-            this.headers = headers;
+            this.headers.setAll(headers);
+            return self();
+        }
+
+        /**
+         * For initial connection to the WebSocket.
+         *
+         * @param headers HttpHeaderMap of header fields.
+         * @return {@link #self()}
+         */
+        public T setHeaders(HttpHeaderMap headers) {
+            this.headers.setAll(headers);
+            return self();
+        }
+
+        /**
+         * For initial connection to the WebSocket.
+         *
+         * @param key   Name of the header parameter
+         * @param value Value of the header parameter
+         * @return {@link #self()}
+         */
+        public T setHeaderParam(String key, String value) {
+            this.headers.set(key, value);
             return self();
         }
 
@@ -457,13 +493,11 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
     protected final String protocol;
     protected final int maxRetries;
     protected final AbstractTokenAPIHandler tokenAPIHandler;
-    protected final Map<String, String> query = new HashMap<>();
-    protected final Map<String, String> headers = new HashMap<>();
+    protected final URIEncodedData query = new URIEncodedData();
+    protected final HttpHeaderMap headers = new HttpHeaderMap();
     protected final String fragment;
     protected final boolean reconnectOnFailedSend;
     protected final long webSocketRequestTimeout;
-
-    protected URI webSocketURI;
 
     private WebSocket webSocket;
     protected InternalListener internalListener;
@@ -482,8 +516,8 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
         this.maxRetries = builder.getMaxRetries();
         this.tokenAPIHandler = notNull(builder.getTokenApiHandler(), "tokenApiHandler");
 
-        this.query.putAll(builder.query);
-        this.headers.putAll(builder.headers);
+        this.query.setAll(builder.query);
+        this.headers.setAll(builder.headers);
         this.fragment = builder.fragment;
         this.reconnectOnFailedSend = builder.isReconnectOnFailedSend();
 
@@ -517,8 +551,10 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
                 endpoint = versionEntry.endpoint;
         }
 
-        if (webSocketURI == null)
-            webSocketURI = tokenAPIHandler.buildWebSocketURI(endpoint);
+        URI webSocketURI = AbstractAPIHandler.addQueryFragmentAndNormalize(
+                tokenAPIHandler.buildWebSocketURI(endpoint),
+                query,
+                fragment);
 
         try {
             try {
