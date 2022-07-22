@@ -84,9 +84,9 @@ public class EventWebSocketTest {
                     .build()) {
                 eventWebSocket.start();
                 Thread.sleep(2000);
-//                synchronized (this) {
-//                    wait();
-//                }
+                // synchronized (this) {
+                // wait();
+                // }
             }
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
