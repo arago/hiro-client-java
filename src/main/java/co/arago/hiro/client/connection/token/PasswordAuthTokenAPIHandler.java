@@ -1,6 +1,5 @@
 package co.arago.hiro.client.connection.token;
 
-import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.token.PasswordTokenRequest;
 import co.arago.hiro.client.model.token.TokenResponse;
@@ -79,8 +78,7 @@ public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
         }
 
         public PasswordAuthTokenAPIHandler build() {
-            return getSharedConnectionHandler() != null ? new PasswordAuthTokenAPIHandler(getSharedConnectionHandler(), this)
-                    : new PasswordAuthTokenAPIHandler(this);
+            return new PasswordAuthTokenAPIHandler(this);
         }
     }
 
@@ -93,22 +91,6 @@ public class PasswordAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
 
     protected PasswordAuthTokenAPIHandler(Conf<?> builder) {
         super(builder);
-        notBlank(clientSecret, "clientSecret");
-        this.username = notBlank(builder.getUsername(), "username");
-        this.password = notBlank(builder.getPassword(), "password");
-    }
-
-    /**
-     * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
-     *
-     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     * @param builder           Only configuration specific to a PasswordAuthTokenAPIHandler, see {@link Conf}, will
-     *                          be copied from the builder. The AbstractVersionAPIHandler overwrites everything else.
-     */
-    protected PasswordAuthTokenAPIHandler(
-            AbstractVersionAPIHandler versionAPIHandler,
-            Conf<?> builder) {
-        super(versionAPIHandler, builder);
         notBlank(clientSecret, "clientSecret");
         this.username = notBlank(builder.getUsername(), "username");
         this.password = notBlank(builder.getPassword(), "password");

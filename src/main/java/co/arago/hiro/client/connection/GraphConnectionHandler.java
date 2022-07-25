@@ -7,13 +7,14 @@ import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
  * TokenAPIHandlers, i.e. a FixedTokenApiHandler with a token for each user that shall all use the same connection.
  * Contains CookieHandler, the versionMap and the httpConnection.
  */
-public class GraphConnectionHandler extends AbstractVersionAPIHandler {
+public class GraphConnectionHandler extends AbstractVersionAPIHandler implements AutoCloseable {
 
     // ###############################################################################################
     // ## Conf and Builder ##
     // ###############################################################################################
 
     public static abstract class Conf<T extends Conf<T>> extends AbstractVersionAPIHandler.Conf<T> {
+
         @Override
         public abstract GraphConnectionHandler build();
     }
@@ -26,8 +27,7 @@ public class GraphConnectionHandler extends AbstractVersionAPIHandler {
         }
 
         public GraphConnectionHandler build() {
-            return (getSharedConnectionHandler() != null) ? new GraphConnectionHandler(getSharedConnectionHandler())
-                    : new GraphConnectionHandler(this);
+            return new GraphConnectionHandler(this);
         }
 
     }
@@ -45,15 +45,6 @@ public class GraphConnectionHandler extends AbstractVersionAPIHandler {
         super(builder);
     }
 
-    /**
-     * Protected Copy Constructor. Fields shall be copied from another AbstractVersionAPIHandler.
-     *
-     * @param other The source AbstractVersionAPIHandler.
-     */
-    protected GraphConnectionHandler(AbstractVersionAPIHandler other) {
-        super(other);
-    }
-
     public static Conf<?> newBuilder() {
         return new Builder();
     }
@@ -69,4 +60,11 @@ public class GraphConnectionHandler extends AbstractVersionAPIHandler {
         headers.set("User-Agent", userAgent);
     }
 
+    /**
+     * Close the underlying httpClientHandler.
+     */
+    @Override
+    public void close() {
+        httpClientHandler.close();
+    }
 }

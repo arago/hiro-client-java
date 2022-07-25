@@ -12,7 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
 
-public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler {
+public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler implements AutoCloseable {
 
     // ###############################################################################################
     // ## Conf and Builder ##
@@ -34,15 +34,6 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      */
     protected AbstractTokenAPIHandler(Conf<?> builder) {
         super(builder);
-    }
-
-    /**
-     * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
-     *
-     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     */
-    protected AbstractTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler) {
-        super(versionAPIHandler);
     }
 
     /**
@@ -137,4 +128,11 @@ public abstract class AbstractTokenAPIHandler extends AbstractVersionAPIHandler 
      */
     public abstract Instant expiryInstant();
 
+    /**
+     * Close the underlying httpClientHandler.
+     */
+    @Override
+    public void close() {
+        httpClientHandler.close();
+    }
 }

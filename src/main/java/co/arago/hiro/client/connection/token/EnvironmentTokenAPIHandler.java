@@ -1,6 +1,5 @@
 package co.arago.hiro.client.connection.token;
 
-import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
 import co.arago.hiro.client.exceptions.FixedTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +28,7 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
             return self();
         }
 
+        @Override
         public abstract EnvironmentTokenAPIHandler build();
     }
 
@@ -39,9 +39,9 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
             return this;
         }
 
+        @Override
         public EnvironmentTokenAPIHandler build() {
-            return getSharedConnectionHandler() != null ? new EnvironmentTokenAPIHandler(getSharedConnectionHandler(), this)
-                    : new EnvironmentTokenAPIHandler(this);
+            return new EnvironmentTokenAPIHandler(this);
         }
 
     }
@@ -61,17 +61,6 @@ public class EnvironmentTokenAPIHandler extends AbstractTokenAPIHandler {
      */
     protected EnvironmentTokenAPIHandler(Conf<?> builder) {
         super(builder);
-        this.tokenEnv = StringUtils.isBlank(builder.getTokenEnv()) ? DEFAULT_ENV : builder.getTokenEnv();
-    }
-
-    /**
-     * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
-     *
-     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     * @param builder           The builder with the configuration data for this specific class.
-     */
-    protected EnvironmentTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler, Conf<?> builder) {
-        super(versionAPIHandler);
         this.tokenEnv = StringUtils.isBlank(builder.getTokenEnv()) ? DEFAULT_ENV : builder.getTokenEnv();
     }
 

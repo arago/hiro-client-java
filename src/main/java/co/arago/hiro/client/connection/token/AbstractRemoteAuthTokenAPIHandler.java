@@ -1,6 +1,5 @@
 package co.arago.hiro.client.connection.token;
 
-import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
 import co.arago.hiro.client.exceptions.AuthenticationTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
@@ -154,6 +153,7 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
             return self();
         }
 
+        @Override
         public abstract AbstractRemoteAuthTokenAPIHandler build();
     }
 
@@ -258,39 +258,15 @@ public abstract class AbstractRemoteAuthTokenAPIHandler extends AbstractTokenAPI
         }
     }
 
-    /**
-     * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
-     *
-     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     * @param builder           Only configuration specific to this TokenAPIHandler, see {@link Conf}, will
-     *                          be copied from the builder. The AbstractVersionAPIHandler overwrites everything else.
-     */
-    protected AbstractRemoteAuthTokenAPIHandler(
-            AbstractVersionAPIHandler versionAPIHandler,
-            Conf<?> builder) {
-        super(versionAPIHandler);
-        this.clientId = notBlank(builder.getClientId(), "clientId");
-        this.clientSecret = builder.getClientSecret();
-        this.organization = builder.getOrganization();
-        this.organizationId = builder.getOrganizationId();
-        this.apiPath = builder.getApiPath();
-
-        this.tokenInfo.refreshOffset = builder.getRefreshOffset();
-
-        if (!builder.getForceLogging()) {
-            configureLogging();
-        }
-    }
-
     private void configureLogging() {
         try {
-            httpLogger.addFilter(getURI("token"));
-            httpLogger.addFilter(getURI("app"));
-            httpLogger.addFilter(getURI("refresh"));
-            httpLogger.addFilter(getURI("revoke"));
+            getHttpLogger().addFilter(getURI("token"));
+            getHttpLogger().addFilter(getURI("app"));
+            getHttpLogger().addFilter(getURI("refresh"));
+            getHttpLogger().addFilter(getURI("revoke"));
         } catch (IOException | InterruptedException | HiroException e) {
             log.error("Cannot get apiPath URI. Disable logging of http bodies.", e);
-            httpLogger.setLogBody(false);
+            getHttpLogger().setLogBody(false);
         }
     }
 

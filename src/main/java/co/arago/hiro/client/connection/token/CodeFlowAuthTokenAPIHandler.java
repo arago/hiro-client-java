@@ -1,6 +1,5 @@
 package co.arago.hiro.client.connection.token;
 
-import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
 import co.arago.hiro.client.exceptions.AuthenticationTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
@@ -21,6 +20,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 import static co.arago.util.validation.ValueChecks.notBlank;
+import static co.arago.util.validation.ValueChecks.notNull;
 
 public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandler {
 
@@ -75,6 +75,7 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
             return self();
         }
 
+        @Override
         public abstract CodeFlowAuthTokenAPIHandler build();
     }
 
@@ -86,8 +87,7 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
         }
 
         public CodeFlowAuthTokenAPIHandler build() {
-            return getSharedConnectionHandler() != null ? new CodeFlowAuthTokenAPIHandler(getSharedConnectionHandler(), this)
-                    : new CodeFlowAuthTokenAPIHandler(this);
+            return new CodeFlowAuthTokenAPIHandler(this);
         }
     }
 
@@ -107,21 +107,6 @@ public class CodeFlowAuthTokenAPIHandler extends AbstractRemoteAuthTokenAPIHandl
 
     protected CodeFlowAuthTokenAPIHandler(Conf<?> builder) {
         super(builder);
-        this.redirectURI = notBlank(builder.getRedirectURI(), "redirectURI");
-        this.scope = builder.getScope();
-    }
-
-    /**
-     * Special Copy Constructor. Uses the connection of another existing AbstractVersionAPIHandler.
-     *
-     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     * @param builder           Only configuration specific to a CodeFlowAuthTokenAPIHandler, see {@link Conf}, will
-     *                          be copied from the builder. The AbstractVersionAPIHandler overwrites everything else.
-     */
-    protected CodeFlowAuthTokenAPIHandler(
-            AbstractVersionAPIHandler versionAPIHandler,
-            Conf<?> builder) {
-        super(versionAPIHandler, builder);
         this.redirectURI = notBlank(builder.getRedirectURI(), "redirectURI");
         this.scope = builder.getScope();
     }

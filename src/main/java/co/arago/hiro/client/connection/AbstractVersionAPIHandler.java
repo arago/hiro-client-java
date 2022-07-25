@@ -9,26 +9,28 @@ import java.net.URI;
 /**
  * Handles Version information for HIRO.
  */
-public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler {
+public abstract class AbstractVersionAPIHandler extends AbstractAPIHandler {
 
     // ###############################################################################################
     // ## Conf and Builder ##
     // ###############################################################################################
 
-    public static abstract class Conf<T extends Conf<T>> extends AbstractClientAPIHandler.Conf<T> {
+    public static abstract class Conf<T extends Conf<T>> extends AbstractAPIHandler.Conf<T> {
 
-        private AbstractVersionAPIHandler sharedConnectionHandler;
+        private AbstractVersionAPIHandler sharedConnectionHandler = null;
 
         public AbstractVersionAPIHandler getSharedConnectionHandler() {
             return sharedConnectionHandler;
         }
 
         /**
-         * Set a shared connection handler. The fields of this class and its parents will be copied from this
-         * shared handler, overriding other settings. This is used to share a connection between several handlers.
+         * Specifies a shared handler for a set of APIHandlers. The versionMap, the httpClientHandler and the
+         * configuration will be shared among them. Its primary purpose is to avoid unnecessary calls to
+         * '/api/version'.
          *
-         * @param sharedConnectionHandler The shared connection handler.
+         * @param sharedConnectionHandler The handler to share.
          * @return {@link #self()}
+         * @see GraphConnectionHandler
          */
         public T setSharedConnectionHandler(AbstractVersionAPIHandler sharedConnectionHandler) {
             this.sharedConnectionHandler = sharedConnectionHandler;
@@ -44,7 +46,6 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
     // ###############################################################################################
 
     private VersionResponse versionMap;
-
     private final AbstractVersionAPIHandler sharedConnectionHandler;
 
     /**
@@ -53,19 +54,8 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
      * @param builder The builder to use.
      */
     protected AbstractVersionAPIHandler(Conf<?> builder) {
-        super(builder);
-        this.sharedConnectionHandler = null;
-    }
-
-    /**
-     * Protected Copy Constructor. Fields shall be copied from another AbstractVersionAPIHandler.
-     *
-     * @param other The source AbstractVersionAPIHandler.
-     */
-    protected AbstractVersionAPIHandler(AbstractVersionAPIHandler other) {
-        super(other);
-        this.versionMap = other.versionMap;
-        this.sharedConnectionHandler = other;
+        super(builder.getSharedConnectionHandler() == null ? builder : builder.getSharedConnectionHandler().getConf());
+        this.sharedConnectionHandler = builder.sharedConnectionHandler;
     }
 
     /**
@@ -88,7 +78,7 @@ public abstract class AbstractVersionAPIHandler extends AbstractClientAPIHandler
 
     /**
      * Returns the current {@link #versionMap}. If no {@link #versionMap} is available, it will be requested, cached
-     * and then returned.
+     * and then returned. if a {@link #sharedConnectionHandler} is set, the versionMap will be obtained from there.
      *
      * @return The (cached) versionMap.
      * @throws HiroException        When the request fails.

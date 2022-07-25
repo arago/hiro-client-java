@@ -1,6 +1,7 @@
 package co.arago.hiro.client.connection.token;
 
 import co.arago.hiro.client.ConfigModel;
+import co.arago.hiro.client.connection.httpclient.DefaultHttpClientHandler;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.mock.MockGraphitServerExtension;
 import co.arago.hiro.client.rest.AuthAPI;
@@ -13,7 +14,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,11 +38,13 @@ public class InvalidCredentialsAPITest {
             return;
 
         try (AbstractTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+                .setHttpClientHandler(DefaultHttpClientHandler.newBuilder()
+                        .setAcceptAllCerts(config.accept_all_certs)
+                        .setShutdownTimeout(0)
+                        .build())
                 .setRootApiURI(config.api_url)
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
-                .setAcceptAllCerts(config.accept_all_certs)
                 .setForceLogging(config.force_logging)
-                .setShutdownTimeout(0)
                 .setPassword("Wrong")
                 .build()) {
 
@@ -66,11 +68,13 @@ public class InvalidCredentialsAPITest {
             return;
 
         try (AbstractTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+                .setHttpClientHandler(DefaultHttpClientHandler.newBuilder()
+                        .setAcceptAllCerts(config.accept_all_certs)
+                        .setShutdownTimeout(0)
+                        .build())
                 .setRootApiURI(config.api_url)
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
-                .setAcceptAllCerts(config.accept_all_certs)
                 .setForceLogging(config.force_logging)
-                .setShutdownTimeout(0)
                 .setClientSecret("Wrong")
                 .build()) {
 
@@ -89,15 +93,17 @@ public class InvalidCredentialsAPITest {
     }
 
     @Test
-    void wrongUrl() throws MalformedURLException {
+    void wrongUrl() {
         if (config == null)
             return;
 
         try (AbstractTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+                .setHttpClientHandler(DefaultHttpClientHandler.newBuilder()
+                        .setAcceptAllCerts(config.accept_all_certs)
+                        .setShutdownTimeout(0)
+                        .build())
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
-                .setAcceptAllCerts(config.accept_all_certs)
                 .setForceLogging(config.force_logging)
-                .setShutdownTimeout(0)
                 .setRootApiURI("http://nothing.here")
                 .build()) {
 
