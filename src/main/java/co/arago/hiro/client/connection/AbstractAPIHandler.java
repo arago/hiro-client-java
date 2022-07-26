@@ -182,7 +182,8 @@ public abstract class AbstractAPIHandler {
         /**
          * @param proxy Simple proxy with one address and port
          * @return {@link #self()}
-         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setProxy(HttpClientHandler.ProxySpec proxy) {
@@ -198,7 +199,8 @@ public abstract class AbstractAPIHandler {
         /**
          * @param followRedirects Enable Redirect.NORMAL. Default is true.
          * @return {@link #self()}
-         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setFollowRedirects(boolean followRedirects) {
@@ -214,7 +216,8 @@ public abstract class AbstractAPIHandler {
         /**
          * @param connectTimeout Connect timeout in milliseconds.
          * @return {@link #self()}
-         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setConnectTimeout(Long connectTimeout) {
@@ -232,7 +235,8 @@ public abstract class AbstractAPIHandler {
          *                        If this is set to a value too low, you might need to wait elsewhere for the HttpClient
          *                        to shut down properly. Default is 3000ms.
          * @return {@link #self()}
-         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setShutdownTimeout(long shutdownTimeout) {
@@ -251,7 +255,8 @@ public abstract class AbstractAPIHandler {
          *
          * @param acceptAllCerts the toggle
          * @return {@link #self()}
-         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setAcceptAllCerts(Boolean acceptAllCerts) {
@@ -267,8 +272,9 @@ public abstract class AbstractAPIHandler {
         /**
          * @param sslContext The specific SSLContext to use.
          * @return {@link #self()}
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          * @see #setAcceptAllCerts(Boolean)
-         * @implNote Will be ignored if {@link #httpClientHandler} is set.
          */
         @Override
         public T setSslContext(SSLContext sslContext) {
@@ -284,7 +290,8 @@ public abstract class AbstractAPIHandler {
         /**
          * @param sslParameters The specific SSLParameters to use.
          * @return {@link #self()}
-         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setSslParameters(SSLParameters sslParameters) {
@@ -303,10 +310,12 @@ public abstract class AbstractAPIHandler {
          *
          * @param httpClient Instance of an HttpClient.
          * @return {@link #self()}
-         * @implNote Be aware, that any httpClient given via this method will be marked as external and has to be
-         *           closed externally as well. A call to {@link DefaultHttpClientHandler#close()} with an external httpclient
-         *           will have no effect.
-         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         *           <br>
+         *           Be aware, that any httpClient given via this method will set AutoClose to false and has to be
+         *           closed externally, unless {@link #setHttpClientAutoClose(boolean)} is used. A call to
+         *           {@link HttpClientHandler#close()} with AutoClose set to false will have no effect.
          */
         @Override
         public T setHttpClient(HttpClient httpClient) {
@@ -325,7 +334,8 @@ public abstract class AbstractAPIHandler {
          *
          * @param cookieManager Instance of a CookieManager.
          * @return {@link #self()}
-         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setCookieManager(CookieManager cookieManager) {
@@ -344,7 +354,8 @@ public abstract class AbstractAPIHandler {
          *
          * @param maxConnectionPool Maximum size of the pool. Default is 8.
          * @return {@link #self()}
-         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setMaxConnectionPool(int maxConnectionPool) {
@@ -362,7 +373,8 @@ public abstract class AbstractAPIHandler {
          *
          * @param maxBinaryLogLength Size in bytes
          * @return {@link #self()}
-         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setMaxBinaryLogLength(int maxBinaryLogLength) {
@@ -386,7 +398,8 @@ public abstract class AbstractAPIHandler {
          *
          * @param httpClientAutoClose true: enable, false: disable.
          * @return {@link #self()}
-         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setHttpClientAutoClose(boolean httpClientAutoClose) {
@@ -475,7 +488,7 @@ public abstract class AbstractAPIHandler {
     public URI getWebSocketURI() {
         try {
             return (webSocketURI != null ? webSocketURI
-                    : new URI(RegExUtils.replaceFirst(getRootApiURI().toString(), "^httpclient", "ws")));
+                    : new URI(RegExUtils.replaceFirst(getRootApiURI().toString(), "^http", "ws")));
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException("Cannot create webSocketURI from rootApiURI.", e);
         }
