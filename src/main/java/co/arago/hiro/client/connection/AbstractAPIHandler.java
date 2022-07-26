@@ -183,7 +183,7 @@ public abstract class AbstractAPIHandler {
          * @param proxy Simple proxy with one address and port
          * @return {@link #self()}
          * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
-         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setProxy(HttpClientHandler.ProxySpec proxy) {
@@ -200,7 +200,7 @@ public abstract class AbstractAPIHandler {
          * @param followRedirects Enable Redirect.NORMAL. Default is true.
          * @return {@link #self()}
          * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
-         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setFollowRedirects(boolean followRedirects) {
@@ -217,7 +217,7 @@ public abstract class AbstractAPIHandler {
          * @param connectTimeout Connect timeout in milliseconds.
          * @return {@link #self()}
          * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
-         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setConnectTimeout(Long connectTimeout) {
@@ -236,7 +236,7 @@ public abstract class AbstractAPIHandler {
          *                        to shut down properly. Default is 3000ms.
          * @return {@link #self()}
          * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
-         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setShutdownTimeout(long shutdownTimeout) {
@@ -256,7 +256,7 @@ public abstract class AbstractAPIHandler {
          * @param acceptAllCerts the toggle
          * @return {@link #self()}
          * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
-         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setAcceptAllCerts(Boolean acceptAllCerts) {
@@ -273,7 +273,7 @@ public abstract class AbstractAPIHandler {
          * @param sslContext The specific SSLContext to use.
          * @return {@link #self()}
          * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
-         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          * @see #setAcceptAllCerts(Boolean)
          */
         @Override
@@ -291,7 +291,7 @@ public abstract class AbstractAPIHandler {
          * @param sslParameters The specific SSLParameters to use.
          * @return {@link #self()}
          * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
-         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setSslParameters(SSLParameters sslParameters) {
@@ -311,11 +311,11 @@ public abstract class AbstractAPIHandler {
          * @param httpClient Instance of an HttpClient.
          * @return {@link #self()}
          * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
-         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
-         * <br>
-         * Be aware, that any httpClient given via this method will set AutoClose to false and has to be
-         * closed externally, unless {@link #setHttpClientAutoClose(boolean)} is used. A call to
-         * {@link HttpClientHandler#close()} with AutoClose set to false will have no effect.
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         *           <br>
+         *           Be aware, that any httpClient given via this method will set AutoClose to false and has to be
+         *           closed externally, unless {@link #setHttpClientAutoClose(boolean)} is used. A call to
+         *           {@link HttpClientHandler#close()} with AutoClose set to false will have no effect.
          */
         @Override
         public T setHttpClient(HttpClient httpClient) {
@@ -335,7 +335,7 @@ public abstract class AbstractAPIHandler {
          * @param cookieManager Instance of a CookieManager.
          * @return {@link #self()}
          * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
-         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setCookieManager(CookieManager cookieManager) {
@@ -355,7 +355,7 @@ public abstract class AbstractAPIHandler {
          * @param maxConnectionPool Maximum size of the pool. Default is 8.
          * @return {@link #self()}
          * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
-         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setMaxConnectionPool(int maxConnectionPool) {
@@ -374,7 +374,7 @@ public abstract class AbstractAPIHandler {
          * @param maxBinaryLogLength Size in bytes
          * @return {@link #self()}
          * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
-         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setMaxBinaryLogLength(int maxBinaryLogLength) {
@@ -399,7 +399,7 @@ public abstract class AbstractAPIHandler {
          * @param httpClientAutoClose true: enable, false: disable.
          * @return {@link #self()}
          * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
-         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         *           {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
          */
         @Override
         public T setHttpClientAutoClose(boolean httpClientAutoClose) {
@@ -467,8 +467,8 @@ public abstract class AbstractAPIHandler {
      *
      * @return A copy of the configuration.
      * @implNote Please take note, that the included httpClientHandler of this class will be
-     * added to the returned {@link Conf} and therefore will be shared among all APIHandlers that use this
-     * configuration.
+     *           added to the returned {@link Conf} and therefore will be shared among all APIHandlers that use this
+     *           configuration.
      * @see co.arago.hiro.client.rest.AuthenticatedAPIHandler
      */
     public Conf<?> getConf() {
@@ -634,10 +634,10 @@ public abstract class AbstractAPIHandler {
      * @return The constructed HttpRequest.
      */
     private HttpRequest createStreamRequest(URI uri,
-                                            String method,
-                                            StreamContainer body,
-                                            HttpHeaderMap headers,
-                                            Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
+            String method,
+            StreamContainer body,
+            HttpHeaderMap headers,
+            Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
 
         if (body != null && body.hasContentType()) {
             headers.set("Content-Type", body.getContentType());
@@ -666,10 +666,10 @@ public abstract class AbstractAPIHandler {
      * @return The constructed HttpRequest.
      */
     private HttpRequest createStringRequest(URI uri,
-                                            String method,
-                                            String body,
-                                            HttpHeaderMap headers,
-                                            Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
+            String method,
+            String body,
+            HttpHeaderMap headers,
+            Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
 
         HttpRequest httpRequest = getRequestBuilder(uri, headers, httpRequestTimeout)
                 .method(method,
@@ -692,7 +692,7 @@ public abstract class AbstractAPIHandler {
      * @param httpRequest The httpRequest to send
      * @param maxRetries  The amount of retries on errors. When this is null, {@link #maxRetries} will be used.
      * @return A HttpResponse containing an InputStream of the incoming body part of
-     * the result.
+     *         the result.
      * @throws HiroException        When status errors occur.
      * @throws IOException          On IO errors with the connection.
      * @throws InterruptedException When the call gets interrupted.

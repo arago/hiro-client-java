@@ -1,3 +1,7 @@
+# v0.5.1
+
+Library update. Use arago java-project 0.4.2.
+
 # v0.5.0
 
 Refactorings
