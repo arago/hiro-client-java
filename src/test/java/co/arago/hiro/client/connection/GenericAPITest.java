@@ -1,8 +1,6 @@
 package co.arago.hiro.client.connection;
 
 import co.arago.hiro.client.ConfigModel;
-import co.arago.hiro.client.connection.httpclient.DefaultHttpClientHandler;
-import co.arago.hiro.client.connection.httpclient.HttpClientHandler;
 import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
@@ -42,13 +40,9 @@ public class GenericAPITest {
                     GenericAPITest.class.getClassLoader().getResourceAsStream("config.json"),
                     ConfigModel.class);
 
-            HttpClientHandler httpClientHandler = DefaultHttpClientHandler.newBuilder()
+            handler = PasswordAuthTokenAPIHandler.newBuilder()
                     .setAcceptAllCerts(config.accept_all_certs)
                     .setShutdownTimeout(0)
-                    .build();
-
-            handler = PasswordAuthTokenAPIHandler.newBuilder()
-                    .setHttpClientHandler(httpClientHandler)
                     .setRootApiURI(config.api_url)
                     .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                     .setForceLogging(config.force_logging)

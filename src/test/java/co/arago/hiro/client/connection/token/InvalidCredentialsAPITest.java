@@ -1,7 +1,6 @@
 package co.arago.hiro.client.connection.token;
 
 import co.arago.hiro.client.ConfigModel;
-import co.arago.hiro.client.connection.httpclient.DefaultHttpClientHandler;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.mock.MockGraphitServerExtension;
 import co.arago.hiro.client.rest.AuthAPI;
@@ -38,10 +37,8 @@ public class InvalidCredentialsAPITest {
             return;
 
         try (AbstractTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setHttpClientHandler(DefaultHttpClientHandler.newBuilder()
-                        .setAcceptAllCerts(config.accept_all_certs)
-                        .setShutdownTimeout(0)
-                        .build())
+                .setAcceptAllCerts(config.accept_all_certs)
+                .setShutdownTimeout(0)
                 .setRootApiURI(config.api_url)
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                 .setForceLogging(config.force_logging)
@@ -68,10 +65,8 @@ public class InvalidCredentialsAPITest {
             return;
 
         try (AbstractTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setHttpClientHandler(DefaultHttpClientHandler.newBuilder()
-                        .setAcceptAllCerts(config.accept_all_certs)
-                        .setShutdownTimeout(0)
-                        .build())
+                .setAcceptAllCerts(config.accept_all_certs)
+                .setShutdownTimeout(0)
                 .setRootApiURI(config.api_url)
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                 .setForceLogging(config.force_logging)
@@ -98,10 +93,8 @@ public class InvalidCredentialsAPITest {
             return;
 
         try (AbstractTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setHttpClientHandler(DefaultHttpClientHandler.newBuilder()
-                        .setAcceptAllCerts(config.accept_all_certs)
-                        .setShutdownTimeout(0)
-                        .build())
+                .setAcceptAllCerts(config.accept_all_certs)
+                .setShutdownTimeout(0)
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
                 .setForceLogging(config.force_logging)
                 .setRootApiURI("http://nothing.here")

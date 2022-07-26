@@ -265,16 +265,12 @@ class Example {
                 .executor(Executors.newFixedThreadPool(1))
                 .build();
 
-        // Build an API handler which takes care of API paths via /api/versions and security tokens.
-        // Use external httpClientHandler.
+        // Pass the external httpClient and set httpClientAutoClose, so it gets closed
+        // when the TokenAPIHandler closes.
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler
                 .newBuilder()
-                .setHttpClientHandler(
-                        DefaultHttpClientHandler.newBuilder()
-                                .setHttpClient(httpClient)
-                                .setHttpClientAutoClose(true) // If this is missing, the httpClient will not be closed.
-                                .build()
-                )
+                .setHttpClient(httpClient)
+                .setHttpClientAutoClose(true) // If this is missing, the httpClient will not be closed.
                 .setRootApiUri(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
                 .build()) {

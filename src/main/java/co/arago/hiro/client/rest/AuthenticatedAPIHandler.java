@@ -395,11 +395,14 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      * Also tries to refresh the token on {@link TokenUnauthorizedException}.
      *
      * @param httpResponse The httpResponse from the HttpRequest
-     * @param retryCount   current counter for retries
+     * @param retryCount   current counter for retries. Counts down to zero.
      * @return true for a retry, false otherwise.
-     * @throws HiroException        If the check fails with a http status code error.
-     * @throws IOException          When the refresh fails with an IO error.
-     * @throws InterruptedException Call got interrupted.
+     * @throws TokenUnauthorizedException When the statusCode is 401 and all retries are exhausted or the token cannot
+     *                                    be refreshed.
+     * @throws HiroHttpException          When the statusCode is &lt; 200 or &gt; 399 and all retries are exhausted.
+     * @throws HiroException              On internal errors regarding hiro data processing.
+     * @throws IOException                When the refresh fails with an IO error.
+     * @throws InterruptedException       Call got interrupted.
      */
     @Override
     public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount)
@@ -407,25 +410,24 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         try {
             return tokenAPIHandler.checkResponse(httpResponse, retryCount);
         } catch (TokenUnauthorizedException e) {
-            // Add one additional retry for obtaining a new token.
-            if (retryCount >= 0) {
-                log.info("Trying to refresh token because of {}.", e.toString());
-                try {
-                    tokenAPIHandler.refreshToken();
-                } catch (FixedTokenException ignored) {
+            try {
+                if (retryCount < 0)
                     throw e;
-                }
+
+                log.info("Trying to refresh token because of {}.", e.toString());
+                tokenAPIHandler.refreshToken();
                 return true;
-            } else {
-                throw e;
+            } catch (FixedTokenException fte) {
+                // Integrate the FixedTokenException into the exception chain while keeping the original type.
+                throw new TokenUnauthorizedException(e.getMessage() + " " + fte.getMessage(), e.getCode(), e.getBody(),
+                        new FixedTokenException(fte.getMessage(), e));
             }
         } catch (HiroHttpException e) {
-            if (retryCount > 0) {
-                log.info("Retrying with {} retries left because of {}", retryCount, e.toString());
-                return true;
-            } else {
+            if (retryCount <= 0)
                 throw e;
-            }
+
+            log.info("Retrying with {} retries left because of {}", retryCount, e.toString());
+            return true;
         }
     }
 

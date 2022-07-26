@@ -18,8 +18,11 @@ import co.arago.util.json.JsonUtil;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.CookieManager;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -42,17 +45,23 @@ public abstract class AbstractAPIHandler {
     // ###############################################################################################
 
     /**
-     * The basic configuration for all APIHAndler
+     * The basic configuration for all APIHAndler. This also integrates the configuration for a default
+     * HttpClientHandler.
      *
      * @param <T> The type of the Builder
      */
-    public static abstract class Conf<T extends Conf<T>> {
+    public static abstract class Conf<T extends Conf<T>> implements HttpClientHandler.ConfTemplate<T> {
         private URI rootApiURI;
         private URI webSocketURI;
         private String userAgent;
         private Long httpRequestTimeout;
         private int maxRetries;
+
+        // Reference to an already existing httpClientHandler.
         private HttpClientHandler httpClientHandler;
+
+        // Configuration for a DefaultHttpClientHandler that is created internally.
+        private final DefaultHttpClientHandler.Conf<?> defaultHttpClientHandlerBuilder = DefaultHttpClientHandler.newBuilder();
 
         public URI getRootApiURI() {
             return rootApiURI;
@@ -147,14 +156,241 @@ public abstract class AbstractAPIHandler {
         }
 
         /**
+         * <p>
          * Sets the httpClientHandler for the backend connection. This handler will be shared among all
          * APIHandlers that use this configuration instance.
+         * </p>
+         * <p>
+         * Setting this handler means, that no DefaultHttpClientHandler will be created internally. All configuration
+         * options that are used for the internal handler will be ignored.
+         * </p>
          *
          * @param httpClientHandler The connection handler to use.
          * @return {@link #self()}
+         * @see HttpClientHandler.ConfTemplate
          */
         public T setHttpClientHandler(HttpClientHandler httpClientHandler) {
             this.httpClientHandler = httpClientHandler;
+            return self();
+        }
+
+        @Override
+        public HttpClientHandler.ProxySpec getProxy() {
+            return defaultHttpClientHandlerBuilder.getProxy();
+        }
+
+        /**
+         * @param proxy Simple proxy with one address and port
+         * @return {@link #self()}
+         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         */
+        @Override
+        public T setProxy(HttpClientHandler.ProxySpec proxy) {
+            defaultHttpClientHandlerBuilder.setProxy(proxy);
+            return self();
+        }
+
+        @Override
+        public boolean isFollowRedirects() {
+            return defaultHttpClientHandlerBuilder.isFollowRedirects();
+        }
+
+        /**
+         * @param followRedirects Enable Redirect.NORMAL. Default is true.
+         * @return {@link #self()}
+         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         */
+        @Override
+        public T setFollowRedirects(boolean followRedirects) {
+            defaultHttpClientHandlerBuilder.setFollowRedirects(followRedirects);
+            return self();
+        }
+
+        @Override
+        public Long getConnectTimeout() {
+            return defaultHttpClientHandlerBuilder.getShutdownTimeout();
+        }
+
+        /**
+         * @param connectTimeout Connect timeout in milliseconds.
+         * @return {@link #self()}
+         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         */
+        @Override
+        public T setConnectTimeout(Long connectTimeout) {
+            defaultHttpClientHandlerBuilder.setConnectTimeout(connectTimeout);
+            return self();
+        }
+
+        @Override
+        public long getShutdownTimeout() {
+            return defaultHttpClientHandlerBuilder.getShutdownTimeout();
+        }
+
+        /**
+         * @param shutdownTimeout Time to wait in milliseconds for a complete shutdown of the Java 11 HttpClientImpl.
+         *                        If this is set to a value too low, you might need to wait elsewhere for the HttpClient
+         *                        to shut down properly. Default is 3000ms.
+         * @return {@link #self()}
+         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         */
+        @Override
+        public T setShutdownTimeout(long shutdownTimeout) {
+            defaultHttpClientHandlerBuilder.setShutdownTimeout(shutdownTimeout);
+            return self();
+        }
+
+        @Override
+        public Boolean getAcceptAllCerts() {
+            return defaultHttpClientHandlerBuilder.getAcceptAllCerts();
+        }
+
+        /**
+         * Skip SSL certificate verification. Leave this unset to use the default in HttpClient. Setting this to true
+         * installs a permissive SSLContext, setting it to false removes the SSLContext to use the default.
+         *
+         * @param acceptAllCerts the toggle
+         * @return {@link #self()}
+         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         */
+        @Override
+        public T setAcceptAllCerts(Boolean acceptAllCerts) {
+            defaultHttpClientHandlerBuilder.setAcceptAllCerts(acceptAllCerts);
+            return self();
+        }
+
+        @Override
+        public SSLContext getSslContext() {
+            return defaultHttpClientHandlerBuilder.getSslContext();
+        }
+
+        /**
+         * @param sslContext The specific SSLContext to use.
+         * @return {@link #self()}
+         * @see #setAcceptAllCerts(Boolean)
+         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         */
+        @Override
+        public T setSslContext(SSLContext sslContext) {
+            defaultHttpClientHandlerBuilder.setSslContext(sslContext);
+            return self();
+        }
+
+        @Override
+        public SSLParameters getSslParameters() {
+            return defaultHttpClientHandlerBuilder.getSslParameters();
+        }
+
+        /**
+         * @param sslParameters The specific SSLParameters to use.
+         * @return {@link #self()}
+         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         */
+        @Override
+        public T setSslParameters(SSLParameters sslParameters) {
+            defaultHttpClientHandlerBuilder.setSslParameters(sslParameters);
+            return self();
+        }
+
+        @Override
+        public HttpClient getHttpClient() {
+            return defaultHttpClientHandlerBuilder.getHttpClient();
+        }
+
+        /**
+         * Instance of an externally configured http client. An internal HttpClient will be built with parameters
+         * given by this Builder if this is not set.
+         *
+         * @param httpClient Instance of an HttpClient.
+         * @return {@link #self()}
+         * @implNote Be aware, that any httpClient given via this method will be marked as external and has to be
+         *           closed externally as well. A call to {@link DefaultHttpClientHandler#close()} with an external httpclient
+         *           will have no effect.
+         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         */
+        @Override
+        public T setHttpClient(HttpClient httpClient) {
+            defaultHttpClientHandlerBuilder.setHttpClient(httpClient);
+            return self();
+        }
+
+        @Override
+        public CookieManager getCookieManager() {
+            return defaultHttpClientHandlerBuilder.getCookieManager();
+        }
+
+        /**
+         * Instance of an externally configured CookieManager. An internal CookieManager will be built if this is not
+         * set.
+         *
+         * @param cookieManager Instance of a CookieManager.
+         * @return {@link #self()}
+         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         */
+        @Override
+        public T setCookieManager(CookieManager cookieManager) {
+            defaultHttpClientHandlerBuilder.setCookieManager(cookieManager);
+            return self();
+        }
+
+        @Override
+        public int getMaxConnectionPool() {
+            return defaultHttpClientHandlerBuilder.getMaxConnectionPool();
+        }
+
+        /**
+         * Set the maximum of open connections for this HttpClient (This sets the fixedThreadPool for the
+         * Executor of the HttpClient).
+         *
+         * @param maxConnectionPool Maximum size of the pool. Default is 8.
+         * @return {@link #self()}
+         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         */
+        @Override
+        public T setMaxConnectionPool(int maxConnectionPool) {
+            defaultHttpClientHandlerBuilder.setMaxConnectionPool(maxConnectionPool);
+            return self();
+        }
+
+        @Override
+        public int getMaxBinaryLogLength() {
+            return defaultHttpClientHandlerBuilder.getMaxBinaryLogLength();
+        }
+
+        /**
+         * Maximum size to log binary data in logfiles. Default is 1024.
+         *
+         * @param maxBinaryLogLength Size in bytes
+         * @return {@link #self()}
+         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         */
+        @Override
+        public T setMaxBinaryLogLength(int maxBinaryLogLength) {
+            defaultHttpClientHandlerBuilder.setMaxBinaryLogLength(maxBinaryLogLength);
+            return self();
+        }
+
+        @Override
+        public Boolean getHttpClientAutoClose() {
+            return defaultHttpClientHandlerBuilder.getHttpClientAutoClose();
+        }
+
+        /**
+         * <p>
+         * Close internal httpClient automatically, even when it has been set externally.
+         * </p>
+         * <p>
+         * The default is to close the internal httpClient when it has been created internally and to
+         * not close the internal httpClient when it has been set via {@link #setHttpClient(HttpClient)}
+         * </p>
+         *
+         * @param httpClientAutoClose true: enable, false: disable.
+         * @return {@link #self()}
+         * @implNote Will be ignored if {@link #httpClientHandler} is set.
+         */
+        @Override
+        public T setHttpClientAutoClose(boolean httpClientAutoClose) {
+            defaultHttpClientHandlerBuilder.setHttpClientAutoClose(httpClientAutoClose);
             return self();
         }
 
@@ -210,7 +446,7 @@ public abstract class AbstractAPIHandler {
                 : (version != null ? title + " " + version : title);
 
         this.httpClientHandler = builder.getHttpClientHandler() != null ? builder.getHttpClientHandler()
-                : DefaultHttpClientHandler.newBuilder().build();
+                : builder.defaultHttpClientHandlerBuilder.build();
     }
 
     /**

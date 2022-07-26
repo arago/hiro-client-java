@@ -23,7 +23,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Class for API httpRequests that contains a HttpClient and a HttpLogger.
+ * Class for API httpRequests that contains a HttpClient and a HttpLogger. Wraps around the HttpClient for easier
+ * handling on cleanup and using common default parameters.
  */
 public class DefaultHttpClientHandler implements HttpClientHandler {
 
@@ -37,7 +38,7 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
     // ## Conf and Builder ##
     // ###############################################################################################
 
-    public static abstract class Conf<T extends Conf<T>> {
+    public static abstract class Conf<T extends Conf<T>> implements ConfTemplate<T> {
         private HttpClientHandler.ProxySpec proxy;
         private boolean followRedirects = true;
         private Boolean acceptAllCerts;
@@ -52,6 +53,7 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
         private int maxBinaryLogLength = DEFAULT_MAX_BINARY_LOG_LENGTH;
         private Boolean httpClientAutoClose;
 
+        @Override
         public ProxySpec getProxy() {
             return proxy;
         }
@@ -61,11 +63,13 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
          * @return {@link #self()}
          */
 
+        @Override
         public T setProxy(ProxySpec proxy) {
             this.proxy = proxy;
             return self();
         }
 
+        @Override
         public boolean isFollowRedirects() {
             return followRedirects;
         }
@@ -75,11 +79,13 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
          * @return {@link #self()}
          */
 
+        @Override
         public T setFollowRedirects(boolean followRedirects) {
             this.followRedirects = followRedirects;
             return self();
         }
 
+        @Override
         public Long getConnectTimeout() {
             return connectTimeout;
         }
@@ -89,11 +95,13 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
          * @return {@link #self()}
          */
 
+        @Override
         public T setConnectTimeout(Long connectTimeout) {
             this.connectTimeout = connectTimeout;
             return self();
         }
 
+        @Override
         public long getShutdownTimeout() {
             return shutdownTimeout;
         }
@@ -105,11 +113,13 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
          * @return {@link #self()}
          */
 
+        @Override
         public T setShutdownTimeout(long shutdownTimeout) {
             this.shutdownTimeout = shutdownTimeout;
             return self();
         }
 
+        @Override
         public Boolean getAcceptAllCerts() {
             return acceptAllCerts;
         }
@@ -122,11 +132,13 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
          * @return {@link #self()}
          */
 
+        @Override
         public T setAcceptAllCerts(Boolean acceptAllCerts) {
             this.acceptAllCerts = acceptAllCerts;
             return self();
         }
 
+        @Override
         public SSLContext getSslContext() {
             return sslContext;
         }
@@ -137,11 +149,13 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
          * @see #setAcceptAllCerts(Boolean)
          */
 
+        @Override
         public T setSslContext(SSLContext sslContext) {
             this.sslContext = sslContext;
             return self();
         }
 
+        @Override
         public SSLParameters getSslParameters() {
             return sslParameters;
         }
@@ -151,11 +165,13 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
          * @return {@link #self()}
          */
 
+        @Override
         public T setSslParameters(SSLParameters sslParameters) {
             this.sslParameters = sslParameters;
             return self();
         }
 
+        @Override
         public HttpClient getHttpClient() {
             return httpClient;
         }
@@ -171,11 +187,13 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
          *           will have no effect.
          */
 
+        @Override
         public T setHttpClient(HttpClient httpClient) {
             this.httpClient = httpClient;
             return self();
         }
 
+        @Override
         public CookieManager getCookieManager() {
             return cookieManager;
         }
@@ -188,11 +206,13 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
          * @return {@link #self()}
          */
 
+        @Override
         public T setCookieManager(CookieManager cookieManager) {
             this.cookieManager = cookieManager;
             return self();
         }
 
+        @Override
         public int getMaxConnectionPool() {
             return maxConnectionPool;
         }
@@ -205,11 +225,13 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
          * @return {@link #self()}
          */
 
+        @Override
         public T setMaxConnectionPool(int maxConnectionPool) {
             this.maxConnectionPool = maxConnectionPool;
             return self();
         }
 
+        @Override
         public int getMaxBinaryLogLength() {
             return maxBinaryLogLength;
         }
@@ -221,11 +243,13 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
          * @return {@link #self()}
          */
 
+        @Override
         public T setMaxBinaryLogLength(int maxBinaryLogLength) {
             this.maxBinaryLogLength = maxBinaryLogLength;
             return self();
         }
 
+        @Override
         public Boolean getHttpClientAutoClose() {
             return httpClientAutoClose;
         }
@@ -243,6 +267,7 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
          * @return {@link #self()}
          */
 
+        @Override
         public T setHttpClientAutoClose(boolean httpClientAutoClose) {
             this.httpClientAutoClose = httpClientAutoClose;
             return self();
@@ -283,6 +308,27 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
         }
     } };
 
+    /**
+     * A simple data class for a proxy
+     */
+    public static class DefaultProxySpec implements ProxySpec {
+        private final String address;
+        private final int port;
+
+        public DefaultProxySpec(String address, int port) {
+            this.address = address;
+            this.port = port;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+
+        public int getPort() {
+            return port;
+        }
+    }
+
     // ###############################################################################################
     // ## Main part ##
     // ###############################################################################################
@@ -319,9 +365,8 @@ public class DefaultHttpClientHandler implements HttpClientHandler {
         this.cookieManager = builder.getCookieManager() != null ? builder.getCookieManager() : new CookieManager();
         this.httpLogger = new HttpLogger(builder.getMaxBinaryLogLength());
 
-        boolean externalConnection = (this.httpClient != null);
-        this.httpClientAutoClose = builder.getHttpClientAutoClose() != null ? builder.getHttpClientAutoClose()
-                : !externalConnection;
+        this.httpClientAutoClose = (builder.getHttpClientAutoClose() != null) ? builder.getHttpClientAutoClose()
+                : (this.httpClient == null);
 
         if (acceptAllCerts == null) {
             this.sslContext = builder.getSslContext();
