@@ -67,7 +67,7 @@ class Example {
 ## TokenApiHandler
 
 Authorization against the HIRO Graph is done via tokens. These tokens are handled by classes of
-type `AbstractTokenAPIHandler` in this library. Each of the Hiro-Client-Objects (`GraphAPI`, `AuthAPI`, etc.) need to
+type `TokenAPIHandler` in this library. Each of the Hiro-Client-Objects (`GraphAPI`, `AuthAPI`, etc.) need to
 have some kind of TokenApiHandler in their builder for construction.
 
 This library supplies the following TokenApiHandlers:

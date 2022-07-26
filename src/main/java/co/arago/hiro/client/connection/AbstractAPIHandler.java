@@ -407,8 +407,8 @@ public abstract class AbstractAPIHandler {
     public static final String version;
 
     static {
-        version = DefaultHttpClientHandler.class.getPackage().getImplementationVersion();
-        String t = DefaultHttpClientHandler.class.getPackage().getImplementationTitle();
+        version = AbstractAPIHandler.class.getPackage().getImplementationVersion();
+        String t = AbstractAPIHandler.class.getPackage().getImplementationTitle();
         title = (t != null ? t : "hiro-client-java");
     }
 

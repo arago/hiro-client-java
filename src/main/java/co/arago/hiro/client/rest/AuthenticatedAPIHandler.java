@@ -1,7 +1,7 @@
 package co.arago.hiro.client.rest;
 
 import co.arago.hiro.client.connection.AbstractAPIHandler;
-import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
+import co.arago.hiro.client.connection.token.TokenAPIHandler;
 import co.arago.hiro.client.exceptions.FixedTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
@@ -29,7 +29,7 @@ import static co.arago.util.validation.ValueChecks.notNull;
 
 /**
  * This class is the basis of all authenticated API handlers that make use of the different sections of the HIRO API.
- * It copies its configuration from the supplied {@link AbstractTokenAPIHandler} and overrides
+ * It copies its configuration from the supplied {@link TokenAPIHandler} and overrides
  * {@link AbstractAPIHandler#addToHeaders(HttpHeaderMap)} and {@link AbstractAPIHandler#checkResponse(HttpResponse, int)}
  * to handle tokens.
  */
@@ -49,7 +49,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         private String apiName;
         private String apiPath;
         private Long httpRequestTimeout;
-        private AbstractTokenAPIHandler tokenAPIHandler;
+        private TokenAPIHandler tokenAPIHandler;
         private int maxRetries;
 
         public String getApiName() {
@@ -105,7 +105,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
             return self();
         }
 
-        public AbstractTokenAPIHandler getTokenApiHandler() {
+        public TokenAPIHandler getTokenApiHandler() {
             return this.tokenAPIHandler;
         }
 
@@ -113,7 +113,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @param tokenAPIHandler The tokenAPIHandler for this API.
          * @return {@link #self()}
          */
-        public T setTokenApiHandler(AbstractTokenAPIHandler tokenAPIHandler) {
+        public T setTokenApiHandler(TokenAPIHandler tokenAPIHandler) {
             this.tokenAPIHandler = tokenAPIHandler;
             return self();
         }
@@ -337,7 +337,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
     protected final String apiName;
     protected final String apiPath;
-    protected final AbstractTokenAPIHandler tokenAPIHandler;
+    protected final TokenAPIHandler tokenAPIHandler;
     protected URI apiURI;
 
     /**

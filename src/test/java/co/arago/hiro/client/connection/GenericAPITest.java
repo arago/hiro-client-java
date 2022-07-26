@@ -1,8 +1,8 @@
 package co.arago.hiro.client.connection;
 
 import co.arago.hiro.client.ConfigModel;
-import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
+import co.arago.hiro.client.connection.token.TokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.mock.MockGraphitServerExtension;
@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockGraphitServerExtension.class)
 public class GenericAPITest {
-    public static AbstractTokenAPIHandler handler;
+    public static TokenAPIHandler handler;
     public static AuthenticatedAPIHandler apiHandler;
     final static Logger log = LoggerFactory.getLogger(GenericAPITest.class);
 

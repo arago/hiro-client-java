@@ -36,7 +36,7 @@ public class InvalidCredentialsAPITest {
         if (config == null)
             return;
 
-        try (AbstractTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+        try (TokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setAcceptAllCerts(config.accept_all_certs)
                 .setShutdownTimeout(0)
                 .setRootApiURI(config.api_url)
@@ -64,7 +64,7 @@ public class InvalidCredentialsAPITest {
         if (config == null)
             return;
 
-        try (AbstractTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+        try (TokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setAcceptAllCerts(config.accept_all_certs)
                 .setShutdownTimeout(0)
                 .setRootApiURI(config.api_url)
@@ -92,7 +92,7 @@ public class InvalidCredentialsAPITest {
         if (config == null)
             return;
 
-        try (AbstractTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+        try (TokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setAcceptAllCerts(config.accept_all_certs)
                 .setShutdownTimeout(0)
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
