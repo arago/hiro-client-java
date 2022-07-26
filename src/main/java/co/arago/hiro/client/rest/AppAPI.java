@@ -1,6 +1,6 @@
 package co.arago.hiro.client.rest;
 
-import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
+import co.arago.hiro.client.connection.token.TokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.HiroMessage;
 import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
@@ -25,7 +25,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
 
     public static final class Builder extends Conf<Builder> {
 
-        private Builder(String apiName, AbstractTokenAPIHandler tokenAPIHandler) {
+        private Builder(String apiName, TokenAPIHandler tokenAPIHandler) {
             setApiName(apiName);
             setTokenApiHandler(tokenAPIHandler);
         }
@@ -59,7 +59,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
      * @param tokenAPIHandler The API handler for this websocket.
      * @return The {@link Builder} for {@link AppAPI}.
      */
-    public static Conf<?> newBuilder(AbstractTokenAPIHandler tokenAPIHandler) {
+    public static Conf<?> newBuilder(TokenAPIHandler tokenAPIHandler) {
         return new Builder("app", tokenAPIHandler);
     }
 
@@ -92,7 +92,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
 
         /**
          * @return A {@link HiroVertexMessage} with the result data.
-         * @throws HiroException        When the call returns a http status error.
+         * @throws HiroException        TokenAPIHandler.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
@@ -142,7 +142,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
 
         /**
          * @return A {@link HiroMessage} with the result data.
-         * @throws HiroException        When the call returns a http status error.
+         * @throws HiroException        TokenAPIHandler.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
@@ -196,7 +196,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
 
         /**
          * @return A {@link HttpResponseParser} with the result data.
-         * @throws HiroException        When the call returns a http status error.
+         * @throws HiroException        TokenAPIHandler.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
@@ -249,7 +249,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
 
         /**
          * @return A {@link HiroMessage} with the result data.
-         * @throws HiroException        When the call returns a http status error.
+         * @throws HiroException        TokenAPIHandler.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */
@@ -299,7 +299,7 @@ public class AppAPI extends AuthenticatedAPIHandler {
 
         /**
          * @return A {@link HiroVertexListMessage} with the result data.
-         * @throws HiroException        When the call returns a http status error.
+         * @throws HiroException        TokenAPIHandler.
          * @throws IOException          When the call got an IO error.
          * @throws InterruptedException When the call gets interrupted.
          */

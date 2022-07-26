@@ -1,6 +1,8 @@
 package co.arago.hiro.client.rest;
 
 import co.arago.hiro.client.ConfigModel;
+import co.arago.hiro.client.connection.httpclient.DefaultHttpClientHandler;
+import co.arago.hiro.client.connection.httpclient.HttpClientHandler;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.util.json.JsonUtil;
@@ -14,7 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
@@ -32,12 +33,16 @@ class TokenAPIHandlerTest {
                     TokenAPIHandlerTest.class.getClassLoader().getResourceAsStream("config.json"),
                     ConfigModel.class);
 
+            HttpClientHandler httpClientHandler = DefaultHttpClientHandler.newBuilder()
+                    .setAcceptAllCerts(config.accept_all_certs)
+                    .setShutdownTimeout(0)
+                    .build();
+
             handler = PasswordAuthTokenAPIHandler.newBuilder()
+                    .setHttpClientHandler(httpClientHandler)
                     .setRootApiURI(config.api_url)
                     .setCredentials(config.username, config.password, config.client_id, config.client_secret)
-                    .setAcceptAllCerts(config.accept_all_certs)
                     .setForceLogging(config.force_logging)
-                    .setShutdownTimeout(0)
                     .build();
         } catch (URISyntaxException e) {
             log.warn("Skipping tests: {}.", e.getMessage());

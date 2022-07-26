@@ -1,6 +1,7 @@
 package co.arago.hiro.client.websocket;
 
 import co.arago.hiro.client.ConfigModel;
+import co.arago.hiro.client.connection.httpclient.DefaultHttpClientHandler;
 import co.arago.hiro.client.connection.token.FixedTokenAPIHandler;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
@@ -69,11 +70,13 @@ public class EventWebSocketTest {
             return;
 
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+                .setHttpClientHandler(DefaultHttpClientHandler.newBuilder()
+                        .setAcceptAllCerts(config.accept_all_certs)
+                        .setShutdownTimeout(0)
+                        .build())
                 .setRootApiURI(config.api_url)
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
-                .setAcceptAllCerts(config.accept_all_certs)
                 .setForceLogging(config.force_logging)
-                .setShutdownTimeout(0)
                 .build()) {
 
             DecodedToken decodedToken = handler.decodeToken();
@@ -101,10 +104,12 @@ public class EventWebSocketTest {
         EventListener listener = new EventListener();
 
         try (FixedTokenAPIHandler handler = FixedTokenAPIHandler.newBuilder()
+                .setHttpClientHandler(DefaultHttpClientHandler.newBuilder()
+                        .setAcceptAllCerts(config.accept_all_certs)
+                        .setShutdownTimeout(0)
+                        .build())
                 .setRootApiURI(config.api_url)
                 .setToken("Invalid")
-                .setAcceptAllCerts(config.accept_all_certs)
-                .setShutdownTimeout(0)
                 .build()) {
             try (EventWebSocket eventWebSocket = EventWebSocket.newBuilder(handler, listener)
                     .setName("events-ws-test")
@@ -124,17 +129,19 @@ public class EventWebSocketTest {
     }
 
     @Test
-    void testInvalidUrl() throws IOException {
+    void testInvalidUrl() {
         if (config == null)
             return;
 
         EventListener listener = new EventListener();
 
         try (FixedTokenAPIHandler handler = FixedTokenAPIHandler.newBuilder()
+                .setHttpClientHandler(DefaultHttpClientHandler.newBuilder()
+                        .setAcceptAllCerts(config.accept_all_certs)
+                        .setShutdownTimeout(0)
+                        .build())
                 .setRootApiURI("http://nothing.here")
                 .setToken("Invalid")
-                .setAcceptAllCerts(config.accept_all_certs)
-                .setShutdownTimeout(0)
                 .build()) {
 
             try (EventWebSocket eventWebSocket = EventWebSocket.newBuilder(handler, listener)

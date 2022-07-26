@@ -34,7 +34,7 @@ public class MultiValueMap {
     }
 
     public MultiValueMap(MultiValueMap other) {
-        map.putAll(other.map);
+        appendAll(other);
     }
 
     /**
@@ -62,11 +62,7 @@ public class MultiValueMap {
      */
     public void setAll(MultiValueMap other) {
         map.clear();
-
-        if (other == null)
-            return;
-
-        map.putAll(other.map);
+        appendAll(other);
     }
 
     /**
@@ -100,7 +96,7 @@ public class MultiValueMap {
         if (other == null)
             return;
 
-        other.map.forEach(this::appendAtKey);
+        other.map.forEach((key, values) -> map.put(key, new ArrayList<>(values)));
     }
 
     /**
@@ -228,9 +224,9 @@ public class MultiValueMap {
     /**
      * @return A deep copy of the internal map.
      */
-    public Map<String, List<String>> getCopy() {
+    public Map<String, List<String>> getMapCopy() {
         Map<String, List<String>> clone = new LinkedHashMap<>();
-        map.forEach((key, value) -> clone.put(key, new ArrayList<>(value)));
+        map.forEach((key, values) -> clone.put(key, new ArrayList<>(values)));
         return clone;
     }
 
@@ -239,7 +235,7 @@ public class MultiValueMap {
      */
     public Map<String, String> toSingleValueMap() {
         Map<String, String> singleValueMap = new HashMap<>();
-        map.forEach((key, value) -> singleValueMap.put(key, value.iterator().next()));
+        map.forEach((key, values) -> singleValueMap.put(key, values.iterator().next()));
         return singleValueMap;
     }
 

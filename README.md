@@ -30,6 +30,7 @@ Most of the documentation is done in the sourcecode.
 ### Straightforward graph example
 
 ```Java
+
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.rest.GraphAPI;
@@ -41,11 +42,11 @@ class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
 
         // Build an API handler which takes care of API paths via /api/versions and security tokens.
-        try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+        try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler
+                .newBuilder()
                 .setRootApiUri(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
-                .build()
-        ) {
+                .build()) {
 
             // Use the actual API you want with the handler
             GraphAPI graphAPI = GraphAPI.newBuilder(handler)
@@ -66,7 +67,7 @@ class Example {
 ## TokenApiHandler
 
 Authorization against the HIRO Graph is done via tokens. These tokens are handled by classes of
-type `AbstractTokenAPIHandler` in this library. Each of the Hiro-Client-Objects (`GraphAPI`, `AuthAPI`, etc.) need to
+type `TokenAPIHandler` in this library. Each of the Hiro-Client-Objects (`GraphAPI`, `AuthAPI`, etc.) need to
 have some kind of TokenApiHandler in their builder for construction.
 
 This library supplies the following TokenApiHandlers:
@@ -120,10 +121,10 @@ class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
 
         // Build an API handler which takes care of API paths via /api/versions and security tokens.
-        try (EnvironmentTokenAPIHandler handler = EnvironmentTokenAPIHandler.newBuilder()
+        try (EnvironmentTokenAPIHandler handler = EnvironmentTokenAPIHandler
+                .newBuilder()
                 .setRootApiUri(API_URL)
-                .build()
-        ) {
+                .build()) {
 
             // Use the actual API you want with the handler
             GraphAPI graphAPI = GraphAPI.newBuilder(handler)
@@ -163,6 +164,7 @@ When you need to access multiple APIs, it is a good idea to share the TokenApiHa
 unnecessary API version requests and unnecessary token requests with the PasswordAuthTokenAPIHandler for instance.
 
 ```java
+
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.rest.AuthAPI;
@@ -174,11 +176,12 @@ class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
 
         // Build an API handler which takes care of API paths via /api/versions and security tokens.
-        try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+        try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler
+                .newBuilder()
                 .setRootApiUri(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
-                .build()
-        ) {
+                .build()) {
+
 
             // Use the actual APIs you want with the handler
 
@@ -196,13 +199,14 @@ class Example {
 ### Connection sharing
 
 When you need to create a token externally, it is a good idea to share a GraphConnectionHandler between
-TokenAPIHandlers. The connection, cookies and API version information will be shared among them. The connection will
-_not_ be closed when `TokenAPIHandler#close()` is called - you need to close the GraphConnectionHandler explicitly.
+TokenAPIHandlers. The connection, cookies and API version information will be shared among them. Be aware, that you
+should close the connection via the GraphConnectionHandler here, not via the TokenAPIHandlers.
 
 ```java
-import co.arago.hiro.client.connection.GraphConnectionHandler;
+
 import co.arago.hiro.client.connection.token.FixedTokenAPIHandler;
 import co.arago.hiro.client.rest.GraphAPI;
+import co.arago.hiro.client.connection.GraphConnectionHandler;
 
 import java.io.IOException;
 
@@ -210,18 +214,21 @@ class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
 
         // Build a connection without any token handling
-        try (GraphConnectionHandler connectionHandler = GraphConnectionHandler.newBuilder()
+        try (GraphConnectionHandler connectionHandler = GraphConnectionHandler
+                .newBuilder(httpClientHandler)
                 .setRootApiUri(API_URL)
-                .build()
-        ) {
-            GraphAPI graphAPI_user1 = GraphAPI.newBuilder(FixedTokenAPIHandler.newBuilder()
-                            .setSharedConnectionHandler(connectionHandler)
-                            .setToken("TOKEN_1"))
+                .build()) {
+
+            GraphAPI graphAPI_user1 = GraphAPI.newBuilder(
+                            FixedTokenAPIHandler.newBuilder()
+                                    .setSharedConnectionHandler(connectionHandler)
+                                    .setToken("TOKEN_1"))
                     .build();
 
-            GraphAPI graphAPI_user2 = GraphAPI.newBuilder(FixedTokenAPIHandler.newBuilder()
-                            .setSharedConnectionHandler(connectionHandler)
-                            .setToken("TOKEN_2"))
+            GraphAPI graphAPI_user2 = GraphAPI.newBuilder(
+                            FixedTokenAPIHandler.newBuilder()
+                                    .setSharedConnectionHandler(connectionHandler)
+                                    .setToken("TOKEN_2"))
                     .build();
         }
 
@@ -231,14 +238,16 @@ class Example {
 
 ### External HTTP Client
 
-An external httpClient can be provided to the TokenAPIHandlers or a GraphConnectionHandler via their Builders
-using `setClient(HttpClient client)`. If this is the case, a call to `close()` of such a handler will have no effect. It
-has to be closed externally.
+An external httpClient can be provided to the HttpClientHandler via its Builder using
+`setHttpClient(HttpClient client)`. If this is the case and httpClientAutoClose is not set to `true`, a call
+to `close()`
+of such a handler will have no effect. Its removal then has to be handled externally.
 
 Example with an external httpClient:
 
 ```java
 import co.arago.hiro.client.Config;
+import co.arago.hiro.client.connection.httpclient.DefaultHttpClientHandler;
 import co.arago.hiro.client.connection.token.PasswordAuthTokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.rest.GraphAPI;
@@ -246,10 +255,7 @@ import co.arago.hiro.client.model.vertex.HiroVertexListMessage;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 class Example {
     public static void main(String[] args) throws HiroException, IOException, InterruptedException {
@@ -259,14 +265,15 @@ class Example {
                 .executor(Executors.newFixedThreadPool(1))
                 .build();
 
-        try {
-            // Build an API handler which takes care of API paths via /api/versions and security tokens.
-            // Use an external httpClient.
-            PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
-                    .setHttpClient(httpClient)
-                    .setRootApiUri(API_URL)
-                    .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
-                    .build();
+        // Pass the external httpClient and set httpClientAutoClose, so it gets closed
+        // when the TokenAPIHandler closes.
+        try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler
+                .newBuilder()
+                .setHttpClient(httpClient)
+                .setHttpClientAutoClose(true) // If this is missing, the httpClient will not be closed.
+                .setRootApiUri(API_URL)
+                .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
+                .build()) {
 
             // Use the actual API you want with the handler
             GraphAPI graphAPI = GraphAPI.newBuilder(handler)
@@ -279,22 +286,6 @@ class Example {
                     .execute();
 
             System.out.println(queryResult.toPrettyJsonString());
-        } finally {
-            // Shutdown the connection by shutting down its executorService.
-            Executor executor = httpClient.executor().orElse(null);
-            if (executor instanceof ExecutorService) {
-                ExecutorService executorService = (ExecutorService) executor;
-
-                executorService.shutdown();
-                try {
-                    if (!executorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
-                        executorService.shutdownNow();
-                    }
-                } catch (InterruptedException e) {
-                    executorService.shutdownNow();
-                }
-
-            }
         }
     }
 }
@@ -488,7 +479,6 @@ class Example {
         try (PasswordAuthTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setRootApiUri(API_URL)
                 .setCredentials(USERNAME, PASSWORD, CLIENT_ID, CLIENT_SECRET)
-                .setAcceptAllCerts(config.accept_all_certs)
                 .build()
         ) {
 

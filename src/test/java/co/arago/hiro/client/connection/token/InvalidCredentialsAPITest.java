@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ConnectException;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -37,12 +36,12 @@ public class InvalidCredentialsAPITest {
         if (config == null)
             return;
 
-        try (AbstractTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+        try (TokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+                .setAcceptAllCerts(config.accept_all_certs)
+                .setShutdownTimeout(0)
                 .setRootApiURI(config.api_url)
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
-                .setAcceptAllCerts(config.accept_all_certs)
                 .setForceLogging(config.force_logging)
-                .setShutdownTimeout(0)
                 .setPassword("Wrong")
                 .build()) {
 
@@ -65,12 +64,12 @@ public class InvalidCredentialsAPITest {
         if (config == null)
             return;
 
-        try (AbstractTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+        try (TokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
+                .setAcceptAllCerts(config.accept_all_certs)
+                .setShutdownTimeout(0)
                 .setRootApiURI(config.api_url)
                 .setCredentials(config.username, config.password, config.client_id, config.client_secret)
-                .setAcceptAllCerts(config.accept_all_certs)
                 .setForceLogging(config.force_logging)
-                .setShutdownTimeout(0)
                 .setClientSecret("Wrong")
                 .build()) {
 
@@ -89,15 +88,15 @@ public class InvalidCredentialsAPITest {
     }
 
     @Test
-    void wrongUrl() throws MalformedURLException {
+    void wrongUrl() {
         if (config == null)
             return;
 
-        try (AbstractTokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
-                .setCredentials(config.username, config.password, config.client_id, config.client_secret)
+        try (TokenAPIHandler handler = PasswordAuthTokenAPIHandler.newBuilder()
                 .setAcceptAllCerts(config.accept_all_certs)
-                .setForceLogging(config.force_logging)
                 .setShutdownTimeout(0)
+                .setCredentials(config.username, config.password, config.client_id, config.client_secret)
+                .setForceLogging(config.force_logging)
                 .setRootApiURI("http://nothing.here")
                 .build()) {
 

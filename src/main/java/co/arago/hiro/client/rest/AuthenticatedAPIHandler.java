@@ -1,13 +1,12 @@
 package co.arago.hiro.client.rest;
 
 import co.arago.hiro.client.connection.AbstractAPIHandler;
-import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
+import co.arago.hiro.client.connection.token.TokenAPIHandler;
 import co.arago.hiro.client.exceptions.FixedTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.exceptions.TokenUnauthorizedException;
 import co.arago.hiro.client.model.JsonMessage;
-import co.arago.hiro.client.util.HttpLogger;
 import co.arago.hiro.client.util.httpclient.HttpHeaderMap;
 import co.arago.hiro.client.util.httpclient.StreamContainer;
 import co.arago.hiro.client.util.httpclient.URIEncodedData;
@@ -21,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.nio.charset.Charset;
 import java.util.Map;
@@ -31,6 +29,9 @@ import static co.arago.util.validation.ValueChecks.notNull;
 
 /**
  * This class is the basis of all authenticated API handlers that make use of the different sections of the HIRO API.
+ * It copies its configuration from the supplied {@link TokenAPIHandler} and overrides
+ * {@link AbstractAPIHandler#addToHeaders(HttpHeaderMap)} and {@link AbstractAPIHandler#checkResponse(HttpResponse, int)}
+ * to handle tokens.
  */
 public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
@@ -48,7 +49,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         private String apiName;
         private String apiPath;
         private Long httpRequestTimeout;
-        private AbstractTokenAPIHandler tokenAPIHandler;
+        private TokenAPIHandler tokenAPIHandler;
         private int maxRetries;
 
         public String getApiName() {
@@ -104,7 +105,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
             return self();
         }
 
-        public AbstractTokenAPIHandler getTokenApiHandler() {
+        public TokenAPIHandler getTokenApiHandler() {
             return this.tokenAPIHandler;
         }
 
@@ -112,7 +113,7 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
          * @param tokenAPIHandler The tokenAPIHandler for this API.
          * @return {@link #self()}
          */
-        public T setTokenApiHandler(AbstractTokenAPIHandler tokenAPIHandler) {
+        public T setTokenApiHandler(TokenAPIHandler tokenAPIHandler) {
             this.tokenAPIHandler = tokenAPIHandler;
             return self();
         }
@@ -135,8 +136,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> {
 
         protected final URIPath path;
-        protected URIEncodedData query = new URIEncodedData();
-        protected HttpHeaderMap headers = new HttpHeaderMap();
+        protected final URIEncodedData query = new URIEncodedData();
+        protected final HttpHeaderMap headers = new HttpHeaderMap();
         protected String fragment;
 
         protected Long httpRequestTimeout;
@@ -336,19 +337,20 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
 
     protected final String apiName;
     protected final String apiPath;
-    protected final AbstractTokenAPIHandler tokenAPIHandler;
+    protected final TokenAPIHandler tokenAPIHandler;
     protected URI apiURI;
 
     /**
-     * Create this APIHandler by using its Builder.
+     * Create this APIHandler by using its Builder. The API configuration will be copied over from the
+     * builder.tokenAPIHandler.
      *
      * @param builder The builder to use.
      */
     protected AuthenticatedAPIHandler(Conf<?> builder) {
-        super(notNull(builder.getTokenApiHandler(), "tokenApiHandler"));
+        super(notNull(builder.tokenAPIHandler, "tokenApiHandler").getConf());
+        this.tokenAPIHandler = builder.getTokenApiHandler();
         this.apiName = builder.getApiName();
         this.apiPath = builder.getApiPath();
-        this.tokenAPIHandler = builder.getTokenApiHandler();
 
         if (StringUtils.isAllBlank(this.apiName, this.apiPath))
             anyError("Either 'apiName' or 'apiPath' have to be set.");
@@ -371,9 +373,9 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
         if (apiURI == null)
             apiURI = (apiPath != null ? buildApiURI(apiPath) : tokenAPIHandler.getApiURIOf(apiName));
 
-        URI pathURI = buildURI(apiURI, path.build(), false);
+        URI pathURI = AbstractAPIHandler.buildURI(apiURI, path.build(), false);
 
-        return addQueryFragmentAndNormalize(pathURI, query, fragment);
+        return AbstractAPIHandler.addQueryFragmentAndNormalize(pathURI, query, fragment);
     }
 
     /**
@@ -383,67 +385,50 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
      */
     @Override
     public void addToHeaders(HttpHeaderMap headers) throws InterruptedException, IOException, HiroException {
-        headers.set("User-Agent", userAgent);
+        tokenAPIHandler.addToHeaders(headers);
         headers.set("Authorization", "Bearer " + tokenAPIHandler.getToken());
     }
 
     /**
      * Checks for {@link TokenUnauthorizedException} and {@link HiroHttpException}
-     * until {@link #maxRetries} is exhausted.
+     * until {@link AbstractAPIHandler#getMaxRetries()} is exhausted.
      * Also tries to refresh the token on {@link TokenUnauthorizedException}.
      *
      * @param httpResponse The httpResponse from the HttpRequest
-     * @param retryCount   current counter for retries
+     * @param retryCount   current counter for retries. Counts down to zero.
      * @return true for a retry, false otherwise.
-     * @throws HiroException        If the check fails with a http status code error.
-     * @throws IOException          When the refresh fails with an IO error.
-     * @throws InterruptedException Call got interrupted.
+     * @throws TokenUnauthorizedException When the statusCode is 401 and all retries are exhausted or the token cannot
+     *                                    be refreshed.
+     * @throws HiroHttpException          When the statusCode is &lt; 200 or &gt; 399 and all retries are exhausted.
+     * @throws HiroException              On internal errors regarding hiro data processing.
+     * @throws IOException                When the refresh fails with an IO error.
+     * @throws InterruptedException       Call got interrupted.
      */
     @Override
     public boolean checkResponse(HttpResponse<InputStream> httpResponse, int retryCount)
             throws HiroException, IOException, InterruptedException {
         try {
-            return super.checkResponse(httpResponse, retryCount);
+            return tokenAPIHandler.checkResponse(httpResponse, retryCount);
         } catch (TokenUnauthorizedException e) {
-            // Add one additional retry for obtaining a new token.
-            if (retryCount >= 0) {
-                log.info("Trying to refresh token because of {}.", e.toString());
-                try {
-                    tokenAPIHandler.refreshToken();
-                } catch (FixedTokenException ignored) {
+            try {
+                if (retryCount < 0)
                     throw e;
-                }
+
+                log.info("Trying to refresh token because of {}.", e.toString());
+                tokenAPIHandler.refreshToken();
                 return true;
-            } else {
-                throw e;
+            } catch (FixedTokenException fte) {
+                // Integrate the FixedTokenException into the exception chain while keeping the original type.
+                throw new TokenUnauthorizedException(e.getMessage() + " " + fte.getMessage(), e.getCode(), e.getBody(),
+                        new FixedTokenException(fte.getMessage(), e));
             }
         } catch (HiroHttpException e) {
-            if (retryCount > 0) {
-                log.info("Retrying with {} retries left because of {}", retryCount, e.toString());
-                return true;
-            } else {
+            if (retryCount <= 0)
                 throw e;
-            }
+
+            log.info("Retrying with {} retries left because of {}", retryCount, e.toString());
+            return true;
         }
     }
 
-    /**
-     * Redirect the HttpLogger to the one provided in {@link #tokenAPIHandler}.
-     *
-     * @return The HttpLogger to use with this class.
-     */
-    @Override
-    protected HttpLogger getHttpLogger() {
-        return tokenAPIHandler.getHttpLogger();
-    }
-
-    /**
-     * Redirect the HttpClient to the one provided in {@link #tokenAPIHandler}.
-     *
-     * @return The HttpClient to use with this class.
-     */
-    @Override
-    protected HttpClient getOrBuildClient() {
-        return tokenAPIHandler.getOrBuildClient();
-    }
 }

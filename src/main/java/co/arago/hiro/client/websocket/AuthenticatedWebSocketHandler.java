@@ -1,7 +1,7 @@
 package co.arago.hiro.client.websocket;
 
 import co.arago.hiro.client.connection.AbstractAPIHandler;
-import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
+import co.arago.hiro.client.connection.token.TokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.RefreshTokenWebSocketException;
 import co.arago.hiro.client.exceptions.UnauthorizedWebSocketException;
@@ -60,7 +60,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
         private final HttpHeaderMap headers = new HttpHeaderMap();
         private String fragment;
         private long webSocketMessageTimeout = 60000L;
-        private AbstractTokenAPIHandler tokenAPIHandler;
+        private TokenAPIHandler tokenAPIHandler;
         private int maxRetries = 2;
         private boolean reconnectOnFailedSend = false;
 
@@ -218,7 +218,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
             return self();
         }
 
-        public AbstractTokenAPIHandler getTokenApiHandler() {
+        public TokenAPIHandler getTokenApiHandler() {
             return this.tokenAPIHandler;
         }
 
@@ -226,7 +226,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
          * @param tokenAPIHandler The tokenAPIHandler for this API.
          * @return {@link #self()}
          */
-        public T setTokenApiHandler(AbstractTokenAPIHandler tokenAPIHandler) {
+        public T setTokenApiHandler(TokenAPIHandler tokenAPIHandler) {
             this.tokenAPIHandler = tokenAPIHandler;
             return self();
         }
@@ -492,7 +492,7 @@ public abstract class AuthenticatedWebSocketHandler implements AutoCloseable {
     protected final String endpoint;
     protected final String protocol;
     protected final int maxRetries;
-    protected final AbstractTokenAPIHandler tokenAPIHandler;
+    protected final TokenAPIHandler tokenAPIHandler;
     protected final URIEncodedData query = new URIEncodedData();
     protected final HttpHeaderMap headers = new HttpHeaderMap();
     protected final String fragment;

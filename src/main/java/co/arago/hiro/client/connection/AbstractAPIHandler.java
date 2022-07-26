@@ -1,5 +1,7 @@
 package co.arago.hiro.client.connection;
 
+import co.arago.hiro.client.connection.httpclient.DefaultHttpClientHandler;
+import co.arago.hiro.client.connection.httpclient.HttpClientHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.exceptions.HiroHttpException;
 import co.arago.hiro.client.exceptions.RetryException;
@@ -15,11 +17,12 @@ import co.arago.hiro.client.util.httpclient.URLPartEncoder;
 import co.arago.util.json.JsonUtil;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLParameters;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.CookieManager;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
@@ -37,23 +40,28 @@ import static co.arago.util.validation.ValueChecks.notNull;
  */
 public abstract class AbstractAPIHandler {
 
-    final static Logger log = LoggerFactory.getLogger(AbstractAPIHandler.class);
-
     // ###############################################################################################
     // ## Conf and Builder ##
     // ###############################################################################################
 
     /**
-     * The basic configuration for all APIHAndler
+     * The basic configuration for all APIHAndler. This also integrates the configuration for a default
+     * HttpClientHandler.
      *
      * @param <T> The type of the Builder
      */
-    public static abstract class Conf<T extends Conf<T>> {
+    public static abstract class Conf<T extends Conf<T>> implements HttpClientHandler.ConfTemplate<T> {
         private URI rootApiURI;
         private URI webSocketURI;
         private String userAgent;
         private Long httpRequestTimeout;
         private int maxRetries;
+
+        // Reference to an already existing httpClientHandler.
+        private HttpClientHandler httpClientHandler;
+
+        // Configuration for a DefaultHttpClientHandler that is created internally.
+        private final DefaultHttpClientHandler.Conf<?> defaultHttpClientHandlerBuilder = DefaultHttpClientHandler.newBuilder();
 
         public URI getRootApiURI() {
             return rootApiURI;
@@ -67,7 +75,6 @@ public abstract class AbstractAPIHandler {
          * @param rootApiURI The root url for the API
          * @return {@link #self()}
          * @throws URISyntaxException When the rootApiURI is malformed.
-         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setRootApiURI(String rootApiURI) throws URISyntaxException {
             this.rootApiURI = new URI(RegExUtils.removePattern(rootApiURI, "/+$") + "/");
@@ -77,7 +84,6 @@ public abstract class AbstractAPIHandler {
         /**
          * @param rootApiURI The root uri for the API
          * @return {@link #self()}
-         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setRootApiURI(URI rootApiURI) {
             this.rootApiURI = rootApiURI;
@@ -89,7 +95,6 @@ public abstract class AbstractAPIHandler {
          *                     from an apiUrl.
          * @return {@link #self()}
          * @throws URISyntaxException When the webSocketURI is a malformed URI.
-         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setWebSocketURI(String webSocketURI) throws URISyntaxException {
             this.webSocketURI = new URI(RegExUtils.removePattern(webSocketURI, "/+$") + "/");
@@ -99,7 +104,6 @@ public abstract class AbstractAPIHandler {
         /**
          * @param apiURI The root url for the WebSockets
          * @return {@link #self()}
-         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setWebSocketURI(URI apiURI) {
             this.rootApiURI = apiURI;
@@ -115,7 +119,6 @@ public abstract class AbstractAPIHandler {
          *
          * @param userAgent The line for the User-Agent header.
          * @return {@link #self()}
-         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setUserAgent(String userAgent) {
             this.userAgent = userAgent;
@@ -129,7 +132,6 @@ public abstract class AbstractAPIHandler {
         /**
          * @param httpRequestTimeout Request timeout in ms.
          * @return {@link #self()}
-         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setHttpRequestTimeout(Long httpRequestTimeout) {
             this.httpRequestTimeout = httpRequestTimeout;
@@ -143,10 +145,265 @@ public abstract class AbstractAPIHandler {
         /**
          * @param maxRetries Max amount of retries when http errors are received. The default is 0.
          * @return {@link #self()}
-         * @implNote Will not be used in the final class when a sharedConnectionHandler is set.
          */
         public T setMaxRetries(int maxRetries) {
             this.maxRetries = maxRetries;
+            return self();
+        }
+
+        public HttpClientHandler getHttpClientHandler() {
+            return httpClientHandler;
+        }
+
+        /**
+         * <p>
+         * Sets the httpClientHandler for the backend connection. This handler will be shared among all
+         * APIHandlers that use this configuration instance.
+         * </p>
+         * <p>
+         * Setting this handler means, that no DefaultHttpClientHandler will be created internally. All configuration
+         * options that are used for the internal handler will be ignored.
+         * </p>
+         *
+         * @param httpClientHandler The connection handler to use.
+         * @return {@link #self()}
+         * @see HttpClientHandler.ConfTemplate
+         */
+        public T setHttpClientHandler(HttpClientHandler httpClientHandler) {
+            this.httpClientHandler = httpClientHandler;
+            return self();
+        }
+
+        @Override
+        public HttpClientHandler.ProxySpec getProxy() {
+            return defaultHttpClientHandlerBuilder.getProxy();
+        }
+
+        /**
+         * @param proxy Simple proxy with one address and port
+         * @return {@link #self()}
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         */
+        @Override
+        public T setProxy(HttpClientHandler.ProxySpec proxy) {
+            defaultHttpClientHandlerBuilder.setProxy(proxy);
+            return self();
+        }
+
+        @Override
+        public boolean isFollowRedirects() {
+            return defaultHttpClientHandlerBuilder.isFollowRedirects();
+        }
+
+        /**
+         * @param followRedirects Enable Redirect.NORMAL. Default is true.
+         * @return {@link #self()}
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         */
+        @Override
+        public T setFollowRedirects(boolean followRedirects) {
+            defaultHttpClientHandlerBuilder.setFollowRedirects(followRedirects);
+            return self();
+        }
+
+        @Override
+        public Long getConnectTimeout() {
+            return defaultHttpClientHandlerBuilder.getShutdownTimeout();
+        }
+
+        /**
+         * @param connectTimeout Connect timeout in milliseconds.
+         * @return {@link #self()}
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         */
+        @Override
+        public T setConnectTimeout(Long connectTimeout) {
+            defaultHttpClientHandlerBuilder.setConnectTimeout(connectTimeout);
+            return self();
+        }
+
+        @Override
+        public long getShutdownTimeout() {
+            return defaultHttpClientHandlerBuilder.getShutdownTimeout();
+        }
+
+        /**
+         * @param shutdownTimeout Time to wait in milliseconds for a complete shutdown of the Java 11 HttpClientImpl.
+         *                        If this is set to a value too low, you might need to wait elsewhere for the HttpClient
+         *                        to shut down properly. Default is 3000ms.
+         * @return {@link #self()}
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         */
+        @Override
+        public T setShutdownTimeout(long shutdownTimeout) {
+            defaultHttpClientHandlerBuilder.setShutdownTimeout(shutdownTimeout);
+            return self();
+        }
+
+        @Override
+        public Boolean getAcceptAllCerts() {
+            return defaultHttpClientHandlerBuilder.getAcceptAllCerts();
+        }
+
+        /**
+         * Skip SSL certificate verification. Leave this unset to use the default in HttpClient. Setting this to true
+         * installs a permissive SSLContext, setting it to false removes the SSLContext to use the default.
+         *
+         * @param acceptAllCerts the toggle
+         * @return {@link #self()}
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         */
+        @Override
+        public T setAcceptAllCerts(Boolean acceptAllCerts) {
+            defaultHttpClientHandlerBuilder.setAcceptAllCerts(acceptAllCerts);
+            return self();
+        }
+
+        @Override
+        public SSLContext getSslContext() {
+            return defaultHttpClientHandlerBuilder.getSslContext();
+        }
+
+        /**
+         * @param sslContext The specific SSLContext to use.
+         * @return {@link #self()}
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         * @see #setAcceptAllCerts(Boolean)
+         */
+        @Override
+        public T setSslContext(SSLContext sslContext) {
+            defaultHttpClientHandlerBuilder.setSslContext(sslContext);
+            return self();
+        }
+
+        @Override
+        public SSLParameters getSslParameters() {
+            return defaultHttpClientHandlerBuilder.getSslParameters();
+        }
+
+        /**
+         * @param sslParameters The specific SSLParameters to use.
+         * @return {@link #self()}
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         */
+        @Override
+        public T setSslParameters(SSLParameters sslParameters) {
+            defaultHttpClientHandlerBuilder.setSslParameters(sslParameters);
+            return self();
+        }
+
+        @Override
+        public HttpClient getHttpClient() {
+            return defaultHttpClientHandlerBuilder.getHttpClient();
+        }
+
+        /**
+         * Instance of an externally configured http client. An internal HttpClient will be built with parameters
+         * given by this Builder if this is not set.
+         *
+         * @param httpClient Instance of an HttpClient.
+         * @return {@link #self()}
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         * <br>
+         * Be aware, that any httpClient given via this method will set AutoClose to false and has to be
+         * closed externally, unless {@link #setHttpClientAutoClose(boolean)} is used. A call to
+         * {@link HttpClientHandler#close()} with AutoClose set to false will have no effect.
+         */
+        @Override
+        public T setHttpClient(HttpClient httpClient) {
+            defaultHttpClientHandlerBuilder.setHttpClient(httpClient);
+            return self();
+        }
+
+        @Override
+        public CookieManager getCookieManager() {
+            return defaultHttpClientHandlerBuilder.getCookieManager();
+        }
+
+        /**
+         * Instance of an externally configured CookieManager. An internal CookieManager will be built if this is not
+         * set.
+         *
+         * @param cookieManager Instance of a CookieManager.
+         * @return {@link #self()}
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         */
+        @Override
+        public T setCookieManager(CookieManager cookieManager) {
+            defaultHttpClientHandlerBuilder.setCookieManager(cookieManager);
+            return self();
+        }
+
+        @Override
+        public int getMaxConnectionPool() {
+            return defaultHttpClientHandlerBuilder.getMaxConnectionPool();
+        }
+
+        /**
+         * Set the maximum of open connections for this HttpClient (This sets the fixedThreadPool for the
+         * Executor of the HttpClient).
+         *
+         * @param maxConnectionPool Maximum size of the pool. Default is 8.
+         * @return {@link #self()}
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         */
+        @Override
+        public T setMaxConnectionPool(int maxConnectionPool) {
+            defaultHttpClientHandlerBuilder.setMaxConnectionPool(maxConnectionPool);
+            return self();
+        }
+
+        @Override
+        public int getMaxBinaryLogLength() {
+            return defaultHttpClientHandlerBuilder.getMaxBinaryLogLength();
+        }
+
+        /**
+         * Maximum size to log binary data in logfiles. Default is 1024.
+         *
+         * @param maxBinaryLogLength Size in bytes
+         * @return {@link #self()}
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         */
+        @Override
+        public T setMaxBinaryLogLength(int maxBinaryLogLength) {
+            defaultHttpClientHandlerBuilder.setMaxBinaryLogLength(maxBinaryLogLength);
+            return self();
+        }
+
+        @Override
+        public Boolean getHttpClientAutoClose() {
+            return defaultHttpClientHandlerBuilder.getHttpClientAutoClose();
+        }
+
+        /**
+         * <p>
+         * Close internal httpClient automatically, even when it has been set externally.
+         * </p>
+         * <p>
+         * The default is to close the internal httpClient when it has been created internally and to
+         * not close the internal httpClient when it has been set via {@link #setHttpClient(HttpClient)}
+         * </p>
+         *
+         * @param httpClientAutoClose true: enable, false: disable.
+         * @return {@link #self()}
+         * @implNote Configuration option for an internal DefaultHttpClientHandler. Will be ignored if the
+         * {@link #httpClientHandler} is set directly via {@link #setHttpClientHandler(HttpClientHandler)}.
+         */
+        @Override
+        public T setHttpClientAutoClose(boolean httpClientAutoClose) {
+            defaultHttpClientHandlerBuilder.setHttpClientAutoClose(httpClientAutoClose);
             return self();
         }
 
@@ -163,8 +420,8 @@ public abstract class AbstractAPIHandler {
     public static final String version;
 
     static {
-        version = AbstractClientAPIHandler.class.getPackage().getImplementationVersion();
-        String t = AbstractClientAPIHandler.class.getPackage().getImplementationTitle();
+        version = AbstractAPIHandler.class.getPackage().getImplementationVersion();
+        String t = AbstractAPIHandler.class.getPackage().getImplementationTitle();
         title = (t != null ? t : "hiro-client-java");
     }
 
@@ -175,30 +432,48 @@ public abstract class AbstractAPIHandler {
     protected int maxRetries;
 
     /**
-     * Constructor
+     * This is a reference which will be shared among all AbstractAPIHandler that use the same configuration
+     * {@link Conf}.
+     */
+    protected HttpClientHandler httpClientHandler;
+
+    /**
+     * Store the original configuration, so it can be used in other APIHandlers which will use the same underlying
+     * {@link #httpClientHandler}.
+     */
+    private final Conf<?> conf;
+
+    /**
+     * Constructor.
      *
      * @param builder The builder to use.
+     * @implNote If the builder does not carry a httpClientHandler, a default will be created here.
      */
     protected AbstractAPIHandler(Conf<?> builder) {
+        this.conf = builder;
         this.rootApiURI = notNull(builder.getRootApiURI(), "rootApiURI");
         this.webSocketURI = builder.getWebSocketURI();
         this.maxRetries = builder.getMaxRetries();
         this.httpRequestTimeout = builder.getHttpRequestTimeout();
         this.userAgent = builder.getUserAgent() != null ? builder.getUserAgent()
                 : (version != null ? title + " " + version : title);
+
+        this.httpClientHandler = builder.getHttpClientHandler() != null ? builder.getHttpClientHandler()
+                : builder.defaultHttpClientHandlerBuilder.build();
     }
 
     /**
-     * Copy constructor
+     * Return a copy of the configuration.
      *
-     * @param other The object to copy the data from.
+     * @return A copy of the configuration.
+     * @implNote Please take note, that the included httpClientHandler of this class will be
+     * added to the returned {@link Conf} and therefore will be shared among all APIHandlers that use this
+     * configuration.
+     * @see co.arago.hiro.client.rest.AuthenticatedAPIHandler
      */
-    protected AbstractAPIHandler(AbstractAPIHandler other) {
-        this.rootApiURI = other.rootApiURI;
-        this.webSocketURI = other.webSocketURI;
-        this.maxRetries = other.maxRetries;
-        this.httpRequestTimeout = other.httpRequestTimeout;
-        this.userAgent = other.userAgent;
+    public Conf<?> getConf() {
+        conf.setHttpClientHandler(httpClientHandler);
+        return conf;
     }
 
     public URI getRootApiURI() {
@@ -269,7 +544,7 @@ public abstract class AbstractAPIHandler {
      * @param finalSlash Append a final slash?
      * @return The constructed URI
      */
-    protected static URI buildURI(URI uri, String path, boolean finalSlash) {
+    public static URI buildURI(URI uri, String path, boolean finalSlash) {
         return uri.resolve(RegExUtils.removePattern(path, "^/+") + (finalSlash ? "/" : ""));
     }
 
@@ -281,17 +556,19 @@ public abstract class AbstractAPIHandler {
      *                 a query already.
      * @param fragment URI Fragment. Can be null for no fragment, otherwise uri must not have a fragment already.
      * @return The constructed URI
+     * @throws IllegalArgumentException When the given URI already has a query and the given query is not blank or
+     *                                  the URI has a fragment and the given fragment is not blank.
      */
     public static URI addQueryFragmentAndNormalize(URI uri, URIEncodedData query, String fragment) {
 
-        String sourceURI = uri.toASCIIString();
+        String sourceURI = uri.toString();
 
         if (query != null) {
             String encodedQueryString = query.toString();
 
             if (StringUtils.isNotBlank(encodedQueryString)) {
                 if (sourceURI.contains("?")) {
-                    throw new IllegalArgumentException("Given uri must not have a query part already.");
+                    throw new IllegalArgumentException("Given URI must not have a query part already.");
                 }
                 sourceURI += "?" + encodedQueryString;
             }
@@ -299,7 +576,7 @@ public abstract class AbstractAPIHandler {
 
         if (StringUtils.isNotBlank(fragment)) {
             if (sourceURI.contains("#")) {
-                throw new IllegalArgumentException("Given uri must not have a fragment part already.");
+                throw new IllegalArgumentException("Given URI must not have a fragment part already.");
             }
             sourceURI += "#" + URLPartEncoder.encodeNoPlus(fragment, StandardCharsets.UTF_8);
         }
@@ -309,13 +586,6 @@ public abstract class AbstractAPIHandler {
         } catch (URISyntaxException e) {
             throw new IllegalArgumentException(e);
         }
-    }
-
-    private static void addQueryPart(StringBuilder builder, String key, String value) {
-        builder
-                .append(URLPartEncoder.encodeNoPlus(key, StandardCharsets.UTF_8))
-                .append("=")
-                .append(URLPartEncoder.encodeNoPlus(value, StandardCharsets.UTF_8));
     }
 
     /**
@@ -364,10 +634,10 @@ public abstract class AbstractAPIHandler {
      * @return The constructed HttpRequest.
      */
     private HttpRequest createStreamRequest(URI uri,
-            String method,
-            StreamContainer body,
-            HttpHeaderMap headers,
-            Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
+                                            String method,
+                                            StreamContainer body,
+                                            HttpHeaderMap headers,
+                                            Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
 
         if (body != null && body.hasContentType()) {
             headers.set("Content-Type", body.getContentType());
@@ -396,10 +666,10 @@ public abstract class AbstractAPIHandler {
      * @return The constructed HttpRequest.
      */
     private HttpRequest createStringRequest(URI uri,
-            String method,
-            String body,
-            HttpHeaderMap headers,
-            Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
+                                            String method,
+                                            String body,
+                                            HttpHeaderMap headers,
+                                            Long httpRequestTimeout) throws InterruptedException, IOException, HiroException {
 
         HttpRequest httpRequest = getRequestBuilder(uri, headers, httpRequestTimeout)
                 .method(method,
@@ -422,7 +692,7 @@ public abstract class AbstractAPIHandler {
      * @param httpRequest The httpRequest to send
      * @param maxRetries  The amount of retries on errors. When this is null, {@link #maxRetries} will be used.
      * @return A HttpResponse containing an InputStream of the incoming body part of
-     *         the result.
+     * the result.
      * @throws HiroException        When status errors occur.
      * @throws IOException          On IO errors with the connection.
      * @throws InterruptedException When the call gets interrupted.
@@ -917,18 +1187,18 @@ public abstract class AbstractAPIHandler {
     // ###############################################################################################
 
     /**
-     * Abstract class that needs to be overwritten by a supplier of a HttpLogger.
-     *
      * @return The HttpLogger to use with this class.
      */
-    abstract protected HttpLogger getHttpLogger();
+    public HttpLogger getHttpLogger() {
+        return httpClientHandler.getHttpLogger();
+    }
 
     /**
-     * Abstract class that needs to be overwritten by a supplier of a HttpClient.
-     *
      * @return The HttpClient to use with this class.
      */
-    abstract protected HttpClient getOrBuildClient();
+    public HttpClient getOrBuildClient() {
+        return httpClientHandler.getOrBuildClient();
+    }
 
     /**
      * Override this to add authentication tokens.

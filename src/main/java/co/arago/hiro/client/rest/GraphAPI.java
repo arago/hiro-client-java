@@ -1,6 +1,6 @@
 package co.arago.hiro.client.rest;
 
-import co.arago.hiro.client.connection.token.AbstractTokenAPIHandler;
+import co.arago.hiro.client.connection.token.TokenAPIHandler;
 import co.arago.hiro.client.exceptions.HiroException;
 import co.arago.hiro.client.model.DefaultHiroItemListMessage;
 import co.arago.hiro.client.model.HiroMessage;
@@ -30,7 +30,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
 
     public static final class Builder extends Conf<Builder> {
 
-        private Builder(String apiName, AbstractTokenAPIHandler tokenAPIHandler) {
+        private Builder(String apiName, TokenAPIHandler tokenAPIHandler) {
             setApiName(apiName);
             setTokenApiHandler(tokenAPIHandler);
         }
@@ -58,7 +58,7 @@ public class GraphAPI extends AuthenticatedAPIHandler {
         super(builder);
     }
 
-    public static Conf<?> newBuilder(AbstractTokenAPIHandler tokenAPIHandler) {
+    public static Conf<?> newBuilder(TokenAPIHandler tokenAPIHandler) {
         return new Builder("graph", tokenAPIHandler);
     }
 

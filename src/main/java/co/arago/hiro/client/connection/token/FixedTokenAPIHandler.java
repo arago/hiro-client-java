@@ -1,6 +1,5 @@
 package co.arago.hiro.client.connection.token;
 
-import co.arago.hiro.client.connection.AbstractVersionAPIHandler;
 import co.arago.hiro.client.exceptions.FixedTokenException;
 import co.arago.hiro.client.exceptions.HiroException;
 import org.apache.commons.lang3.StringUtils;
@@ -44,8 +43,7 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
         }
 
         public FixedTokenAPIHandler build() {
-            return getSharedConnectionHandler() != null ? new FixedTokenAPIHandler(getSharedConnectionHandler(), this)
-                    : new FixedTokenAPIHandler(this);
+            return new FixedTokenAPIHandler(this);
         }
 
     }
@@ -63,17 +61,6 @@ public class FixedTokenAPIHandler extends AbstractTokenAPIHandler {
      */
     protected FixedTokenAPIHandler(Conf<Builder> builder) {
         super(builder);
-        this.token = notNull(builder.getToken(), "token");
-    }
-
-    /**
-     * Constructor
-     *
-     * @param versionAPIHandler The AbstractVersionAPIHandler with the source data.
-     * @param builder           The builder to use for all specific data for this class.
-     */
-    protected FixedTokenAPIHandler(AbstractVersionAPIHandler versionAPIHandler, Conf<Builder> builder) {
-        super(versionAPIHandler);
         this.token = notNull(builder.getToken(), "token");
     }
 
