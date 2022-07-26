@@ -1,3 +1,14 @@
+# v0.5.0
+
+Refactorings
+
+* Made `AbstractClientAPIHandler` into `DefaultHttpClientHandler` without references to `AbstractAPIHandler`.
+* Created interfaces HttpClientHandler and TokenAPIHandler.
+* Got rid of the copy constructors.
+* Added and modified documentation.
+* Do not ignore `FixedTokenException` when a token is invalid and cannot be changed, but add it to the exception chain.
+
+
 # v0.4.0
 
 * Code Auth and Org switch.
