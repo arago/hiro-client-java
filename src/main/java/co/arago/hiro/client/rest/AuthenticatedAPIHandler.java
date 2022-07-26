@@ -136,8 +136,8 @@ public abstract class AuthenticatedAPIHandler extends AbstractAPIHandler {
     public static abstract class APIRequestConf<T extends APIRequestConf<T, R>, R> {
 
         protected final URIPath path;
-        protected URIEncodedData query = new URIEncodedData();
-        protected HttpHeaderMap headers = new HttpHeaderMap();
+        protected final URIEncodedData query = new URIEncodedData();
+        protected final HttpHeaderMap headers = new HttpHeaderMap();
         protected String fragment;
 
         protected Long httpRequestTimeout;
