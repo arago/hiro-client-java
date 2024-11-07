@@ -8,9 +8,9 @@ __Status__
 
 * Technical preview
 
-For more information about HIRO Automation, look at https://www.arago.co/
+For more information about HIRO Automation, look at https://www.almato.ai/
 
-For more information about the APIs this library covers, see https://developer.hiro.arago.co/7.0/api/ (Currently
+For more information about the APIs this library covers, see https://dev-portal.engine.datagroup.de/7.0/api/ (Currently
 implemented are `app`, `auth`, `graph`, `event-ws` and `action-ws` )
 
 ## Prerequisites and dependencies
@@ -22,8 +22,8 @@ Maven Central Library.
 
 ## Quickstart
 
-To use this library, you will need an account at https://id.arago.co/ and access to an OAuth Client-Id and Client-Secret
-to access the HIRO Graph. See also https://developer.hiro.arago.co.
+To use this library, you will need an account at https://id.engine.datagroup.de/ and access to an OAuth Client-Id and Client-Secret
+to access the HIRO Graph. See also https://dev-portal.engine.datagroup.de.
 
 Most of the documentation is done in the sourcecode.
 
